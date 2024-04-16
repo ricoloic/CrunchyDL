@@ -1,0 +1,712 @@
+import { messageBox } from '../../../electron/background'
+import { server } from '../../api'
+import { Account, Playlist } from '../../db/database'
+import { CrunchyEpisode, VideoPlaylist } from '../../types/crunchyroll'
+import { useFetch } from '../useFetch'
+import fs from 'fs'
+import path from 'path'
+import Ffmpeg from 'fluent-ffmpeg'
+import { parse as mpdParse } from 'mpd-parser'
+import { parse, stringify } from 'ass-compiler'
+import { Readable } from 'stream'
+import { finished } from 'stream/promises'
+import { v4 as uuidv4 } from 'uuid'
+import { app } from 'electron'
+var cron = require('node-cron')
+
+const crErrors = [
+  {
+    error: 'invalid_grant',
+    response: 'Email/Password is wrong'
+  }
+]
+
+export async function crunchyLogin(user: string, passw: string) {
+  const cachedData: {
+    access_token: string
+    refresh_token: string
+    expires_in: number
+    token_type: string
+    scope: string
+    country: string
+    account_id: string
+    profile_id: string
+  } | undefined = server.CacheController.get('crtoken')
+
+  if (!cachedData) {
+    var { data, error } = await crunchyLoginFetch(user, passw)
+
+    if (error) {
+      messageBox(
+        'error',
+        ['Cancel'],
+        2,
+        'Failed to login',
+        'Failed to login to Crunchyroll',
+        crErrors.find((r) => r.error === (error?.error as string)) ? crErrors.find((r) => r.error === (error?.error as string))?.response : (error.error as string)
+      )
+      return { data: null, error: error.error }
+    }
+
+    if (!data) {
+      messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned null')
+      return { data: null, error: 'Crunchyroll returned null' }
+    }
+
+    if (!data.access_token) {
+      messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned malformed data')
+      return { data: null, error: 'Crunchyroll returned malformed data' }
+    }
+
+    server.CacheController.set('crtoken', data, data.expires_in - 30)
+
+    return { data: data, error: null }
+  }
+
+  return { data: cachedData, error: null }
+}
+
+async function crunchyLoginFetch(user: string, passw: string) {
+  const headers = {
+    Authorization: 'Basic bm12anNoZmtueW14eGtnN2ZiaDk6WllJVnJCV1VQYmNYRHRiRDIyVlNMYTZiNFdRb3Mzelg=',
+    'Content-Type': 'application/x-www-form-urlencoded',
+    'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
+  }
+
+  const body: any = {
+    username: user,
+    password: passw,
+    grant_type: 'password',
+    scope: 'offline_access',
+    device_name: 'RMX2170',
+    device_type: 'realme RMX2170'
+  }
+
+  const { data, error } = await useFetch<{
+    access_token: string
+    refresh_token: string
+    expires_in: number
+    token_type: string
+    scope: string
+    country: string
+    account_id: string
+    profile_id: string
+  }>('https://beta-api.crunchyroll.com/auth/v1/token', {
+    type: 'POST',
+    body: new URLSearchParams(body).toString(),
+    header: headers,
+    credentials: 'same-origin'
+  })
+
+  if (error) {
+    return { data: null, error: error }
+  }
+
+  if (!data) {
+    return { data: null, error: null }
+  }
+
+  return { data: data, error: null }
+}
+
+export async function checkIfLoggedInCR(service: string) {
+  const login = await Account.findOne({
+    where: {
+      service: service
+    }
+  })
+
+  return login?.get()
+}
+
+export async function safeLoginData(user: string, password: string, service: string) {
+  const login = await Account.create({
+    username: user,
+    password: password,
+    service: service
+  })
+
+  return login?.get()
+}
+
+export async function addEpisodeToPlaylist(e: CrunchyEpisode, s: Array<string>, d: Array<string>, dir: string) {
+  const episode = await Playlist.create({
+    media: e,
+    sub: s,
+    dub: d,
+    dir: dir
+  })
+
+  return episode.get()
+}
+
+export async function getPlaylist() {
+  const episodes = await Playlist.findAll()
+
+  return episodes
+}
+
+export async function updatePlaylistByID(id: number, status: 'waiting' | 'preparing' | 'downloading' | 'completed' | 'merging' | 'failed') {
+  await Playlist.update({ status: status }, { where: { id: id } })
+}
+
+export async function updatePlaylistToDownloadPartsByID(id: number, parts: number) {
+  await Playlist.update({ partsleft: parts }, { where: { id: id } })
+}
+
+export async function updatePlaylistToDownloadedPartsByID(id: number, parts: number) {
+  await Playlist.update({ partsdownloaded: parts }, { where: { id: id } })
+}
+
+async function checkPlaylists() {
+  const episodes = await Playlist.findAll({ where: { status: 'waiting' } })
+
+  for (const e of episodes) {
+    await updatePlaylistByID(e.dataValues.id, 'preparing')
+    await downloadPlaylist(e.dataValues.media.id, e.dataValues.dub, e.dataValues.sub, e.dataValues.hardsub, e.dataValues.id)
+  }
+}
+
+cron.schedule('* * * * * *', () => {
+  checkPlaylists()
+})
+
+export async function crunchyGetPlaylist(q: string) {
+  const account = await checkIfLoggedInCR('crunchyroll')
+
+  if (!account) return
+
+  const { data, error } = await crunchyLogin(account.username, account.password)
+
+  if (!data) return
+
+  const headers = {
+    Authorization: `Bearer ${data.access_token}`,
+    'X-Cr-Disable-Drm': 'true'
+  }
+
+  const query: any = {
+    q: q,
+    n: 100,
+    type: 'series',
+    ratings: false,
+    locale: 'de-DE'
+  }
+
+  try {
+    const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}/console/switch/play`, {
+      method: 'GET',
+      headers: headers
+    })
+
+    if (response.ok) {
+      const data: VideoPlaylist = JSON.parse(await response.text())
+
+      data.hardSubs = Object.values((data as any).hardSubs)
+
+      data.subtitles = Object.values((data as any).subtitles)
+
+      return data
+    } else {
+      throw new Error(await response.text())
+    }
+  } catch (e) {
+    throw new Error(e as string)
+  }
+}
+
+async function createFolder() {
+  const tempFolderPath = path.join(app.getPath('documents'), (Math.random() + 1).toString(36).substring(2))
+  try {
+    await fs.promises.mkdir(tempFolderPath, { recursive: true })
+    return tempFolderPath
+  } catch (error) {
+    console.error('Error creating temporary folder:', error)
+    throw error
+  }
+}
+
+async function deleteFolder(folderPath: string) {
+  fs.rmSync(folderPath, { recursive: true, force: true })
+}
+
+export async function crunchyGetPlaylistMPD(q: string) {
+  const account = await checkIfLoggedInCR('crunchyroll')
+
+  if (!account) return
+
+  const { data, error } = await crunchyLogin(account.username, account.password)
+
+  if (!data) return
+
+  const headers = {
+    Authorization: `Bearer ${data.access_token}`,
+    'X-Cr-Disable-Drm': 'true'
+  }
+
+  try {
+    const response = await fetch(q, {
+      method: 'GET',
+      headers: headers
+    })
+
+    if (response.ok) {
+      const parsed = mpdParse(await response.text())
+
+      return parsed
+    } else {
+      throw new Error(await response.text())
+    }
+  } catch (e) {
+    throw new Error(e as string)
+  }
+}
+
+export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Array<string>, hardsub: boolean, downloadID: number) {
+  var playlist = await crunchyGetPlaylist(e)
+
+  if (!playlist) return
+
+  if (playlist.audioLocale !== subs[0]) {
+    const found = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
+    if (found) {
+      playlist = await crunchyGetPlaylist(found.guid)
+    }
+  }
+
+  if (!playlist) return
+
+  const subFolder = await createFolder()
+
+  const audioFolder = await createFolder()
+
+  const dubDownloadList: Array<{
+    audio_locale: string
+    guid: string
+    is_premium_only: boolean
+    media_guid: string
+    original: boolean
+    season_guid: string
+    variant: string
+  }> = []
+
+  const subDownloadList: Array<{
+    format: string
+    language: string
+    url: string
+  }> = []
+
+  for (const s of subs) {
+    const found = playlist.subtitles.find((sub) => sub.language === s)
+    if (found) {
+      subDownloadList.push(found)
+      console.log(`Subtitle ${s}.ass found, adding to download`)
+    } else {
+      console.warn(`Subtitle ${s}.ass not found, skipping`)
+    }
+  }
+
+  for (const d of dubs) {
+    const found = playlist.versions.find((p) => p.audio_locale === d)
+    if (found) {
+      dubDownloadList.push(found)
+      console.log(`Audio ${d}.aac found, adding to download`)
+    } else {
+      console.warn(`Audio ${d}.aac not found, skipping`)
+    }
+  }
+
+  if (dubDownloadList.length === 0) {
+    const jpVersion = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
+
+    if (jpVersion) {
+      console.log('Using ja-JP Audio because no Audio in download list')
+      dubDownloadList.push(jpVersion)
+    }
+  }
+
+  const subDownload = async () => {
+    const sbs: Array<string> = []
+    for (const sub of subDownloadList) {
+      const name = await downloadSub(sub, subFolder)
+      sbs.push(name)
+    }
+    return sbs
+  }
+
+  const audioDownload = async () => {
+    const audios: Array<string> = []
+    for (const v of dubDownloadList) {
+      const list = await crunchyGetPlaylist(v.guid)
+
+      if (!list) return
+
+      const playlist = await crunchyGetPlaylistMPD(list.url)
+
+      if (!playlist) return
+
+      var p: { filename: string; url: string }[] = []
+
+      p.push({
+        filename: (playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
+        url: playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.resolvedUri
+      })
+
+      for (const s of playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments) {
+        p.push({
+          filename: (s.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
+          url: s.resolvedUri
+        })
+      }
+
+      const path = await downloadAudio(p, audioFolder, list.audioLocale)
+
+      audios.push(path as string)
+    }
+    return audios
+  }
+
+  const downloadVideo = async () => {
+    var code
+
+    if (!playlist) return
+
+    if (playlist.versions.find((p) => p.audio_locale === dubs[0])) {
+      code = playlist.versions.find((p) => p.audio_locale === dubs[0])?.guid
+    } else {
+      code = playlist.versions.find((p) => p.audio_locale === 'ja-JP')?.guid
+    }
+
+    if (!code) return console.error('No clean stream found')
+
+    const play = await crunchyGetPlaylist(code)
+
+    if (!play) return
+
+    var mdp = await crunchyGetPlaylistMPD(play.url)
+
+    if (hardsub) {
+      const findjpplaylist = playlist.versions.find((p) => p.audio_locale === 'ja-JP')?.guid
+
+      if (!findjpplaylist) return
+
+      const hsplaylist = await crunchyGetPlaylist(findjpplaylist)
+
+      if (!hsplaylist) return
+
+      const hsurl = hsplaylist.hardSubs.find((h) => h.hlang === subs[0])
+
+      if (hsurl) {
+        mdp = await crunchyGetPlaylistMPD(hsurl.url)
+      }
+    }
+
+    if (!mdp) return
+
+    var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.width === 1920)
+
+    if (!hq) return
+
+    var p: { filename: string; url: string }[] = []
+
+    p.push({
+      filename: (hq.segments[0].map.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
+      url: hq.segments[0].map.resolvedUri
+    })
+
+    for (const s of hq.segments) {
+      p.push({
+        filename: (s.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
+        url: s.resolvedUri
+      })
+    }
+
+    await updatePlaylistByID(downloadID, "downloading")
+
+    await updatePlaylistToDownloadPartsByID(downloadID, p.length)
+
+    const file = await downloadParts(p, downloadID)
+
+    return file
+  }
+
+  const [subss, audios, file] = await Promise.all([subDownload(), audioDownload(), downloadVideo()])
+
+  if (!audios) return
+
+  await updatePlaylistByID(downloadID, "merging")
+
+  await mergeFile(file as string, audios, subss, String(playlist.assetId))
+
+  await deleteFolder(subFolder)
+  await deleteFolder(audioFolder)
+
+  await updatePlaylistByID(downloadID, "completed")
+
+  return playlist
+}
+
+async function downloadAudio(parts: { filename: string; url: string }[], dir: string, name: string) {
+  const path = await createFolder()
+  const downloadPromises = []
+
+  for (const [index, part] of parts.entries()) {
+    const stream = fs.createWriteStream(`${path}/${part.filename}`)
+    const downloadPromise = fetchAndPipe(part.url, stream, index + 1)
+    downloadPromises.push(downloadPromise)
+  }
+
+  await Promise.all(downloadPromises)
+
+  return await mergePartsAudio(parts, path, dir, name)
+}
+
+async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number) {
+  const { body } = await fetch(url)
+  const readableStream = Readable.from(body as any)
+
+  return new Promise<void>((resolve, reject) => {
+    readableStream
+      .pipe(stream)
+      .on('finish', () => {
+        console.log(`Fragment ${index} downloaded`)
+        resolve()
+      })
+      .on('error', (error) => {
+        reject(error)
+      })
+  })
+}
+
+async function downloadParts(parts: { filename: string; url: string }[], downloadID: number) {
+  var partsdownloaded = 0
+  const path = await createFolder()
+
+  for (const [index, part] of parts.entries()) {
+    const stream = fs.createWriteStream(`${path}/${part.filename}`)
+    const { body } = await fetch(part.url)
+    await finished(Readable.fromWeb(body as any).pipe(stream))
+    console.log(`Fragment ${index + 1} downloaded`)
+    partsdownloaded++
+    updatePlaylistToDownloadedPartsByID(downloadID, partsdownloaded)
+  }
+
+  return await mergeParts(parts, path)
+}
+
+async function downloadSub(
+  sub: {
+    format: string
+    language: string
+    url: string
+  },
+  dir: string
+) {
+  const path = `${dir}/${sub.language}.${sub.format}`
+
+  const stream = fs.createWriteStream(path)
+  const response = await fetch(sub.url)
+
+  var parsedASS = parse(await response.text())
+
+  // Disabling Changing ASS because still broken in vlc
+
+  // parsedASS.info.PlayResX = "1920";
+  // parsedASS.info.PlayResY = "1080";
+
+  // for (const s of parsedASS.styles.style) {
+  //     (s.Fontsize = "54"), (s.Outline = "4");
+  // }
+
+  const fixed = stringify(parsedASS)
+
+  const readableStream = Readable.from([fixed])
+
+  await finished(readableStream.pipe(stream))
+  console.log(`Sub ${sub.language}.${sub.format} downloaded`)
+
+  return path
+}
+
+async function concatenateTSFiles(inputFiles: Array<string>, outputFile: string) {
+  return new Promise<void>((resolve, reject) => {
+    const writeStream = fs.createWriteStream(outputFile)
+
+    writeStream.on('error', (error) => {
+      reject(error)
+    })
+
+    writeStream.on('finish', () => {
+      console.log('TS files concatenated successfully!')
+      resolve()
+    })
+
+    const processNextFile = (index: number) => {
+      if (index >= inputFiles.length) {
+        writeStream.end()
+        return
+      }
+
+      const readStream = fs.createReadStream(inputFiles[index])
+
+      readStream.on('error', (error) => {
+        reject(error)
+      })
+
+      readStream.pipe(writeStream, { end: false })
+
+      readStream.on('end', () => {
+        processNextFile(index + 1)
+      })
+    }
+
+    processNextFile(0)
+  })
+}
+
+async function mergeParts(parts: { filename: string; url: string }[], tmp: string) {
+  const tempname = (Math.random() + 1).toString(36).substring(2)
+
+  try {
+    const list: Array<string> = []
+
+    for (const [index, part] of parts.entries()) {
+      list.push(`${tmp}/${part.filename}`)
+    }
+
+    const concatenatedFile = `${tmp}/main.m4s`
+    await concatenateTSFiles(list, concatenatedFile)
+
+    return new Promise((resolve, reject) => {
+      Ffmpeg()
+        .input(concatenatedFile)
+        .outputOptions('-c copy')
+        .save(app.getPath('documents') + `/${tempname}.mp4`)
+        .on('end', async () => {
+          console.log('Merging finished')
+          await deleteFolder(tmp)
+          return resolve(app.getPath('documents') + `/${tempname}.mp4`)
+        })
+    })
+  } catch (error) {
+    console.error('Error merging parts:', error)
+  }
+}
+
+async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: string, dir: string, name: string) {
+  try {
+    const list: Array<string> = []
+
+    for (const [index, part] of parts.entries()) {
+      list.push(`${tmp}/${part.filename}`)
+    }
+
+    const concatenatedFile = `${tmp}/main.m4s`
+    await concatenateTSFiles(list, concatenatedFile)
+
+    return new Promise((resolve, reject) => {
+      Ffmpeg()
+        .input(concatenatedFile)
+        .outputOptions('-c copy')
+        .save(`${dir}/${name}.aac`)
+        .on('end', async () => {
+          console.log('Merging finished')
+          await deleteFolder(tmp)
+
+          return resolve(`${dir}/${name}.aac`)
+        })
+    })
+  } catch (error) {
+    console.error('Error merging parts:', error)
+  }
+}
+
+async function mergeFile(video: string, audios: Array<string>, subs: Array<string>, name: string) {
+  const locales: Array<{
+    locale: string
+    name: string
+    iso: string
+    title: string
+  }> = [
+    { locale: 'ja-JP', name: 'JP', iso: 'jpn', title: 'Japanese' },
+    { locale: 'de-DE', name: 'DE', iso: 'deu', title: 'German' },
+    { locale: 'hi-IN', name: 'HI', iso: 'hin', title: 'Hindi' },
+    { locale: 'ru-RU', name: 'RU', iso: 'rus', title: 'Russian' },
+    { locale: 'en-US', name: 'EN', iso: 'eng', title: 'English' },
+    { locale: 'fr-FR', name: 'FR', iso: 'fra', title: 'French' },
+    { locale: 'pt-BR', name: 'PT', iso: 'por', title: 'Portugese' },
+    { locale: 'es-419', name: 'LA-ES', iso: 'spa', title: 'SpanishLatin' },
+    { locale: 'en-IN', name: 'EN-IN', iso: 'eng', title: 'IndianEnglish' },
+    { locale: 'it-IT', name: 'IT', iso: 'ita', title: 'Italian' },
+    { locale: 'es-ES', name: 'ES', iso: 'spa', title: 'Spanish' },
+    { locale: 'ta-IN', name: 'TA', iso: 'tam', title: 'Tamil' },
+    { locale: 'te-IN', name: 'TE', iso: 'tel', title: 'Telugu' },
+    { locale: 'ar-SA', name: 'AR', iso: 'ara', title: 'ArabicSA' },
+    { locale: 'ms-MY', name: 'MS', iso: 'msa', title: 'Malay' },
+    { locale: 'th-TH', name: 'TH', iso: 'tha', title: 'Thai' },
+    { locale: 'vi-VN', name: 'VI', iso: 'vie', title: 'Vietnamese' },
+    { locale: 'id-ID', name: 'ID', iso: 'ind', title: 'Indonesian' },
+    { locale: 'ko-KR', name: 'KO', iso: 'kor', title: 'Korean' }
+  ]
+
+  return new Promise((resolve, reject) => {
+    var output = Ffmpeg()
+    var ffindex = 1
+    output.addInput(video)
+    var options = ['-c copy', '-map 0']
+
+    for (const [index, a] of audios.entries()) {
+      output.addInput(a)
+      options.push(`-map ${ffindex}:a:0`)
+      options.push(
+        `-metadata:s:a:${index} language=${
+          locales.find((l) => l.locale === a.split('/')[1].split('.aac')[0])
+            ? locales.find((l) => l.locale === a.split('/')[1].split('.aac')[0])?.iso
+            : a.split('/')[1].split('.aac')[0]
+        }`
+      )
+
+      ffindex++
+
+      // Somehow not working
+      // options.push(
+      //     `-metadata:s:a:${index} language="${
+      //         locales.find(
+      //             (l) => l.locale === a.split("/")[1].split(".aac")[0]
+      //         ) ? locales.find(
+      //             (l) => l.locale === a.split("/")[1].split(".aac")[0]
+      //         )?.title : a.split("/")[1].split(".aac")[0]
+      //     }"`
+      // );
+    }
+
+    if (subs) {
+      for (const [index, s] of subs.entries()) {
+        output.addInput(s)
+        options.push(`-map ${ffindex}:s`)
+
+        options.push(
+          `-metadata:s:s:${index} language=${
+            locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])
+              ? locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])?.iso
+              : s.split('/')[1].split('.ass')[0]
+          }`
+        )
+
+        ffindex++
+      }
+    }
+
+    output
+      .addOptions(options)
+      .saveToFile(app.getPath('documents') + `/${name}.mkv`)
+      .on('error', (error) => {
+        console.log(error)
+        reject(error)
+      })
+      .on('end', async () => {
+        console.log('Download finished')
+        return resolve('combined')
+      })
+  })
+}
