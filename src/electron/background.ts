@@ -65,6 +65,7 @@ function createWindow() {
   if (singleInstance(app, mainWindow)) return
 
   // Open the DevTools.
+  !isProduction &&
     mainWindow.webContents.openDevTools({
       mode: 'bottom'
     })
@@ -199,8 +200,8 @@ ipcMain.handle(
     })
 
     mainWindow.webContents.once('did-finish-load', () => {
-      mainWindow.show();
-    });
+      mainWindow.show()
+    })
 
     mainWindow.loadURL(opt.url)
   }

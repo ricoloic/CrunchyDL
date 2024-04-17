@@ -2,9 +2,9 @@
   <div>
     <MainHeader />
     <div class="flex flex-col text-white pt-16">
-      <button @click="deletePlaylist">
+      <!-- <button @click="deletePlaylist">
         Delete Playlist
-      </button>
+      </button> -->
       <div v-for="p in playlist" class="flex flex-row gap-4 h-40 p-5 bg-[#636363]">
         <div class="flex min-w-52 w-52">
           <img :src="p.media.images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-xl" />
