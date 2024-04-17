@@ -43,7 +43,8 @@ interface PlaylistCreateAttributes {
   media: CrunchyEpisode
   dub: Array<string>
   sub: Array<string>
-  dir: string
+  dir: string,
+  hardsub: boolean,
 }
 
 const Account: ModelDefined<AccountAttributes, AccountCreateAttributes> = sequelize.define('Accounts', {
@@ -102,6 +103,10 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
   dir: {
     allowNull: false,
     type: DataTypes.STRING
+  },
+  hardsub: {
+    allowNull: false,
+    type: DataTypes.BOOLEAN
   },
   partsdownloaded: {
     allowNull: true,

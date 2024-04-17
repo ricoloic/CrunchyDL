@@ -66,7 +66,8 @@ export async function addPlaylistController(
       episodes: CrunchyEpisodes
       dubs: Array<string>
       subs: Array<string>
-      dir: string
+      dir: string,
+      hardsub: boolean
     }
   }>,
   reply: FastifyReply
@@ -75,7 +76,7 @@ export async function addPlaylistController(
   const body = request.body;
 
   for (const e of body.episodes) {
-    await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir)
+    await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir, body.hardsub)
   }
 
   return reply.code(201).send()
@@ -88,6 +89,6 @@ export async function getPlaylistController(
 
   const playlist = await getPlaylist()
 
-  return reply.code(200).send(playlist)
+  return reply.code(200).send(playlist.reverse())
 }
 

@@ -68,13 +68,13 @@ const getPlaylist = async () => {
     return
   }
 
-  playlist.value = data.value.reverse()
+  playlist.value = data.value
 }
 
 onMounted(() => {
   getPlaylist()
 
-  setInterval(getPlaylist, 1000)
+  setInterval(getPlaylist, 2000)
 })
 </script>
 

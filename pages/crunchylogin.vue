@@ -39,7 +39,7 @@ const openAddAnime = () => {
     title: "Add Anime",
     url: isProduction ? 'http://localhost:8079/addanime' : 'http://localhost:3000/addanime',
     width: 700,
-    height: 400,
+    height: 450,
     backgroundColor: "#111111"
   })
 }

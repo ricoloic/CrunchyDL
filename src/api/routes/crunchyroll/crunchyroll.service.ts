@@ -22,16 +22,18 @@ const crErrors = [
 ]
 
 export async function crunchyLogin(user: string, passw: string) {
-  const cachedData: {
-    access_token: string
-    refresh_token: string
-    expires_in: number
-    token_type: string
-    scope: string
-    country: string
-    account_id: string
-    profile_id: string
-  } | undefined = server.CacheController.get('crtoken')
+  const cachedData:
+    | {
+        access_token: string
+        refresh_token: string
+        expires_in: number
+        token_type: string
+        scope: string
+        country: string
+        account_id: string
+        profile_id: string
+      }
+    | undefined = server.CacheController.get('crtoken')
 
   if (!cachedData) {
     var { data, error } = await crunchyLoginFetch(user, passw)
@@ -129,12 +131,13 @@ export async function safeLoginData(user: string, password: string, service: str
   return login?.get()
 }
 
-export async function addEpisodeToPlaylist(e: CrunchyEpisode, s: Array<string>, d: Array<string>, dir: string) {
+export async function addEpisodeToPlaylist(e: CrunchyEpisode, s: Array<string>, d: Array<string>, dir: string, hardsub: boolean) {
   const episode = await Playlist.create({
     media: e,
     sub: s,
     dub: d,
-    dir: dir
+    dir: dir,
+    hardsub: hardsub
   })
 
   return episode.get()
@@ -154,8 +157,22 @@ export async function updatePlaylistToDownloadPartsByID(id: number, parts: numbe
   await Playlist.update({ partsleft: parts }, { where: { id: id } })
 }
 
-export async function updatePlaylistToDownloadedPartsByID(id: number, parts: number) {
+let updateTimeout: NodeJS.Timeout | null = null
+let cooldown = false
+
+export async function updatePlaylistToDownloadedPartsByID(id: number, parts: number, lenght: number) {
+  if (cooldown && parts !== lenght) {
+    return
+  }
+
+  cooldown = true
+
   await Playlist.update({ partsdownloaded: parts }, { where: { id: id } })
+
+  updateTimeout = setTimeout(function () {
+    cooldown = false
+    updateTimeout = null
+  }, 2000)
 }
 
 async function checkPlaylists() {
@@ -163,11 +180,17 @@ async function checkPlaylists() {
 
   for (const e of episodes) {
     await updatePlaylistByID(e.dataValues.id, 'preparing')
-    await downloadPlaylist(e.dataValues.media.id, (e as any).dataValues.dub.map((s: { locale: any })=> s.locale), (e as any).dataValues.sub.map((s: { locale: any })=> s.locale), e.dataValues.hardsub, e.dataValues.id)
+    await downloadPlaylist(
+      e.dataValues.media.id,
+      (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
+      (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
+      e.dataValues.hardsub,
+      e.dataValues.id
+    )
   }
 }
 
-cron.schedule('* * * * * *', () => {
+cron.schedule('*/2 * * * * *', () => {
   checkPlaylists()
 })
 
@@ -268,7 +291,10 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
   console.log(dubs)
   console.log(subs)
 
-  if (!playlist) return
+  if (!playlist) {
+    console.log('Playlist not found')
+    return
+  }
 
   if (playlist.audioLocale !== subs[0]) {
     const found = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
@@ -277,7 +303,10 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
     }
   }
 
-  if (!playlist) return
+  if (!playlist) {
+    console.log('Exact Playlist not found')
+    return
+  }
 
   const subFolder = await createFolder()
 
@@ -297,12 +326,29 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
     format: string
     language: string
     url: string
+    isDub: boolean
   }> = []
 
   for (const s of subs) {
-    const found = playlist.subtitles.find((sub) => sub.language === s)
+    var subPlaylist
+
+    if (playlist.audioLocale !== 'ja-JP') {
+      const foundStream = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
+      if (foundStream) {
+        subPlaylist = await crunchyGetPlaylist(foundStream.guid)
+      }
+    } else {
+      subPlaylist = playlist
+    }
+
+    if (!subPlaylist) {
+      console.log('Subtitle Playlist not found')
+      return
+    }
+
+    const found = subPlaylist.subtitles.find((sub) => sub.language === s)
     if (found) {
-      subDownloadList.push(found)
+      subDownloadList.push({ ...found, isDub: false })
       console.log(`Subtitle ${s}.ass found, adding to download`)
     } else {
       console.warn(`Subtitle ${s}.ass not found, skipping`)
@@ -312,6 +358,15 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
   for (const d of dubs) {
     const found = playlist.versions.find((p) => p.audio_locale === d)
     if (found) {
+      const list = await crunchyGetPlaylist(found.guid)
+      if (list) {
+        const foundSub = list.subtitles.find((sub) => sub.language === d)
+        if (foundSub) {
+          subDownloadList.push({ ...foundSub, isDub: true })
+        } else {
+          console.log(`No Dub Sub Found for ${d}`)
+        }
+      }
       dubDownloadList.push(found)
       console.log(`Audio ${d}.aac found, adding to download`)
     } else {
@@ -388,21 +443,19 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
     var mdp = await crunchyGetPlaylistMPD(play.url)
 
-    if (hardsub) {
-      const findjpplaylist = playlist.versions.find((p) => p.audio_locale === 'ja-JP')?.guid
+    // if (hardsub) {
+    //   const hardsuburl = play.hardSubs.find(h=> h.hlang === subs[0])?.url
 
-      if (!findjpplaylist) return
+    //   if (!hardsuburl) {
+    //     console.error('No Hardsub stream found')
+    //     return
+    //   }
 
-      const hsplaylist = await crunchyGetPlaylist(findjpplaylist)
-
-      if (!hsplaylist) return
-
-      const hsurl = hsplaylist.hardSubs.find((h) => h.hlang === subs[0])
-
-      if (hsurl) {
-        mdp = await crunchyGetPlaylistMPD(hsurl.url)
-      }
-    }
+    //   mdp = await crunchyGetPlaylistMPD(hardsuburl)
+    //   console.error('Hardsub stream found')
+    // } else {
+    //   console.error('Hardsub is false')
+    // }
 
     if (!mdp) return
 
@@ -424,7 +477,7 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
       })
     }
 
-    await updatePlaylistByID(downloadID, "downloading")
+    await updatePlaylistByID(downloadID, 'downloading')
 
     await updatePlaylistToDownloadPartsByID(downloadID, p.length)
 
@@ -437,14 +490,14 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
   if (!audios) return
 
-  await updatePlaylistByID(downloadID, "merging")
+  await updatePlaylistByID(downloadID, 'merging')
 
   await mergeFile(file as string, audios, subss, String(playlist.assetId))
 
   await deleteFolder(subFolder)
   await deleteFolder(audioFolder)
 
-  await updatePlaylistByID(downloadID, "completed")
+  await updatePlaylistByID(downloadID, 'completed')
 
   return playlist
 }
@@ -486,7 +539,7 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
   const path = await createFolder()
 
   for (const [index, part] of parts.entries()) {
-    let success = false;
+    let success = false
     while (!success) {
       try {
         const stream = fs.createWriteStream(`${path}/${part.filename}`)
@@ -494,12 +547,12 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
         await finished(Readable.fromWeb(body as any).pipe(stream))
         console.log(`Fragment ${index + 1} downloaded`)
         partsdownloaded++
-        updatePlaylistToDownloadedPartsByID(downloadID, partsdownloaded)
-        success = true;
+        updatePlaylistToDownloadedPartsByID(downloadID, partsdownloaded, parts.length)
+        success = true
       } catch (error) {
-        console.error(`Error occurred during download of fragment ${index + 1}:`, error);
-        console.log(`Retrying download of fragment ${index + 1}...`);
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        console.error(`Error occurred during download of fragment ${index + 1}:`, error)
+        console.log(`Retrying download of fragment ${index + 1}...`)
+        await new Promise((resolve) => setTimeout(resolve, 5000))
       }
     }
   }
@@ -512,10 +565,11 @@ async function downloadSub(
     format: string
     language: string
     url: string
+    isDub: boolean
   },
   dir: string
 ) {
-  const path = `${dir}/${sub.language}.${sub.format}`
+  const path = `${dir}/${sub.language}${sub.isDub ? `-FORCED` : ''}.${sub.format}`
 
   const stream = fs.createWriteStream(path)
   const response = await fetch(sub.url)
@@ -666,7 +720,7 @@ async function mergeFile(video: string, audios: Array<string>, subs: Array<strin
     var output = Ffmpeg()
     var ffindex = 1
     output.addInput(video)
-    var options = ['-c copy', '-map 0']
+    var options = ['-map_metadata -1', '-c copy', '-metadata:s:v:0 VARIANT_BITRATE=0', '-map 0']
 
     for (const [index, a] of audios.entries()) {
       output.addInput(a)
@@ -681,33 +735,63 @@ async function mergeFile(video: string, audios: Array<string>, subs: Array<strin
 
       ffindex++
 
-      // Somehow not working
-      // options.push(
-      //     `-metadata:s:a:${index} language="${
-      //         locales.find(
-      //             (l) => l.locale === a.split("/")[1].split(".aac")[0]
-      //         ) ? locales.find(
-      //             (l) => l.locale === a.split("/")[1].split(".aac")[0]
-      //         )?.title : a.split("/")[1].split(".aac")[0]
-      //     }"`
-      // );
+      options.push(
+        `-metadata:s:a:${index} title=${
+          locales.find((l) => l.locale === a.split('/')[1].split('.aac')[0])
+            ? locales.find((l) => l.locale === a.split('/')[1].split('.aac')[0])?.title
+            : a.split('/')[1].split('.aac')[0]
+        }`
+      )
+
+      options.push(`-metadata:s:a:${index} VARIANT_BITRATE=0`)
     }
+
+    options.push(`-disposition:a:0 default`)
 
     if (subs) {
       for (const [index, s] of subs.entries()) {
         output.addInput(s)
         options.push(`-map ${ffindex}:s`)
 
-        options.push(
-          `-metadata:s:s:${index} language=${
-            locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])
-              ? locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])?.iso
-              : s.split('/')[1].split('.ass')[0]
-          }`
-        )
+        if (s.includes('-FORCED')) {
+          options.push(
+            `-metadata:s:s:${index} language=${
+              locales.find((l) => l.locale === s.split('/')[1].split('-FORCED.ass')[0])
+                ? locales.find((l) => l.locale === s.split('/')[1].split('-FORCED.ass')[0])?.iso
+                : s.split('/')[1].split('-FORCED.ass')[0]
+            }`
+          )
+        } else {
+          options.push(
+            `-metadata:s:s:${index} language=${
+              locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])
+                ? locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])?.iso
+                : s.split('/')[1].split('.ass')[0]
+            }`
+          )
+        }
+
+        if (s.includes('-FORCED')) {
+          options.push(
+            `-metadata:s:s:${index} title=${
+              locales.find((l) => l.locale === s.split('/')[1].split('-FORCED.ass')[0])
+                ? locales.find((l) => l.locale === s.split('/')[1].split('-FORCED.ass')[0])?.title
+                : s.split('/')[1].split('-FORCED.ass')[0]
+            }[FORCED]`
+          )
+        } else {
+          options.push(
+            `-metadata:s:s:${index} title=${
+              locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])
+                ? locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])?.title
+                : s.split('/')[1].split('.ass')[0]
+            }`
+          )
+        }
 
         ffindex++
       }
+      options.push(`-disposition:s:0 default`)
     }
 
     output

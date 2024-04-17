@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-row bg-[#111111] h-16" style="-webkit-app-region: drag">
+  <div class="fixed w-full flex flex-row bg-[#111111] h-16 z-10" style="-webkit-app-region: drag">
     <div class="w-full flex gap-10 flex-row items-center justify-center px-">
       <button @click="openAddAnime" class="px-6 py-0.5 border-2 border-[#ce6104] rounded-xl" style="-webkit-app-region: no-drag">
         <Icon name="ph:plus-bold" class="h-7 w-7 text-[#ce6104]" />
@@ -56,7 +56,7 @@ async function openAddAnime() {
     title: "Add Anime",
     url: isProduction ? 'http://localhost:8079/addanime' : 'http://localhost:3000/addanime',
     width: 700,
-    height: 400,
+    height: 450,
     backgroundColor: "#111111"
   })
 }

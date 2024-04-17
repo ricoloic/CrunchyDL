@@ -165,12 +165,34 @@
           </button>
         </div>
       </div>
+
+      <div class="relative flex flex-col">
+        <select v-model="hardsub" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+          <option
+            :value="false"
+            class="text-sm text-slate-200"
+            >Hardsub: false</option
+          >
+          <option
+            :value="true"
+            class="text-sm text-slate-200"
+            >Hardsub: true</option
+          >
+        </select>
+        <div
+          class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
+          :class="isFetchingEpisodes ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+        >
+          <Icon name="mdi:loading" class="h-6 w-6 animate-spin" />
+          <div class="text-sm">Loading</div></div
+        >
+      </div>
       <!-- {{ CRselectedShow?.Subs.map(s=> { return locales.find(l => l.locale === s)?.name }) }}
       {{ CRselectedShow?.Dubs.map(s=> { return locales.find(l => l.locale === s)?.name }) }} -->
       <div class="relative flex flex-col mt-auto">
         <button @click="addToPlaylist" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
           <div class="flex flex-row items-center justify-center transition-all" :class="isFetchingSeasons ? 'opacity-0' : 'opacity-100'">
-            <div class="text-xl">Add to Queue</div>
+            <div class="text-xl">Add to Download</div>
           </div>
           <div class="absolute flex flex-row items-center justify-center gap-1 transition-all" :class="isFetchingSeasons ? 'opacity-100' : 'opacity-0'">
             <Icon name="mdi:loading" class="h-6 w-6 animate-spin" />
@@ -236,6 +258,7 @@ const episodes = ref<CrunchyEpisodes>()
 const selectedSeason = ref<CrunchySeason>()
 const selectedStartEpisode = ref<CrunchyEpisode>()
 const selectedEndEpisode = ref<CrunchyEpisode>()
+const hardsub = ref<boolean>(false)
 
 const isFetchingSeasons = ref<number>(0)
 const isFetchingEpisodes = ref<number>(0)
@@ -402,7 +425,8 @@ const addToPlaylist = async () => {
     episodes: [selectedStartEpisode.value],
     dubs: selectedDubs.value,
     subs: selectedSubs.value,
-    dir: path.value
+    dir: path.value,
+    hardsub: hardsub.value
   }
 
   const { error } = await useFetch('http://localhost:8080/api/crunchyroll/playlist', {
