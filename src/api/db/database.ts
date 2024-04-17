@@ -34,8 +34,6 @@ interface PlaylistAttributes {
   sub: Array<string>
   hardsub: boolean,
   dir: string,
-  partsdownloaded: number,
-  partsleft: number,
   failedreason: string
 }
 
@@ -45,6 +43,7 @@ interface PlaylistCreateAttributes {
   sub: Array<string>
   dir: string,
   hardsub: boolean,
+  status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed'
 }
 
 const Account: ModelDefined<AccountAttributes, AccountCreateAttributes> = sequelize.define('Accounts', {
@@ -86,7 +85,6 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
   status: {
     allowNull: false,
     type: DataTypes.STRING,
-    defaultValue: 'waiting'
   },
   media: {
     allowNull: false,
@@ -107,16 +105,6 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
   hardsub: {
     allowNull: false,
     type: DataTypes.BOOLEAN
-  },
-  partsdownloaded: {
-    allowNull: true,
-    type: DataTypes.BOOLEAN,
-    defaultValue: 0
-  },
-  partsleft: {
-    allowNull: true,
-    type: DataTypes.BOOLEAN,
-    defaultValue: 0
   },
   failedreason: {
     allowNull: true,

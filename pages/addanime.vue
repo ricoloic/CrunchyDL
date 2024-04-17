@@ -15,7 +15,7 @@
     <div v-if="tab === 1" class="flex flex-col mt-5 gap-3.5 h-full" style="-webkit-app-region: no-drag">
       <div class="relative flex flex-col">
         <select v-model="service" name="service" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-          <option value="adn">ADN</option>
+          <!-- <option value="adn">ADN</option> -->
           <option value="crunchyroll">Crunchyroll</option>
         </select>
       </div>
@@ -64,7 +64,7 @@
       <div class="relative flex flex-col">
         <input v-model="url" type="text" name="text" placeholder="URL" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center" />
       </div>
-      <div class="relative flex flex-col">
+      <!-- <div class="relative flex flex-col">
         <input
           @click="getFolderPath()"
           v-model="path"
@@ -74,7 +74,7 @@
           class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
           readonly
         />
-      </div>
+      </div> -->
       <div class="relative flex flex-col mt-auto">
         <button @click="switchToSeason" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
           <div class="flex flex-row items-center justify-center transition-all" :class="isFetchingSeasons ? 'opacity-0' : 'opacity-100'">
@@ -421,8 +421,20 @@ const toggleSub = (lang: { name: string | undefined; locale: string }) => {
 
 const addToPlaylist = async () => {
 
+  if (!episodes.value) return
+
+  const startEpisodeIndex = episodes.value.findIndex(episode => episode === selectedStartEpisode.value);
+  const endEpisodeIndex = episodes.value.findIndex(episode => episode === selectedEndEpisode.value);
+
+  if (startEpisodeIndex === -1 || endEpisodeIndex === -1) {
+    console.error('Indexes not found.');
+    return;
+  }
+
+  const selectedEpisodes = episodes.value.slice(startEpisodeIndex, endEpisodeIndex + 1);
+
   const data = {
-    episodes: [selectedStartEpisode.value],
+    episodes: selectedEpisodes,
     dubs: selectedDubs.value,
     subs: selectedSubs.value,
     dir: path.value,

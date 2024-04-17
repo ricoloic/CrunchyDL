@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify'
-import { addPlaylistController, checkLoginController, getPlaylistController, loginController, loginLoginController } from './crunchyroll.controller'
+import { addPlaylistController, checkLoginController, deleteCompletePlaylistController, getPlaylistController, loginController, loginLoginController } from './crunchyroll.controller'
 
 async function crunchyrollRoutes(server: FastifyInstance) {
   server.post(
@@ -71,6 +71,21 @@ async function crunchyrollRoutes(server: FastifyInstance) {
       }
     },
     getPlaylistController
+  )
+
+  server.delete(
+    '/playlist',
+    {
+      schema: {
+        response: {
+          '4xx': {
+            error: { type: 'string' },
+            message: { type: 'string' }
+          }
+        }
+      }
+    },
+    deleteCompletePlaylistController
   )
 }
 

@@ -131,13 +131,21 @@ export async function safeLoginData(user: string, password: string, service: str
   return login?.get()
 }
 
-export async function addEpisodeToPlaylist(e: CrunchyEpisode, s: Array<string>, d: Array<string>, dir: string, hardsub: boolean) {
+export async function addEpisodeToPlaylist(
+  e: CrunchyEpisode,
+  s: Array<string>,
+  d: Array<string>,
+  dir: string,
+  hardsub: boolean,
+  status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed'
+) {
   const episode = await Playlist.create({
     media: e,
     sub: s,
     dub: d,
     dir: dir,
-    hardsub: hardsub
+    hardsub: hardsub,
+    status
   })
 
   return episode.get()
@@ -149,44 +157,44 @@ export async function getPlaylist() {
   return episodes
 }
 
+export async function deletePlaylist() {
+  await Playlist.truncate()
+
+  return true
+}
+
+export async function getDownloading(id: number) {
+  const found = downloading.find((i) => i.id === id)
+
+  if (found) return found
+
+  return null
+}
+
 export async function updatePlaylistByID(id: number, status: 'waiting' | 'preparing' | 'downloading' | 'completed' | 'merging' | 'failed') {
   await Playlist.update({ status: status }, { where: { id: id } })
 }
 
-export async function updatePlaylistToDownloadPartsByID(id: number, parts: number) {
-  await Playlist.update({ partsleft: parts }, { where: { id: id } })
-}
-
-let updateTimeout: NodeJS.Timeout | null = null
-let cooldown = false
-
-export async function updatePlaylistToDownloadedPartsByID(id: number, parts: number, lenght: number) {
-  if (cooldown && parts !== lenght) {
-    return
-  }
-
-  cooldown = true
-
-  await Playlist.update({ partsdownloaded: parts }, { where: { id: id } })
-
-  updateTimeout = setTimeout(function () {
-    cooldown = false
-    updateTimeout = null
-  }, 2000)
-}
+var isDownloading: number = 0
 
 async function checkPlaylists() {
-  const episodes = await Playlist.findAll({ where: { status: 'waiting' } })
+  const eps = await Playlist.findAll({ where: { status: 'waiting' } })
 
-  for (const e of episodes) {
-    await updatePlaylistByID(e.dataValues.id, 'preparing')
-    await downloadPlaylist(
-      e.dataValues.media.id,
-      (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
-      (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
-      e.dataValues.hardsub,
-      e.dataValues.id
-    )
+  for (const e of eps) {
+    if (isDownloading < 2 && e.dataValues.status === 'waiting') {
+      updatePlaylistByID(e.dataValues.id, 'preparing')
+      isDownloading++
+      downloadPlaylist(
+        e.dataValues.media.id,
+        (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
+        (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
+        e.dataValues.hardsub,
+        e.dataValues.id,
+        e.dataValues.media.series_title,
+        e.dataValues.media.season_number,
+        e.dataValues.media.episode_number
+      )
+    }
   }
 }
 
@@ -249,6 +257,23 @@ async function createFolder() {
   }
 }
 
+async function createFolderName(name: string) {
+  const folderPath = path.join(app.getPath('documents'), name)
+
+  try {
+    await fs.promises.access(folderPath)
+    return folderPath
+  } catch (error) {
+    try {
+      await fs.promises.mkdir(folderPath, { recursive: true })
+      return folderPath
+    } catch (mkdirError) {
+      console.error('Error creating season folder:', mkdirError)
+      throw mkdirError
+    }
+  }
+}
+
 async function deleteFolder(folderPath: string) {
   fs.rmSync(folderPath, { recursive: true, force: true })
 }
@@ -285,11 +310,24 @@ export async function crunchyGetPlaylistMPD(q: string) {
   }
 }
 
-export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Array<string>, hardsub: boolean, downloadID: number) {
-  var playlist = await crunchyGetPlaylist(e)
+var downloading: Array<{
+  id: number
+  downloadedParts: number
+  partsToDownload: number
+  downloadSpeed: number
+}> = []
 
-  console.log(dubs)
-  console.log(subs)
+export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Array<string>, hardsub: boolean, downloadID: number, name: string, season: number, episode: number) {
+  downloading.push({
+    id: downloadID,
+    downloadedParts: 0,
+    partsToDownload: 0,
+    downloadSpeed: 0
+  })
+
+  await updatePlaylistByID(downloadID, 'downloading')
+
+  var playlist = await crunchyGetPlaylist(e)
 
   if (!playlist) {
     console.log('Playlist not found')
@@ -311,6 +349,10 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
   const subFolder = await createFolder()
 
   const audioFolder = await createFolder()
+
+  const videoFolder = await createFolder()
+
+  const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`)
 
   const dubDownloadList: Array<{
     audio_locale: string
@@ -443,20 +485,6 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
     var mdp = await crunchyGetPlaylistMPD(play.url)
 
-    // if (hardsub) {
-    //   const hardsuburl = play.hardSubs.find(h=> h.hlang === subs[0])?.url
-
-    //   if (!hardsuburl) {
-    //     console.error('No Hardsub stream found')
-    //     return
-    //   }
-
-    //   mdp = await crunchyGetPlaylistMPD(hardsuburl)
-    //   console.error('Hardsub stream found')
-    // } else {
-    //   console.error('Hardsub is false')
-    // }
-
     if (!mdp) return
 
     var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.width === 1920)
@@ -477,11 +505,15 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
       })
     }
 
-    await updatePlaylistByID(downloadID, 'downloading')
+    // await updatePlaylistToDownloadPartsByID(downloadID, p.length)
 
-    await updatePlaylistToDownloadPartsByID(downloadID, p.length)
+    const dn = downloading.find((i) => i.id === downloadID)
 
-    const file = await downloadParts(p, downloadID)
+    if (dn) {
+      dn.partsToDownload = p.length
+    }
+
+    const file = await downloadParts(p, downloadID, videoFolder)
 
     return file
   }
@@ -490,14 +522,13 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
   if (!audios) return
 
-  await updatePlaylistByID(downloadID, 'merging')
+  await mergeFile(file as string, audios, subss, String(playlist.assetId), seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`)
 
-  await mergeFile(file as string, audios, subss, String(playlist.assetId))
+  await updatePlaylistByID(downloadID, 'completed')
 
   await deleteFolder(subFolder)
   await deleteFolder(audioFolder)
-
-  await updatePlaylistByID(downloadID, 'completed')
+  await deleteFolder(videoFolder)
 
   return playlist
 }
@@ -534,9 +565,12 @@ async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number) 
   })
 }
 
-async function downloadParts(parts: { filename: string; url: string }[], downloadID: number) {
-  var partsdownloaded = 0
+async function downloadParts(parts: { filename: string; url: string }[], downloadID: number, dir: string) {
   const path = await createFolder()
+  const dn = downloading.find((i) => i.id === downloadID)
+
+  let totalDownloadedBytes = 0
+  let startTime = Date.now()
 
   for (const [index, part] of parts.entries()) {
     let success = false
@@ -544,10 +578,25 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
       try {
         const stream = fs.createWriteStream(`${path}/${part.filename}`)
         const { body } = await fetch(part.url)
-        await finished(Readable.fromWeb(body as any).pipe(stream))
+
+        const readableStream = Readable.from(body as any)
+        let partDownloadedBytes = 0
+        readableStream.on('data', (chunk) => {
+          partDownloadedBytes += chunk.length
+          totalDownloadedBytes += chunk.length
+        })
+
+        await finished(readableStream.pipe(stream))
+
         console.log(`Fragment ${index + 1} downloaded`)
-        partsdownloaded++
-        updatePlaylistToDownloadedPartsByID(downloadID, partsdownloaded, parts.length)
+
+        if (dn) {
+          dn.downloadedParts++
+          const endTime = Date.now()
+          const durationInSeconds = (endTime - startTime) / 1000
+          dn.downloadSpeed = totalDownloadedBytes / 1024 / 1024 / durationInSeconds
+        }
+
         success = true
       } catch (error) {
         console.error(`Error occurred during download of fragment ${index + 1}:`, error)
@@ -557,7 +606,7 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
     }
   }
 
-  return await mergeParts(parts, path)
+  return await mergeParts(parts, downloadID, path, dir)
 }
 
 async function downloadSub(
@@ -631,11 +680,14 @@ async function concatenateTSFiles(inputFiles: Array<string>, outputFile: string)
   })
 }
 
-async function mergeParts(parts: { filename: string; url: string }[], tmp: string) {
+async function mergeParts(parts: { filename: string; url: string }[], downloadID: number, tmp: string, dir: string) {
   const tempname = (Math.random() + 1).toString(36).substring(2)
 
   try {
     const list: Array<string> = []
+
+    await updatePlaylistByID(downloadID, 'merging')
+    isDownloading--
 
     for (const [index, part] of parts.entries()) {
       list.push(`${tmp}/${part.filename}`)
@@ -648,11 +700,11 @@ async function mergeParts(parts: { filename: string; url: string }[], tmp: strin
       Ffmpeg()
         .input(concatenatedFile)
         .outputOptions('-c copy')
-        .save(app.getPath('documents') + `/${tempname}.mp4`)
+        .save(dir + `/${tempname}.mp4`)
         .on('end', async () => {
           console.log('Merging finished')
           await deleteFolder(tmp)
-          return resolve(app.getPath('documents') + `/${tempname}.mp4`)
+          return resolve(dir + `/${tempname}.mp4`)
         })
     })
   } catch (error) {
@@ -688,7 +740,7 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
   }
 }
 
-async function mergeFile(video: string, audios: Array<string>, subs: Array<string>, name: string) {
+async function mergeFile(video: string, audios: Array<string>, subs: Array<string>, name: string, path: string, filename: string) {
   const locales: Array<{
     locale: string
     name: string
@@ -796,7 +848,7 @@ async function mergeFile(video: string, audios: Array<string>, subs: Array<strin
 
     output
       .addOptions(options)
-      .saveToFile(app.getPath('documents') + `/${name}.mkv`)
+      .saveToFile(path + `/${filename}.mkv`)
       .on('error', (error) => {
         console.log(error)
         reject(error)

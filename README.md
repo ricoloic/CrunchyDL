@@ -5,6 +5,12 @@ A simple tool for downloading videos from Crunchyroll and ADN.
 - Linux
 ## Credits
 - This is literally just an improved version of [hama3254's](https://github.com/hama3254/Crunchyroll-Downloader-v3.0) [Crunchyroll-Downloader-v3.0](https://github.com/hama3254/Crunchyroll-Downloader-v3.0)
+## To-Do
+- ADN Downloader
+- Download Pause/Delete
+- Download Speed Display
+- Settings
+- Open Download Path
 ## User Interface
 #### Home
 ![Screenshot 2024-04-06 180439](https://github.com/Junon401/CR-Downloader/assets/166554835/b45c5799-3716-49c9-8abf-5fc7c9fe08c9)

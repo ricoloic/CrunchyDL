@@ -65,7 +65,6 @@ function createWindow() {
   if (singleInstance(app, mainWindow)) return
 
   // Open the DevTools.
-  !isProduction &&
     mainWindow.webContents.openDevTools({
       mode: 'bottom'
     })

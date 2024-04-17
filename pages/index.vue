@@ -1,7 +1,10 @@
 <template>
   <div>
     <MainHeader />
-    <div class="flex flex-col text-white">
+    <div class="flex flex-col text-white pt-16">
+      <button @click="deletePlaylist">
+        Delete Playlist
+      </button>
       <div v-for="p in playlist" class="flex flex-row gap-4 h-40 p-5 bg-[#636363]">
         <div class="flex min-w-52 w-52">
           <img :src="p.media.images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-xl" />
@@ -11,8 +14,12 @@
             {{ p.status }}
           </div>
           <div class="text-base capitalize"> {{ p.media.series_title }} Season {{ p.media.season_number }} Episode {{ p.media.episode_number }} </div>
-          <div class="relative w-full min-h-5 bg-[#bdbbbb] mt-1 rounded"> 
-            <div v-if="p.partsleft && p.status === 'downloading'" class="w-full h-full rounded bg-[#4e422d] transition-all duration-300" :style="`width: calc((${p.partsdownloaded} / ${p.partsleft}) * 100%);`"></div>
+          <div class="relative w-full min-h-5 bg-[#bdbbbb] mt-1 rounded">
+            <div
+              v-if="p.partsleft && p.status === 'downloading'"
+              class="w-full h-full rounded bg-[#4e422d] transition-all duration-300"
+              :style="`width: calc((${p.partsdownloaded} / ${p.partsleft}) * 100%);`"
+            ></div>
             <div v-if="p.status === 'completed'" class="w-full h-full rounded bg-[#79ff77] transition-all duration-300"></div>
             <div v-if="p.status === 'merging'" class="absolute top-0 w-20 h-full rounded bg-[#293129] transition-all duration-300 loading-a"></div>
           </div>
@@ -22,6 +29,7 @@
             <div class="text-sm">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
             <div class="text-sm">Subs: {{ p.sub.map((t) => t.name).join(', ') }}</div>
             <div v-if="p.partsleft && p.status === 'downloading'" class="text-sm">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
+            <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-sm">{{ p.downloadspeed }} MB/s</div>
           </div>
         </div>
       </div> </div
@@ -39,9 +47,10 @@ const playlist = ref<
     media: CrunchyEpisode
     dub: Array<{ locale: string; name: string }>
     sub: Array<{ locale: string; name: string }>
-    dir: string,
-      partsleft: number,
-      partsdownloaded: number
+    dir: string
+    partsleft: number
+    partsdownloaded: number
+    downloadspeed: number
   }>
 >()
 
@@ -53,9 +62,10 @@ const getPlaylist = async () => {
       media: CrunchyEpisode
       dub: Array<{ locale: string; name: string }>
       sub: Array<{ locale: string; name: string }>
-      dir: string,
-      partsleft: number,
+      dir: string
+      partsleft: number
       partsdownloaded: number
+      downloadspeed: number
     }>
   >('http://localhost:8080/api/crunchyroll/playlist')
 
@@ -71,6 +81,21 @@ const getPlaylist = async () => {
   playlist.value = data.value
 }
 
+const deletePlaylist = async () => {
+  const { data, error } = await useFetch('http://localhost:8080/api/crunchyroll/playlist', {
+    method: "delete"
+  })
+
+  if (error.value) {
+    alert(error.value)
+    return
+  }
+
+  if (!data.value) {
+    return
+  }
+}
+
 onMounted(() => {
   getPlaylist()
 
@@ -79,7 +104,6 @@ onMounted(() => {
 </script>
 
 <style>
-
 .loading-a {
   animation: animation infinite 3s;
 }
@@ -97,5 +121,4 @@ onMounted(() => {
     left: 0%;
   }
 }
-
 </style>

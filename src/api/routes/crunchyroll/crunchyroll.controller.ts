@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { crunchyLogin, checkIfLoggedInCR, safeLoginData, addEpisodeToPlaylist, getPlaylist } from './crunchyroll.service'
+import { crunchyLogin, checkIfLoggedInCR, safeLoginData, addEpisodeToPlaylist, getPlaylist, getDownloading, deletePlaylist } from './crunchyroll.service'
 import { dialog } from 'electron'
 import { messageBox } from '../../../electron/background'
 import { CrunchyEpisodes, CrunchySeason } from '../../types/crunchyroll'
@@ -76,10 +76,20 @@ export async function addPlaylistController(
   const body = request.body;
 
   for (const e of body.episodes) {
-    await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir, body.hardsub)
+    await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir, body.hardsub, "waiting")
   }
 
   return reply.code(201).send()
+}
+
+export async function deleteCompletePlaylistController(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+
+  await deletePlaylist()
+
+  return reply.code(200).send()
 }
 
 export async function getPlaylistController(
@@ -88,6 +98,20 @@ export async function getPlaylistController(
 ) {
 
   const playlist = await getPlaylist()
+
+  for (const v of playlist) {
+    if (v.dataValues.status === 'downloading') {
+      const found = await getDownloading(v.dataValues.id)
+      if (found) {
+        (v as any).dataValues = {
+          ...v.dataValues,
+          partsleft: found.partsToDownload,
+          partsdownloaded: found.downloadedParts,
+          downloadspeed: found.downloadSpeed.toFixed(2)
+        }
+      }
+    }
+  }
 
   return reply.code(200).send(playlist.reverse())
 }
