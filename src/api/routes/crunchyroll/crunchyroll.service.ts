@@ -163,7 +163,7 @@ async function checkPlaylists() {
 
   for (const e of episodes) {
     await updatePlaylistByID(e.dataValues.id, 'preparing')
-    await downloadPlaylist(e.dataValues.media.id, e.dataValues.dub, e.dataValues.sub, e.dataValues.hardsub, e.dataValues.id)
+    await downloadPlaylist(e.dataValues.media.id, (e as any).dataValues.dub.map((s: { locale: any })=> s.locale), (e as any).dataValues.sub.map((s: { locale: any })=> s.locale), e.dataValues.hardsub, e.dataValues.id)
   }
 }
 
@@ -264,6 +264,9 @@ export async function crunchyGetPlaylistMPD(q: string) {
 
 export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Array<string>, hardsub: boolean, downloadID: number) {
   var playlist = await crunchyGetPlaylist(e)
+
+  console.log(dubs)
+  console.log(subs)
 
   if (!playlist) return
 
@@ -483,12 +486,22 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
   const path = await createFolder()
 
   for (const [index, part] of parts.entries()) {
-    const stream = fs.createWriteStream(`${path}/${part.filename}`)
-    const { body } = await fetch(part.url)
-    await finished(Readable.fromWeb(body as any).pipe(stream))
-    console.log(`Fragment ${index + 1} downloaded`)
-    partsdownloaded++
-    updatePlaylistToDownloadedPartsByID(downloadID, partsdownloaded)
+    let success = false;
+    while (!success) {
+      try {
+        const stream = fs.createWriteStream(`${path}/${part.filename}`)
+        const { body } = await fetch(part.url)
+        await finished(Readable.fromWeb(body as any).pipe(stream))
+        console.log(`Fragment ${index + 1} downloaded`)
+        partsdownloaded++
+        updatePlaylistToDownloadedPartsByID(downloadID, partsdownloaded)
+        success = true;
+      } catch (error) {
+        console.error(`Error occurred during download of fragment ${index + 1}:`, error);
+        console.log(`Retrying download of fragment ${index + 1}...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      }
+    }
   }
 
   return await mergeParts(parts, path)
