@@ -329,15 +329,19 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
   var playlist = await crunchyGetPlaylist(e)
 
+  console.log(playlist)
+
   if (!playlist) {
     console.log('Playlist not found')
     return
   }
 
-  if (playlist.audioLocale !== subs[0]) {
-    const found = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
-    if (found) {
-      playlist = await crunchyGetPlaylist(found.guid)
+  if (playlist.versions && playlist.versions.length !== 0) {
+    if (playlist.audioLocale !== subs[0]) {
+      const found = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
+      if (found) {
+        playlist = await crunchyGetPlaylist(found.guid)
+      }
     }
   }
 
@@ -398,7 +402,11 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
   }
 
   for (const d of dubs) {
-    const found = playlist.versions.find((p) => p.audio_locale === d)
+    var found
+    if (playlist.versions) {
+      found = playlist.versions.find((p) => p.audio_locale === d)
+    }
+
     if (found) {
       const list = await crunchyGetPlaylist(found.guid)
       if (list) {
@@ -411,6 +419,22 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
       }
       dubDownloadList.push(found)
       console.log(`Audio ${d}.aac found, adding to download`)
+    } else if (playlist.versions.length === 0) {
+      const foundSub = playlist.subtitles.find((sub) => sub.language === d)
+      if (foundSub) {
+        subDownloadList.push({ ...foundSub, isDub: true })
+      } else {
+        console.log(`No Dub Sub Found for ${d}`)
+      }
+      dubDownloadList.push({
+        audio_locale: 'ja-JP',
+        guid: e,
+        is_premium_only: true,
+        media_guid: 'adas',
+        original: false,
+        season_guid: 'asdasd',
+        variant: 'asd'
+      })
     } else {
       console.warn(`Audio ${d}.aac not found, skipping`)
     }
@@ -471,10 +495,14 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
     if (!playlist) return
 
-    if (playlist.versions.find((p) => p.audio_locale === dubs[0])) {
-      code = playlist.versions.find((p) => p.audio_locale === dubs[0])?.guid
+    if (playlist.versions && playlist.versions.length !== 0) {
+      if (playlist.versions.find((p) => p.audio_locale === dubs[0])) {
+        code = playlist.versions.find((p) => p.audio_locale === dubs[0])?.guid
+      } else {
+        code = playlist.versions.find((p) => p.audio_locale === 'ja-JP')?.guid
+      }
     } else {
-      code = playlist.versions.find((p) => p.audio_locale === 'ja-JP')?.guid
+      code = e
     }
 
     if (!code) return console.error('No clean stream found')
