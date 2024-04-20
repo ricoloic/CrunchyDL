@@ -368,13 +368,29 @@ const refetchEpisodes = async () => {
 
 const switchToSeason = async () => {
   isFetchingSeasons.value++
-  if (!ADNselectedShow.value && !CRselectedShow.value) {
+  if (!ADNselectedShow.value && !CRselectedShow.value && !url) {
     isFetchingSeasons.value--
     return
   }
 
   if (CRselectedShow.value) {
     seasons.value = await listSeasonCrunchy(CRselectedShow.value.ID)
+    if (!seasons.value) {
+      isFetchingSeasons.value--
+      return
+    }
+    selectedSeason.value = seasons.value[0]
+    episodes.value = await listEpisodeCrunchy(selectedSeason.value.id)
+    if (episodes.value) {
+      selectedStartEpisode.value = episodes.value[0]
+      selectedEndEpisode.value = episodes.value[0]
+    }
+    tab.value = 2
+  }
+
+  if (url.value && url.value.includes('crunchyroll')) {
+    const seriesID = url.value.split('/')
+    seasons.value = await listSeasonCrunchy(seriesID[5])
     if (!seasons.value) {
       isFetchingSeasons.value--
       return
