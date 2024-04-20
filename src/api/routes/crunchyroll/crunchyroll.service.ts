@@ -213,7 +213,7 @@ export async function crunchyGetPlaylist(q: string) {
 
   const headers = {
     Authorization: `Bearer ${data.access_token}`,
-    'X-Cr-Disable-Drm': 'true',
+    'X-Cr-Disable-Drm': 'true'
   }
 
   const query: any = {
@@ -511,7 +511,24 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
     if (!play) return
 
-    var mdp = await crunchyGetPlaylistMPD(play.url)
+    var downloadURL
+
+    if (hardsub) {
+      const hardsubURL = play.hardSubs.find((h) => h.hlang === subs[0])?.url
+
+      if (hardsubURL) {
+        downloadURL = hardsubURL
+        console.log('Hardsub Playlist found')
+      } else {
+        downloadURL = play.url
+        console.log('Hardsub Playlist not found')
+      }
+    } else {
+      downloadURL = play.url
+      console.log('Hardsub disabled, skipping')
+    }
+
+    var mdp = await crunchyGetPlaylistMPD(downloadURL)
 
     if (!mdp) return
 
