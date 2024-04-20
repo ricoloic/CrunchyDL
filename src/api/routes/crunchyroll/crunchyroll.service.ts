@@ -70,7 +70,7 @@ export async function crunchyLogin(user: string, passw: string) {
 
 async function crunchyLoginFetch(user: string, passw: string) {
   const headers = {
-    Authorization: 'Basic bm12anNoZmtueW14eGtnN2ZiaDk6WllJVnJCV1VQYmNYRHRiRDIyVlNMYTZiNFdRb3Mzelg=',
+    Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
     'Content-Type': 'application/x-www-form-urlencoded',
     'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
   }
@@ -181,7 +181,7 @@ async function checkPlaylists() {
   const eps = await Playlist.findAll({ where: { status: 'waiting' } })
 
   for (const e of eps) {
-    if (isDownloading < 2 && e.dataValues.status === 'waiting') {
+    if (isDownloading < 3 && e.dataValues.status === 'waiting') {
       updatePlaylistByID(e.dataValues.id, 'preparing')
       isDownloading++
       downloadPlaylist(
@@ -213,7 +213,7 @@ export async function crunchyGetPlaylist(q: string) {
 
   const headers = {
     Authorization: `Bearer ${data.access_token}`,
-    'X-Cr-Disable-Drm': 'true'
+    'X-Cr-Disable-Drm': 'true',
   }
 
   const query: any = {
