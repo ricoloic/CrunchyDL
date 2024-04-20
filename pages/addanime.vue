@@ -368,7 +368,7 @@ const refetchEpisodes = async () => {
 
 const switchToSeason = async () => {
   isFetchingSeasons.value++
-  if (!ADNselectedShow.value && !CRselectedShow.value && !url) {
+  if (!ADNselectedShow.value && !CRselectedShow.value && !url.value) {
     isFetchingSeasons.value--
     return
   }
@@ -388,7 +388,7 @@ const switchToSeason = async () => {
     tab.value = 2
   }
 
-  if (url.value && url.value.includes('crunchyroll')) {
+  if (url.value && url.value.includes('crunchyroll') && !CRselectedShow.value) {
     const seriesID = url.value.split('/')
     seasons.value = await listSeasonCrunchy(seriesID[5])
     if (!seasons.value) {

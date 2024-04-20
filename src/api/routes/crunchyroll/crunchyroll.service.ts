@@ -13,6 +13,8 @@ import { finished } from 'stream/promises'
 import { v4 as uuidv4 } from 'uuid'
 import { app } from 'electron'
 var cron = require('node-cron')
+const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
+const ffprobePath = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
 
 const crErrors = [
   {
@@ -743,6 +745,8 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
 
     return new Promise((resolve, reject) => {
       Ffmpeg()
+        .setFfmpegPath(ffmpegPath)
+        .setFfprobePath(ffprobePath)
         .input(concatenatedFile)
         .outputOptions('-c copy')
         .save(dir + `/${tempname}.mp4`)
@@ -770,6 +774,8 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
 
     return new Promise((resolve, reject) => {
       Ffmpeg()
+        .setFfmpegPath(ffmpegPath)
+        .setFfprobePath(ffprobePath)
         .input(concatenatedFile)
         .outputOptions('-c copy')
         .save(`${dir}/${name}.aac`)
@@ -814,7 +820,7 @@ async function mergeFile(video: string, audios: Array<string>, subs: Array<strin
   ]
 
   return new Promise((resolve, reject) => {
-    var output = Ffmpeg()
+    var output = Ffmpeg().setFfmpegPath(ffmpegPath).setFfprobePath(ffprobePath)
     var ffindex = 1
     output.addInput(video)
     var options = ['-map_metadata -1', '-c copy', '-metadata:s:v:0 VARIANT_BITRATE=0', '-map 0']
