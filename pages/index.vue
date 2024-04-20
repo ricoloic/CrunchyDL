@@ -99,7 +99,7 @@ const deletePlaylist = async () => {
 onMounted(() => {
   getPlaylist()
 
-  setInterval(getPlaylist, 2000)
+  setInterval(getPlaylist, 1000)
 })
 </script>
 
