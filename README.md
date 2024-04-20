@@ -15,6 +15,7 @@ Downloaded videos are getting saved in your documents folder
 - Settings
 - Open Download Path
 - Select Download Path
+- Quality Selector
 ## User Interface
 #### Home
 ![Screenshot 2024-04-06 180439](https://github.com/Junon401/CR-Downloader/assets/166554835/b45c5799-3716-49c9-8abf-5fc7c9fe08c9)
