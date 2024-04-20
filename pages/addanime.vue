@@ -3,7 +3,7 @@
     <div class="relative flex flex-row items-center justify-center">
       <button
         v-if="tab === 2"
-        @click="tab = 1"
+        @click=";(tab = 1), (added = false)"
         class="absolute left-0 bg-[#5c5b5b] py-1 px-3 rounded-xl flex flex-row items-center justify-center gap-0.5 hover:bg-[#4b4a4a] transition-all"
         style="-webkit-app-region: no-drag"
       >
@@ -168,16 +168,8 @@
 
       <div class="relative flex flex-col">
         <select v-model="hardsub" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-          <option
-            :value="false"
-            class="text-sm text-slate-200"
-            >Hardsub: false</option
-          >
-          <option
-            :value="true"
-            class="text-sm text-slate-200"
-            >Hardsub: true</option
-          >
+          <option :value="false" class="text-sm text-slate-200">Hardsub: false</option>
+          <option :value="true" class="text-sm text-slate-200">Hardsub: true</option>
         </select>
         <div
           class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
@@ -189,7 +181,7 @@
       </div>
       <!-- {{ CRselectedShow?.Subs.map(s=> { return locales.find(l => l.locale === s)?.name }) }}
       {{ CRselectedShow?.Dubs.map(s=> { return locales.find(l => l.locale === s)?.name }) }} -->
-      <div class="relative flex flex-col mt-auto">
+      <div v-if="!added" class="relative flex flex-col mt-auto">
         <button @click="addToPlaylist" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
           <div class="flex flex-row items-center justify-center transition-all" :class="isFetchingSeasons ? 'opacity-0' : 'opacity-100'">
             <div class="text-xl">Add to Download</div>
@@ -197,6 +189,20 @@
           <div class="absolute flex flex-row items-center justify-center gap-1 transition-all" :class="isFetchingSeasons ? 'opacity-100' : 'opacity-0'">
             <Icon name="mdi:loading" class="h-6 w-6 animate-spin" />
             <div class="text-xl">Loading</div>
+          </div>
+        </button>
+      </div>
+      <div v-if="added" class="relative flex flex-row gap-5 mt-auto">
+        <button @click=";(tab = 1), (added = false)" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center cursor-default w-full">
+          <div class="flex gap-1 flex-row items-center justify-center transition-all">
+            <Icon name="formkit:arrowleft" class="h-6 w-6" />
+            <div class="text-xl">Back</div>
+          </div>
+        </button>
+        <button class="relative py-3 border-2 border-green-400 rounded-xl flex flex-row items-center justify-center cursor-default w-full">
+          <div class="flex gap-1 flex-row items-center justify-center transition-all">
+            <Icon name="material-symbols:check" class="h-6 w-6 text-green-200" />
+            <div class="text-xl text-green-200">Added</div>
           </div>
         </button>
       </div>
@@ -259,6 +265,7 @@ const selectedSeason = ref<CrunchySeason>()
 const selectedStartEpisode = ref<CrunchyEpisode>()
 const selectedEndEpisode = ref<CrunchyEpisode>()
 const hardsub = ref<boolean>(false)
+const added = ref<boolean>(false)
 
 const isFetchingSeasons = ref<number>(0)
 const isFetchingEpisodes = ref<number>(0)
@@ -381,10 +388,7 @@ const switchToSeason = async () => {
     tab.value = 2
   }
 
-  selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }],
-  selectedSubs.value = [{ locale: 'en-US', name: 'EN' }],
-
-  isFetchingSeasons.value--
+  ;(selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]), (selectedSubs.value = [{ locale: 'en-US', name: 'EN' }]), isFetchingSeasons.value--
 }
 
 const toggleDub = (lang: { name: string | undefined; locale: string }) => {
@@ -420,18 +424,17 @@ const toggleSub = (lang: { name: string | undefined; locale: string }) => {
 }
 
 const addToPlaylist = async () => {
-
   if (!episodes.value) return
 
-  const startEpisodeIndex = episodes.value.findIndex(episode => episode === selectedStartEpisode.value);
-  const endEpisodeIndex = episodes.value.findIndex(episode => episode === selectedEndEpisode.value);
+  const startEpisodeIndex = episodes.value.findIndex((episode) => episode === selectedStartEpisode.value)
+  const endEpisodeIndex = episodes.value.findIndex((episode) => episode === selectedEndEpisode.value)
 
   if (startEpisodeIndex === -1 || endEpisodeIndex === -1) {
-    console.error('Indexes not found.');
-    return;
+    console.error('Indexes not found.')
+    return
   }
 
-  const selectedEpisodes = episodes.value.slice(startEpisodeIndex, endEpisodeIndex + 1);
+  const selectedEpisodes = episodes.value.slice(startEpisodeIndex, endEpisodeIndex + 1)
 
   const data = {
     episodes: selectedEpisodes,
@@ -442,13 +445,15 @@ const addToPlaylist = async () => {
   }
 
   const { error } = await useFetch('http://localhost:8080/api/crunchyroll/playlist', {
-    method: "POST",
+    method: 'POST',
     body: JSON.stringify(data)
   })
 
   if (error.value) {
     alert(error.value)
   }
+
+  added.value = true
 }
 </script>
 
