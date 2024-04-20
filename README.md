@@ -1,5 +1,9 @@
 ## Crunchyroll Downloader
 A simple tool for downloading videos from Crunchyroll and ADN.
+
+This Tool is still in Beta, so there might be some errors.
+
+Downloaded videos are getting saved in your documents folder
 ## Supported Platforms
 - Windows
 - Linux
@@ -8,9 +12,9 @@ A simple tool for downloading videos from Crunchyroll and ADN.
 ## To-Do
 - ADN Downloader
 - Download Pause/Delete
-- Download Speed Display
 - Settings
 - Open Download Path
+- Select Download Path
 ## User Interface
 #### Home
 ![Screenshot 2024-04-06 180439](https://github.com/Junon401/CR-Downloader/assets/166554835/b45c5799-3716-49c9-8abf-5fc7c9fe08c9)
