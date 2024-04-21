@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="h-screen overflow-hidden">
     <MainHeader />
-    <div class="flex flex-col text-white pt-16">
+    <div class="flex flex-col text-white mt-16 overflow-y-scroll h-[calc(100vh-4rem)]">
       <!-- <button @click="deletePlaylist">
         Delete Playlist
       </button> -->
@@ -103,9 +103,27 @@ onMounted(() => {
 })
 </script>
 
-<style>
+<style scoped>
 .loading-a {
   animation: animation infinite 3s;
+}
+
+::-webkit-scrollbar-track {
+  background: #303030;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #cac9c9;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
 }
 
 @keyframes animation {
