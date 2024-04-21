@@ -197,7 +197,8 @@ async function checkPlaylists() {
         e.dataValues.media.series_title,
         e.dataValues.media.season_number,
         e.dataValues.media.episode_number,
-        e.dataValues.quality
+        e.dataValues.quality,
+        e.dataValues.dir
       )
     }
   }
@@ -262,8 +263,27 @@ async function createFolder() {
   }
 }
 
-async function createFolderName(name: string) {
-  const folderPath = path.join(app.getPath('documents'), name)
+async function checkDirectoryExistence(dir: string) {
+  try {
+    await fs.promises.access(dir)
+    console.log(`Directory ${dir} exists.`)
+    return true
+  } catch (error) {
+    console.log(`Directory ${dir} does not exist.`)
+    return false
+  }
+}
+
+async function createFolderName(name: string, dir: string) {
+  var folderPath
+
+  const dirExists = await checkDirectoryExistence(dir)
+
+  if (dirExists) {
+    folderPath = path.join(dir, name)
+  } else {
+    folderPath = path.join(app.getPath('documents'), name)
+  }
 
   try {
     await fs.promises.access(folderPath)
@@ -322,7 +342,18 @@ var downloading: Array<{
   downloadSpeed: number
 }> = []
 
-export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Array<string>, hardsub: boolean, downloadID: number, name: string, season: number, episode: number, quality: 1080 | 720 | 480 | 360 | 240) {
+export async function downloadPlaylist(
+  e: string,
+  dubs: Array<string>,
+  subs: Array<string>,
+  hardsub: boolean,
+  downloadID: number,
+  name: string,
+  season: number,
+  episode: number,
+  quality: 1080 | 720 | 480 | 360 | 240,
+  downloadPath: string
+) {
   downloading.push({
     id: downloadID,
     downloadedParts: 0,
@@ -361,7 +392,7 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
   const videoFolder = await createFolder()
 
-  const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`)
+  const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`, downloadPath)
 
   const dubDownloadList: Array<{
     audio_locale: string

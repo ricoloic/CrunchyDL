@@ -64,7 +64,7 @@
       <div class="relative flex flex-col">
         <input v-model="url" type="text" name="text" placeholder="URL" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center" />
       </div>
-      <!-- <div class="relative flex flex-col">
+      <div class="relative flex flex-col">
         <input
           @click="getFolderPath()"
           v-model="path"
@@ -74,7 +74,7 @@
           class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
           readonly
         />
-      </div> -->
+      </div>
       <div class="relative flex flex-col mt-auto">
         <button @click="switchToSeason" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
           <div class="flex flex-row items-center justify-center transition-all" :class="isFetchingSeasons ? 'opacity-0' : 'opacity-100'">
@@ -318,11 +318,12 @@ const handleInputChange = () => {
   debounceFetchSearch()
 }
 
-if (process.client) {
+onMounted(() => {
   ;(window as any).myAPI.getFolder().then((result: any) => {
     path.value = result
   })
-}
+})
+
 const getFolderPath = () => {
   if (process.client) {
     ;(window as any).myAPI.selectFolder().then((result: any) => {
