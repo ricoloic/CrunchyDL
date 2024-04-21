@@ -165,20 +165,31 @@
           </button>
         </div>
       </div>
-
-      <div class="relative flex flex-col">
-        <select v-model="hardsub" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" :disabled="isHardsubDisabled">
-          <option :value="false" class="text-sm text-slate-200">Hardsub: false</option>
-          <option :value="true" class="text-sm text-slate-200">Hardsub: true</option>
-        </select>
-        <div
-          class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
-          :class="isFetchingEpisodes ? 'opacity-100' : 'opacity-0 pointer-events-none'"
-        >
-          <Icon name="mdi:loading" class="h-6 w-6 animate-spin" />
-          <div class="text-sm">Loading</div></div
-        >
+      <div class="flex flex-row gap-5">
+        <div class="relative flex flex-col w-full">
+          <select v-model="hardsub" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" :disabled="isHardsubDisabled">
+            <option :value="false" class="text-sm text-slate-200">Hardsub: false</option>
+            <option :value="true" class="text-sm text-slate-200">Hardsub: true</option>
+          </select>
+          <div
+            class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
+            :class="isFetchingEpisodes ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+          >
+            <Icon name="mdi:loading" class="h-6 w-6 animate-spin" />
+            <div class="text-sm">Loading</div></div
+          >
+        </div>
+        <div class="relative flex flex-col w-full">
+          <select v-model="quality" name="quality" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+            <option :value="1080" class="text-sm text-slate-200">1080p</option>
+            <option :value="720" class="text-sm text-slate-200">720p</option>
+            <option :value="480" class="text-sm text-slate-200">480p</option>
+            <option :value="360" class="text-sm text-slate-200">360p</option>
+            <option :value="240" class="text-sm text-slate-200">240p</option>
+          </select>
+        </div>
       </div>
+
       <!-- {{ CRselectedShow?.Subs.map(s=> { return locales.find(l => l.locale === s)?.name }) }}
       {{ CRselectedShow?.Dubs.map(s=> { return locales.find(l => l.locale === s)?.name }) }} -->
       <div v-if="!added" class="relative flex flex-col mt-auto">
@@ -267,6 +278,7 @@ const selectedEndEpisode = ref<CrunchyEpisode>()
 const hardsub = ref<boolean>(false)
 const added = ref<boolean>(false)
 const isHardsubDisabled = ref<boolean>(true)
+const quality = ref<1080 | 720 | 480 | 360 | 240>(1080)
 
 const isFetchingSeasons = ref<number>(0)
 const isFetchingEpisodes = ref<number>(0)
@@ -461,7 +473,8 @@ const addToPlaylist = async () => {
     dubs: selectedDubs.value,
     subs: selectedSubs.value,
     dir: path.value,
-    hardsub: hardsub.value
+    hardsub: hardsub.value,
+    quality: quality.value
   }
 
   const { error } = await useFetch('http://localhost:8080/api/crunchyroll/playlist', {

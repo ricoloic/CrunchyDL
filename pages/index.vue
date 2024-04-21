@@ -5,7 +5,7 @@
       <!-- <button @click="deletePlaylist">
         Delete Playlist
       </button> -->
-      <div v-for="p in playlist" class="flex flex-row gap-4 h-40 p-5 bg-[#636363]">
+      <div v-for="p in playlist" class="flex flex-row gap-4 h-40 p-5 bg-[#636363] border-b-[1px] border-gray-400">
         <div class="flex min-w-52 w-52">
           <img :src="p.media.images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-xl" />
         </div>
@@ -25,7 +25,7 @@
           </div>
           <div class="flex h-full"> </div>
           <div class="flex flex-row gap-2 mt-2">
-            <div class="text-sm">1080p</div>
+            <div class="text-sm">{{ p.quality }}p</div>
             <div class="text-sm">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
             <div class="text-sm">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
             <div v-if="p.partsleft && p.status === 'downloading'" class="text-sm">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
@@ -51,6 +51,7 @@ const playlist = ref<
     partsleft: number
     partsdownloaded: number
     downloadspeed: number
+    quality: number
   }>
 >()
 
@@ -66,6 +67,7 @@ const getPlaylist = async () => {
       partsleft: number
       partsdownloaded: number
       downloadspeed: number
+      quality: number
     }>
   >('http://localhost:8080/api/crunchyroll/playlist')
 
@@ -83,7 +85,7 @@ const getPlaylist = async () => {
 
 const deletePlaylist = async () => {
   const { data, error } = await useFetch('http://localhost:8080/api/crunchyroll/playlist', {
-    method: "delete"
+    method: 'delete'
   })
 
   if (error.value) {

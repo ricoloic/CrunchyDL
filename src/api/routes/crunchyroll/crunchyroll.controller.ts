@@ -66,44 +66,36 @@ export async function addPlaylistController(
       episodes: CrunchyEpisodes
       dubs: Array<string>
       subs: Array<string>
-      dir: string,
+      dir: string
       hardsub: boolean
+      quality: 1080 | 720 | 480 | 360 | 240
     }
   }>,
   reply: FastifyReply
 ) {
-
-  const body = request.body;
+  const body = request.body
 
   for (const e of body.episodes) {
-    await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir, body.hardsub, "waiting")
+    await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir, body.hardsub, 'waiting', body.quality)
   }
 
   return reply.code(201).send()
 }
 
-export async function deleteCompletePlaylistController(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-
+export async function deleteCompletePlaylistController(request: FastifyRequest, reply: FastifyReply) {
   await deletePlaylist()
 
   return reply.code(200).send()
 }
 
-export async function getPlaylistController(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-
+export async function getPlaylistController(request: FastifyRequest, reply: FastifyReply) {
   const playlist = await getPlaylist()
 
   for (const v of playlist) {
     if (v.dataValues.status === 'downloading') {
       const found = await getDownloading(v.dataValues.id)
       if (found) {
-        (v as any).dataValues = {
+        ;(v as any).dataValues = {
           ...v.dataValues,
           partsleft: found.partsToDownload,
           partsdownloaded: found.downloadedParts,
@@ -115,4 +107,3 @@ export async function getPlaylistController(
 
   return reply.code(200).send(playlist.reverse())
 }
-

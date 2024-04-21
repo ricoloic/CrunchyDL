@@ -33,6 +33,7 @@ interface PlaylistAttributes {
   dub: Array<string>
   sub: Array<string>
   hardsub: boolean,
+  quality: 1080 | 720 | 480 | 360 | 240,
   dir: string,
   failedreason: string
 }
@@ -42,6 +43,7 @@ interface PlaylistCreateAttributes {
   dub: Array<string>
   sub: Array<string>
   dir: string,
+  quality: 1080 | 720 | 480 | 360 | 240,
   hardsub: boolean,
   status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed'
 }
@@ -109,6 +111,10 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
   failedreason: {
     allowNull: true,
     type: DataTypes.STRING
+  },
+  quality: {
+    allowNull: true,
+    type: DataTypes.BOOLEAN
   },
   createdAt: {
     allowNull: false,

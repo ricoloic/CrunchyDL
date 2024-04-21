@@ -139,7 +139,8 @@ export async function addEpisodeToPlaylist(
   d: Array<string>,
   dir: string,
   hardsub: boolean,
-  status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed'
+  status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed',
+  quality: 1080 | 720 | 480 | 360 | 240
 ) {
   const episode = await Playlist.create({
     media: e,
@@ -147,7 +148,8 @@ export async function addEpisodeToPlaylist(
     dub: d,
     dir: dir,
     hardsub: hardsub,
-    status
+    status: status,
+    quality: quality
   })
 
   return episode.get()
@@ -194,7 +196,8 @@ async function checkPlaylists() {
         e.dataValues.id,
         e.dataValues.media.series_title,
         e.dataValues.media.season_number,
-        e.dataValues.media.episode_number
+        e.dataValues.media.episode_number,
+        e.dataValues.quality
       )
     }
   }
@@ -319,7 +322,7 @@ var downloading: Array<{
   downloadSpeed: number
 }> = []
 
-export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Array<string>, hardsub: boolean, downloadID: number, name: string, season: number, episode: number) {
+export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Array<string>, hardsub: boolean, downloadID: number, name: string, season: number, episode: number, quality: 1080 | 720 | 480 | 360 | 240) {
   downloading.push({
     id: downloadID,
     downloadedParts: 0,
@@ -534,7 +537,7 @@ export async function downloadPlaylist(e: string, dubs: Array<string>, subs: Arr
 
     if (!mdp) return
 
-    var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.width === 1920)
+    var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.height === quality)
 
     if (!hq) return
 
