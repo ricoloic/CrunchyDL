@@ -27,7 +27,7 @@
           <div class="flex flex-row gap-2 mt-2">
             <div class="text-sm">1080p</div>
             <div class="text-sm">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
-            <div class="text-sm">Subs: {{ p.sub.map((t) => t.name).join(', ') }}</div>
+            <div class="text-sm">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
             <div v-if="p.partsleft && p.status === 'downloading'" class="text-sm">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
             <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-sm">{{ p.downloadspeed }} MB/s</div>
           </div>
