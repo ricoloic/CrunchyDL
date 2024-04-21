@@ -57,6 +57,59 @@ export interface CrunchySearchFetch {
   }>
 }
 
+export interface CrunchyAnimeFetch {
+  total: number
+  data: Array<{
+    promo_description: string
+    title: string
+    promo_title: string
+    channel_id: string
+    slug_title: string
+    search_metadata: {
+      score: number
+    }
+    audio_locales: Array<string>
+    availability_notes: string
+    episode_count: number
+    extended_description: string
+    extended_maturity_rating: string
+    is_dubbed: boolean
+    is_mature: boolean
+    is_simulcast: boolean
+    is_subbed: boolean
+    mature_blocked: boolean
+    maturity_ratings: Array<string>
+    season_count: number
+    series_launch_year: number
+    subtitle_locales: Array<string>
+    id: string
+    slug: string
+    external_id: string
+    description: string
+    new: boolean
+    images: {
+      poster_tall: Array<
+        Array<{
+          height: number
+          source: string
+          type: string
+          width: number
+        }>
+      >
+      poster_wide: Array<
+        Array<{
+          height: number
+          source: string
+          type: string
+          width: number
+        }>
+      >
+    }
+    linked_resource_key: string
+    type: string
+  }>
+}
+
 export interface CrunchyLogin {
   access_token: string
   refresh_token: string

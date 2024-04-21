@@ -3,7 +3,7 @@
     <div class="relative flex flex-row items-center justify-center">
       <button
         v-if="tab === 2"
-        @click=";(tab = 1), (added = false)"
+        @click=";(tab = 1), (added = false), (CRselectedShow = null)"
         class="absolute left-0 bg-[#5c5b5b] py-1 px-3 rounded-xl flex flex-row items-center justify-center gap-0.5 hover:bg-[#4b4a4a] transition-all"
         style="-webkit-app-region: no-drag"
       >
@@ -204,7 +204,10 @@
         </button>
       </div>
       <div v-if="added" class="relative flex flex-row gap-5 mt-auto">
-        <button @click=";(tab = 1), (added = false)" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center cursor-default w-full">
+        <button
+          @click=";(tab = 1), (added = false), (CRselectedShow = null)"
+          class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center cursor-default w-full"
+        >
           <div class="flex gap-1 flex-row items-center justify-center transition-all">
             <Icon name="formkit:arrowleft" class="h-6 w-6" />
             <div class="text-xl">Back</div>
@@ -223,7 +226,7 @@
 
 <script lang="ts" setup>
 import { searchADN } from '~/components/ADN/ListAnimes'
-import { searchCrunchy } from '~/components/Crunchyroll/ListAnimes'
+import { getCRSeries, searchCrunchy } from '~/components/Crunchyroll/ListAnimes'
 import { listEpisodeCrunchy } from '~/components/Crunchyroll/ListEpisodes'
 import { listSeasonCrunchy } from '~/components/Crunchyroll/ListSeasons'
 import type { CrunchyEpisode, CrunchyEpisodes } from '~/components/Episode/Types'
@@ -265,7 +268,7 @@ const search = ref<string>('')
 const searchActive = ref<boolean>(false)
 const crunchySearchResults = ref<CrunchyrollSearchResults>()
 const adnSearchResults = ref<ADNSearchResults>()
-const CRselectedShow = ref<CrunchyrollSearchResult>()
+const CRselectedShow = ref<CrunchyrollSearchResult | null>()
 const ADNselectedShow = ref<ADNSearchResult>()
 const url = ref<string>('')
 const path = ref<string>()
@@ -404,6 +407,7 @@ const switchToSeason = async () => {
 
   if (url.value && url.value.includes('crunchyroll') && !CRselectedShow.value) {
     const seriesID = url.value.split('/')
+    CRselectedShow.value = await getCRSeries(seriesID[5])
     seasons.value = await listSeasonCrunchy(seriesID[5])
     if (!seasons.value) {
       isFetchingSeasons.value--
