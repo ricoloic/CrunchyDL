@@ -4,7 +4,7 @@ import { CrunchyEpisode } from '../types/crunchyroll'
 
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: app.getPath('documents') + '/db.sqlite'
+  storage: app.getPath('documents') + '/crd-dbv1.db'
 })
 
 interface AccountAttributes {
@@ -32,9 +32,9 @@ interface PlaylistAttributes {
   media: CrunchyEpisode
   dub: Array<string>
   sub: Array<string>
-  hardsub: boolean,
-  quality: 1080 | 720 | 480 | 360 | 240,
-  dir: string,
+  hardsub: boolean
+  quality: 1080 | 720 | 480 | 360 | 240
+  dir: string
   failedreason: string
 }
 
@@ -42,9 +42,9 @@ interface PlaylistCreateAttributes {
   media: CrunchyEpisode
   dub: Array<string>
   sub: Array<string>
-  dir: string,
-  quality: 1080 | 720 | 480 | 360 | 240,
-  hardsub: boolean,
+  dir: string
+  quality: 1080 | 720 | 480 | 360 | 240
+  hardsub: boolean
   status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed'
 }
 
@@ -86,7 +86,7 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
   },
   status: {
     allowNull: false,
-    type: DataTypes.STRING,
+    type: DataTypes.STRING
   },
   media: {
     allowNull: false,
