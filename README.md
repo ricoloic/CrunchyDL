@@ -6,7 +6,8 @@ This Tool is still in Beta, so there might be some errors.
 Downloaded videos are getting saved in your documents folder
 ## Supported Platforms
 - Windows
-- Linux
+- Linux (soon)
+- MacOS (soon)
 ## Credits
 - This is literally just an improved version of [hama3254's](https://github.com/hama3254/Crunchyroll-Downloader-v3.0) [Crunchyroll-Downloader-v3.0](https://github.com/hama3254/Crunchyroll-Downloader-v3.0)
 ## To-Do
