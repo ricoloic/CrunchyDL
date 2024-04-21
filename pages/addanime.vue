@@ -150,7 +150,7 @@
       <div class="relative flex flex-col select-none">
         <div @click="selectSub ? (selectSub = false) : (selectSub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
           Subs:
-          {{ selectedSubs.map((t) => t.name).join(', ') }}
+          {{ selectedSubs.length !== 0 ? selectedSubs.map((t) => t.name).join(', ') : 'No Subs selected' }}
         </div>
         <div v-if="selectSub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
           <button
@@ -167,7 +167,7 @@
       </div>
 
       <div class="relative flex flex-col">
-        <select v-model="hardsub" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+        <select v-model="hardsub" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" :disabled="isHardsubDisabled">
           <option :value="false" class="text-sm text-slate-200">Hardsub: false</option>
           <option :value="true" class="text-sm text-slate-200">Hardsub: true</option>
         </select>
@@ -247,7 +247,7 @@ const selectDub = ref<boolean>(false)
 const selectedDubs = ref<Array<{ name: string | undefined; locale: string }>>([{ locale: 'ja-JP', name: 'JP' }])
 
 const selectSub = ref<boolean>(false)
-const selectedSubs = ref<Array<{ name: string | undefined; locale: string }>>([{ locale: 'en-US', name: 'EN' }])
+const selectedSubs = ref<Array<{ name: string | undefined; locale: string }>>([])
 
 const tab = ref<number>(1)
 const search = ref<string>('')
@@ -266,6 +266,7 @@ const selectedStartEpisode = ref<CrunchyEpisode>()
 const selectedEndEpisode = ref<CrunchyEpisode>()
 const hardsub = ref<boolean>(false)
 const added = ref<boolean>(false)
+const isHardsubDisabled = ref<boolean>(true)
 
 const isFetchingSeasons = ref<number>(0)
 const isFetchingEpisodes = ref<number>(0)
@@ -404,7 +405,7 @@ const switchToSeason = async () => {
     tab.value = 2
   }
 
-  ;(selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]), (selectedSubs.value = [{ locale: 'en-US', name: 'EN' }]), isFetchingSeasons.value--
+  ;(selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]), isFetchingSeasons.value--
 }
 
 const toggleDub = (lang: { name: string | undefined; locale: string }) => {
@@ -426,17 +427,20 @@ const toggleDub = (lang: { name: string | undefined; locale: string }) => {
 const toggleSub = (lang: { name: string | undefined; locale: string }) => {
   const index = selectedSubs.value.findIndex((i) => i.locale === lang.locale)
 
-  if (index !== -1) {
-    if (selectedSubs.value.length !== 1) {
-      selectedSubs.value.splice(index, 1)
-      return
-    }
-  }
-
   if (index === -1) {
     selectedSubs.value.push(lang)
+    if (selectedSubs.value.length !== 0) {
+      isHardsubDisabled.value = false
+    }
     return
   }
+
+  selectedSubs.value.splice(index, 1)
+  if (selectedSubs.value.length === 0) {
+    hardsub.value = false
+    isHardsubDisabled.value = true
+  }
+  return
 }
 
 const addToPlaylist = async () => {
