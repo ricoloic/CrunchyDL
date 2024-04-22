@@ -406,8 +406,8 @@ const handleInputChange = () => {
   debounceFetchSearch()
 }
 
-watch(url, () => {
-  if (url.value.length === 0 || !url.value) {
+watch(search, () => {
+  if (search.value.length === 0 || !search.value) {
     searchActive.value = false;
   }
 })
