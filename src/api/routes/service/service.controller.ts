@@ -2,6 +2,7 @@ import { FastifyReply, FastifyRequest } from "fastify"
 import { crunchyLogin } from "../crunchyroll/crunchyroll.service"
 import { addEpisodeToPlaylist, getDownloading, getPlaylist, loggedInCheck, safeLoginData } from "./service.service"
 import { CrunchyEpisodes } from "../../types/crunchyroll"
+import { adnLogin } from "../adn/adn.service"
 
 export async function checkLoginController(request: FastifyRequest<{
     Params: {
@@ -48,9 +49,9 @@ export async function loginController(
   }
 
   if (params.id === 'ADN') {
-    // const { data, error } = await adnLogin(body.user, body.password)
-    // responseError = error,
-    // responseData = data
+    const { data, error } = await adnLogin(body.user, body.password)
+    responseError = error,
+    responseData = data
   }
 
   if (responseError || !responseData) {

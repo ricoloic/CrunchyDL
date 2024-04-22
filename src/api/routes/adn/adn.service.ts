@@ -378,92 +378,74 @@ import { useFetch } from '../useFetch'
 //   }
 // }
 
-export async function adnyLogin(user: string, passw: string) {
-    const cachedData:
-      | {
-          access_token: string
-          refresh_token: string
-          expires_in: number
-          token_type: string
-          scope: string
-          country: string
-          account_id: string
-          profile_id: string
-        }
-      | undefined = server.CacheController.get('adntoken')
-  
-    if (!cachedData) {
-      var { data, error } = await adnLoginFetch(user, passw)
-  
-      if (error) {
-        messageBox(
-          'error',
-          ['Cancel'],
-          2,
-          'Failed to login',
-          'Failed to login to ADN',
-          (error.error as string)
-        )
-        return { data: null, error: error.error }
+export async function adnLogin(user: string, passw: string) {
+  const cachedData:
+    | {
+        access_token: string
+        refresh_token: string
+        expires_in: number
+        token_type: string
+        scope: string
+        country: string
+        account_id: string
+        profile_id: string
       }
-  
-      if (!data) {
-        messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to ADN', 'ADN returned null')
-        return { data: null, error: 'ADN returned null' }
-      }
-  
-      if (!data.access_token) {
-        messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to ADN', 'ADN returned malformed data')
-        return { data: null, error: 'ADN returned malformed data' }
-      }
-  
-      server.CacheController.set('adntoken', data, data.expires_in - 30)
-  
-      return { data: data, error: null }
-    }
-  
-    return { data: cachedData, error: null }
-  }
-  
-  async function adnLoginFetch(user: string, passw: string) {
-    const headers = {
-      Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
-    }
-  
-    const body: any = {
-      username: user,
-      password: passw,
-      grant_type: 'password',
-      scope: 'offline_access',
-      device_name: 'RMX2170',
-      device_type: 'realme RMX2170'
-    }
-  
-    const { data, error } = await useFetch<{
-      access_token: string
-      refresh_token: string
-      expires_in: number
-      token_type: string
-      scope: string
-      country: string
-      account_id: string
-      profile_id: string
-    }>('https://beta-api.crunchyroll.com/auth/v1/token', {
-      type: 'POST',
-      body: new URLSearchParams(body).toString(),
-      header: headers,
-      credentials: 'same-origin'
-    })
-  
+    | undefined = server.CacheController.get('adntoken')
+
+  if (!cachedData) {
+    var { data, error } = await adnLoginFetch(user, passw)
+
     if (error) {
-      return { data: null, error: error }
+      messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to ADN', error.error as string)
+      return { data: null, error: error.error }
     }
-  
+
     if (!data) {
-      return { data: null, error: null }
+      messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to ADN', 'ADN returned null')
+      return { data: null, error: 'ADN returned null' }
     }
-  
+
+    if (!data.accessToken) {
+      messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to ADN', 'ADN returned malformed data')
+      return { data: null, error: 'ADN returned malformed data' }
+    }
+
+    server.CacheController.set('adntoken', data, 300)
+
     return { data: data, error: null }
   }
+
+  return { data: cachedData, error: null }
+}
+
+async function adnLoginFetch(user: string, passw: string) {
+  const headers = {
+    'x-target-distribution': 'de',
+    'Content-Type': 'application/json'
+  }
+
+  const body = {
+    username: user,
+    password: passw,
+    source: 'Web',
+    rememberMe: true
+  }
+
+  const { data, error } = await useFetch<{
+    accessToken: string;
+  }>('https://gw.api.animationdigitalnetwork.fr/authentication/login', {
+    type: 'POST',
+    body: JSON.stringify(body),
+    header: headers,
+  })
+
+  if (error) {
+    return { data: null, error: error }
+  }
+
+  if (!data) {
+    return { data: null, error: null }
+  }
+
+  return { data: data, error: null }
+}

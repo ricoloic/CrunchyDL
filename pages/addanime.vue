@@ -19,7 +19,7 @@
           <option value="adn">ADN</option>
         </select>
       </div>
-      <div v-if="isLoggedInCR && service === 'crunchyroll' || !isLoggedInCR && service === 'adn'" class="relative flex flex-col">
+      <div v-if="isLoggedInCR && service === 'crunchyroll' || isLoggedInADN && service === 'adn'" class="relative flex flex-col">
         <input
           v-model="search"
           @input="handleInputChange"
@@ -33,7 +33,7 @@
         </div>
         <div
           v-if="searchActive"
-          class="absolute top-full left-0 h-60 w-full bg-[#868585] rounded-xl overflow-y-scroll grid grid-cols-2 gap-3 p-2 z-10"
+          class="absolute top-full left-0 h-40 w-full bg-[#868585] rounded-xl overflow-y-scroll grid grid-cols-2 gap-3 p-2 z-10"
           style="-webkit-app-region: no-drag"
         >
           <button v-for="result in crunchySearchResults" @click="selectShow(result)" class="flex flex-row gap-3 px-3 py-3 hover:bg-[#747474] rounded-xl">
@@ -61,10 +61,10 @@
           </button>
         </div>
       </div>
-      <div v-if="isLoggedInCR && service === 'crunchyroll'" class="relative flex flex-col">
+      <div v-if="isLoggedInCR && service === 'crunchyroll' || isLoggedInADN && service === 'adn'" class="relative flex flex-col">
         <input v-model="url" type="text" name="text" placeholder="URL" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center" />
       </div>
-      <div v-if="isLoggedInCR && service === 'crunchyroll'" class="relative flex flex-col">
+      <div v-if="isLoggedInCR && service === 'crunchyroll' || isLoggedInADN && service === 'adn'" class="relative flex flex-col">
         <input
           @click="getFolderPath()"
           v-model="path"
@@ -80,6 +80,11 @@
           class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
         >Click to Login</button>
       </div>
+      <div v-if="!isLoggedInADN && service === 'adn'" class="relative flex flex-col">
+        <button @click="openADNLogin"
+          class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+        >Click to Login</button>
+      </div>
       <div class="relative flex flex-col mt-auto">
         <button @click="switchToSeason" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
           <div class="flex flex-row items-center justify-center transition-all" :class="isFetchingSeasons ? 'opacity-0' : 'opacity-100'">
@@ -91,7 +96,6 @@
           </div>
         </button>
       </div>
-      <!-- {{ searchresults }} -->
     </div>
     <div v-if="tab === 2" class="flex flex-col mt-5 gap-3.5 h-full" style="-webkit-app-region: no-drag">
       <div class="relative flex flex-col">
@@ -282,7 +286,7 @@ const searchActive = ref<boolean>(false)
 const crunchySearchResults = ref<CrunchyrollSearchResults>()
 const adnSearchResults = ref<ADNSearchResults>()
 const CRselectedShow = ref<CrunchyrollSearchResult | null>()
-const ADNselectedShow = ref<ADNSearchResult>()
+const ADNselectedShow = ref<ADNSearchResult | null>()
 const url = ref<string>('')
 const path = ref<string>()
 const service = ref<'adn' | 'crunchyroll'>('crunchyroll')
@@ -302,7 +306,9 @@ const isFetchingEpisodes = ref<number>(0)
 const isFetchingResults = ref<number>(0)
 
 const isLoggedInCR = ref<boolean>(false)
-let interval: NodeJS.Timeout;
+  const isLoggedInADN = ref<boolean>(false)
+let intervalcr: NodeJS.Timeout;
+let intervaladn: NodeJS.Timeout;
 
 const checkIfLoggedInCR = async () => {
   const { data, error } = await checkAccount('CR')
@@ -312,8 +318,8 @@ const checkIfLoggedInCR = async () => {
     return
   }
 
-  if (interval) {
-    clearInterval(interval)
+  if (intervalcr) {
+    clearInterval(intervalcr)
   }
 
   isLoggedInCR.value = true
@@ -328,10 +334,39 @@ const openCRLogin = () => {
     backgroundColor: "#111111"
   })
 
-  interval = setInterval(checkIfLoggedInCR, 1000)
+  intervalcr = setInterval(checkIfLoggedInCR, 1000)
 }
 
+const checkIfLoggedInADN = async () => {
+  const { data, error } = await checkAccount('ADN')
+
+  if (error.value) {
+    isLoggedInADN.value = false
+    return
+  }
+
+  if (intervaladn) {
+    clearInterval(intervaladn)
+  }
+
+  isLoggedInADN.value = true
+}
+
+const openADNLogin = () => {
+  (window as any).myAPI.openWindow({
+    title: "ADN Login",
+    url: isProduction ? 'http://localhost:8079/adnlogin' : 'http://localhost:3000/adnlogin',
+    width: 600,
+    height: 300,
+    backgroundColor: "#111111"
+  })
+
+  intervalcr = setInterval(checkIfLoggedInADN, 1000)
+}
+
+
 checkIfLoggedInCR()
+checkIfLoggedInADN()
 
 const fetchSearch = async () => {
   if (!search.value || search.value.length === 0) {
@@ -341,7 +376,9 @@ const fetchSearch = async () => {
     return
   }
 
-  isFetchingResults.value++
+  if (!isFetchingResults.value) {
+    isFetchingResults.value++
+  }
 
   if (service.value === 'adn') {
     adnSearchResults.value = await searchADN(search.value)
@@ -351,7 +388,9 @@ const fetchSearch = async () => {
     crunchySearchResults.value = await searchCrunchy(search.value)
   }
 
-  isFetchingResults.value--
+  if (isFetchingResults.value) {
+    isFetchingResults.value--
+  }
   searchActive.value = true
 }
 
@@ -366,6 +405,12 @@ const debounceFetchSearch = () => {
 const handleInputChange = () => {
   debounceFetchSearch()
 }
+
+watch(url, () => {
+  if (url.value.length === 0 || !url.value) {
+    searchActive.value = false;
+  }
+})
 
 onMounted(() => {
   ;(window as any).myAPI.getFolder().then((result: any) => {
@@ -396,10 +441,19 @@ const selectShow = async (show: any) => {
   crunchySearchResults.value = []
   adnSearchResults.value = []
   searchActive.value = false
+  if (isFetchingResults.value) {
+    isFetchingResults.value--
+  }
 }
 
 watch(selectedSeason, () => {
   refetchEpisodes()
+})
+
+watch(service, () => {
+  url.value = "",
+  CRselectedShow.value = null,
+  ADNselectedShow.value = null
 })
 
 watch(selectedStartEpisode, () => {
