@@ -10,8 +10,13 @@
           <img :src="p.media.images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-xl" />
         </div>
         <div class="flex flex-col w-full">
-          <div class="text-sm capitalize">
+          <div class="flex flex-row">
+            <div class="text-sm capitalize">
             {{ p.status }}
+          </div>
+          <div class="text-sm capitalize ml-auto">
+            {{ p.service === 'CR' ? 'Crunchyroll' : 'ADN' }}
+          </div>
           </div>
           <div class="text-base capitalize"> {{ p.media.series_title }} Season {{ p.media.season_number }} Episode {{ p.media.episode_number }} </div>
           <div class="relative w-full min-h-5 bg-[#bdbbbb] mt-1 rounded">
@@ -26,9 +31,10 @@
           <div class="flex h-full"> </div>
           <div class="flex flex-row gap-2 mt-2">
             <div class="text-sm">{{ p.quality }}p</div>
+            <div class="text-sm uppercase">{{ p.format }}</div>
             <div class="text-sm">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
             <div class="text-sm">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
-            <div v-if="p.partsleft && p.status === 'downloading'" class="text-sm">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
+            <div v-if="p.partsleft && p.status === 'downloading'" class="text-sm ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
             <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-sm">{{ p.downloadspeed }} MB/s</div>
           </div>
         </div>
@@ -52,6 +58,8 @@ const playlist = ref<
     partsdownloaded: number
     downloadspeed: number
     quality: number
+    service: string
+    format: string
   }>
 >()
 
@@ -68,8 +76,10 @@ const getPlaylist = async () => {
       partsdownloaded: number
       downloadspeed: number
       quality: number
+      service: string
+      format: string
     }>
-  >('http://localhost:8080/api/crunchyroll/playlist')
+  >('http://localhost:8080/api/service/playlist')
 
   if (error.value) {
     alert(error.value)
@@ -84,7 +94,7 @@ const getPlaylist = async () => {
 }
 
 const deletePlaylist = async () => {
-  const { data, error } = await useFetch('http://localhost:8080/api/crunchyroll/playlist', {
+  const { data, error } = await useFetch('http://localhost:8080/api/service/playlist', {
     method: 'delete'
   })
 

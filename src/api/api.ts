@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import NodeCache from "node-cache";
 import crunchyrollRoutes from "./routes/crunchyroll/crunchyroll.route";
 import { sequelize } from "./db/database";
+import serviceRoutes from "./routes/service/service.route";
 
 (async () => {
     try {
@@ -43,6 +44,7 @@ server.decorate("CacheController", CacheController);
 
 // Routes
 server.register(crunchyrollRoutes, { prefix: 'api/crunchyroll' })
+server.register(serviceRoutes, { prefix: 'api/service' })
 
 function startAPI() {
     server.listen({ port: 8080 }, (err, address) => {

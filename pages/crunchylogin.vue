@@ -34,16 +34,6 @@ const password = ref<string>()
 
 const isLoggingIn = ref<number>(0)
 
-const openAddAnime = () => {
-  (window as any).myAPI.openWindow({
-    title: "Add Anime",
-    url: isProduction ? 'http://localhost:8079/addanime' : 'http://localhost:3000/addanime',
-    width: 700,
-    height: 450,
-    backgroundColor: "#111111"
-  })
-}
-
 const login = async () => {
   isLoggingIn.value++
   if (!username.value) {
@@ -55,14 +45,13 @@ const login = async () => {
     return
   }
 
-  const { data, error } = await loginAccount(username.value, password.value)
+  const { data, error } = await loginAccount(username.value, password.value, 'CR')
 
   if (error.value) {
     isLoggingIn.value--
     return
   }
   isLoggingIn.value--
-  openAddAnime()
   close()
 }
 </script>

@@ -39,18 +39,18 @@ async function openSettings() {
 }
 
 async function openAddAnime() {
-  const { data, error } = await checkAccount()
+  // const { data, error } = await checkAccount()
 
-  if (error.value) {
-    (window as any).myAPI.openWindow({
-    title: "Crunchyroll Login",
-    url: isProduction ? 'http://localhost:8079/crunchylogin' : 'http://localhost:3000/crunchylogin',
-    width: 600,
-    height: 300,
-    backgroundColor: "#111111"
-  })
-    return
-  }
+  // if (error.value) {
+  //   (window as any).myAPI.openWindow({
+  //   title: "Crunchyroll Login",
+  //   url: isProduction ? 'http://localhost:8079/crunchylogin' : 'http://localhost:3000/crunchylogin',
+  //   width: 600,
+  //   height: 300,
+  //   backgroundColor: "#111111"
+  // })
+  //   return
+  // }
 
   (window as any).myAPI.openWindow({
     title: "Add Anime",

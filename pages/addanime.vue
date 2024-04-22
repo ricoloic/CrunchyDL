@@ -15,11 +15,11 @@
     <div v-if="tab === 1" class="flex flex-col mt-5 gap-3.5 h-full" style="-webkit-app-region: no-drag">
       <div class="relative flex flex-col">
         <select v-model="service" name="service" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-          <!-- <option value="adn">ADN</option> -->
           <option value="crunchyroll">Crunchyroll</option>
+          <option value="adn">ADN</option>
         </select>
       </div>
-      <div class="relative flex flex-col">
+      <div v-if="isLoggedInCR && service === 'crunchyroll' || !isLoggedInCR && service === 'adn'" class="relative flex flex-col">
         <input
           v-model="search"
           @input="handleInputChange"
@@ -61,10 +61,10 @@
           </button>
         </div>
       </div>
-      <div class="relative flex flex-col">
+      <div v-if="isLoggedInCR && service === 'crunchyroll'" class="relative flex flex-col">
         <input v-model="url" type="text" name="text" placeholder="URL" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center" />
       </div>
-      <div class="relative flex flex-col">
+      <div v-if="isLoggedInCR && service === 'crunchyroll'" class="relative flex flex-col">
         <input
           @click="getFolderPath()"
           v-model="path"
@@ -74,6 +74,11 @@
           class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
           readonly
         />
+      </div>
+      <div v-if="!isLoggedInCR && service === 'crunchyroll'" class="relative flex flex-col">
+        <button @click="openCRLogin"
+          class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+        >Click to Login</button>
       </div>
       <div class="relative flex flex-col mt-auto">
         <button @click="switchToSeason" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
@@ -165,7 +170,7 @@
           </button>
         </div>
       </div>
-      <div class="flex flex-row gap-5">
+      <div class="flex flex-row gap-3">
         <div class="relative flex flex-col w-full">
           <select v-model="hardsub" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" :disabled="isHardsubDisabled">
             <option :value="false" class="text-sm text-slate-200">Hardsub: false</option>
@@ -186,6 +191,12 @@
             <option :value="480" class="text-sm text-slate-200">480p</option>
             <option :value="360" class="text-sm text-slate-200">360p</option>
             <option :value="240" class="text-sm text-slate-200">240p</option>
+          </select>
+        </div>
+        <div class="relative flex flex-col w-full">
+          <select v-model="format" name="format" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+            <option value="mp4" class="text-sm text-slate-200">MP4</option>
+            <option value="mkv" class="text-sm text-slate-200">MKV</option>
           </select>
         </div>
       </div>
@@ -226,6 +237,7 @@
 
 <script lang="ts" setup>
 import { searchADN } from '~/components/ADN/ListAnimes'
+import { checkAccount } from '~/components/Crunchyroll/Account'
 import { getCRSeries, searchCrunchy } from '~/components/Crunchyroll/ListAnimes'
 import { listEpisodeCrunchy } from '~/components/Crunchyroll/ListEpisodes'
 import { listSeasonCrunchy } from '~/components/Crunchyroll/ListSeasons'
@@ -257,6 +269,7 @@ const locales = ref<Array<{ locale: string; name: string }>>([
   { locale: 'ko-KR', name: 'KO' }
 ])
 
+const isProduction = process.env.NODE_ENV !== 'development'
 const selectDub = ref<boolean>(false)
 const selectedDubs = ref<Array<{ name: string | undefined; locale: string }>>([{ locale: 'ja-JP', name: 'JP' }])
 
@@ -282,10 +295,43 @@ const hardsub = ref<boolean>(false)
 const added = ref<boolean>(false)
 const isHardsubDisabled = ref<boolean>(true)
 const quality = ref<1080 | 720 | 480 | 360 | 240>(1080)
+const format = ref<'mp4' | 'mkv'>('mkv')
 
 const isFetchingSeasons = ref<number>(0)
 const isFetchingEpisodes = ref<number>(0)
 const isFetchingResults = ref<number>(0)
+
+const isLoggedInCR = ref<boolean>(false)
+let interval: NodeJS.Timeout;
+
+const checkIfLoggedInCR = async () => {
+  const { data, error } = await checkAccount('CR')
+
+  if (error.value) {
+    isLoggedInCR.value = false
+    return
+  }
+
+  if (interval) {
+    clearInterval(interval)
+  }
+
+  isLoggedInCR.value = true
+}
+
+const openCRLogin = () => {
+  (window as any).myAPI.openWindow({
+    title: "Crunchyroll Login",
+    url: isProduction ? 'http://localhost:8079/crunchylogin' : 'http://localhost:3000/crunchylogin',
+    width: 600,
+    height: 300,
+    backgroundColor: "#111111"
+  })
+
+  interval = setInterval(checkIfLoggedInCR, 1000)
+}
+
+checkIfLoggedInCR()
 
 const fetchSearch = async () => {
   if (!search.value || search.value.length === 0) {
@@ -343,7 +389,7 @@ const selectShow = async (show: any) => {
 
   if (service.value === 'crunchyroll') {
     CRselectedShow.value = show
-    url.value = show.Url
+    url.value = show.Url + '/'
   }
 
   search.value = ''
@@ -471,6 +517,18 @@ const addToPlaylist = async () => {
     return
   }
 
+  var selService
+
+  if (service.value === 'crunchyroll') {
+    selService = 'CR'
+  }
+
+  if (service.value === 'adn') {
+    selService = 'ADN'
+  }
+
+  if (!selService) return
+
   const selectedEpisodes = episodes.value.slice(startEpisodeIndex, endEpisodeIndex + 1)
 
   const data = {
@@ -479,10 +537,12 @@ const addToPlaylist = async () => {
     subs: selectedSubs.value,
     dir: path.value,
     hardsub: hardsub.value,
-    quality: quality.value
+    quality: quality.value,
+    service: selService,
+    format: format.value
   }
 
-  const { error } = await useFetch('http://localhost:8080/api/crunchyroll/playlist', {
+  const { error } = await useFetch('http://localhost:8080/api/service/playlist', {
     method: 'POST',
     body: JSON.stringify(data)
   })
