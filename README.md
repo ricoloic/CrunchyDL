@@ -2,8 +2,6 @@
 A simple tool for downloading videos from Crunchyroll and ADN.
 
 This Tool is still in Beta, so there might be some errors.
-
-Downloaded videos are getting saved in your documents folder
 ## Supported Platforms
 - Windows
 - Linux (soon)
