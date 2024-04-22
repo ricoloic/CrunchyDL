@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { Sequelize, DataTypes, ModelDefined } from 'sequelize'
 import { CrunchyEpisode } from '../types/crunchyroll'
+import { ADNEpisode } from '../types/adn'
 
 const sequelize = new Sequelize({
   dialect: 'sqlite',
@@ -29,7 +30,7 @@ interface AccountCreateAttributes {
 interface PlaylistAttributes {
   id: number
   status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed'
-  media: CrunchyEpisode
+  media: CrunchyEpisode | ADNEpisode
   dub: Array<string>
   sub: Array<string>
   hardsub: boolean
@@ -41,7 +42,7 @@ interface PlaylistAttributes {
 }
 
 interface PlaylistCreateAttributes {
-  media: CrunchyEpisode
+  media: CrunchyEpisode | ADNEpisode
   dub: Array<string>
   sub: Array<string>
   dir: string

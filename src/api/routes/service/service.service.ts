@@ -2,7 +2,7 @@ import { Account, Playlist } from '../../db/database'
 import { downloadMPDAudio } from '../../services/audio'
 import { concatenateTSFiles } from '../../services/concatenate'
 import { createFolder, createFolderName, deleteFolder } from '../../services/folder'
-import { downloadCRSub } from '../../services/subs'
+import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
 import { crunchyGetPlaylist, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
 import fs from 'fs'
@@ -10,6 +10,8 @@ var cron = require('node-cron')
 import { Readable } from 'stream'
 import { finished } from 'stream/promises'
 import Ffmpeg from 'fluent-ffmpeg'
+import { adnGetM3U8Playlist, adnGetPlaylist } from '../adn/adn.service'
+import { ADNEpisode } from '../../types/adn'
 const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
 const ffprobePath = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
 
@@ -104,18 +106,33 @@ async function checkPlaylists() {
       isDownloading++
       if (e.dataValues.service === 'CR') {
         downloadCrunchyrollPlaylist(
-          e.dataValues.media.id,
+          (e.dataValues.media as CrunchyEpisode).id,
           (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
           (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
           e.dataValues.hardsub,
           e.dataValues.id,
-          e.dataValues.media.series_title,
-          e.dataValues.media.season_number,
-          e.dataValues.media.episode_number,
+          (e.dataValues.media as CrunchyEpisode).series_title,
+          (e.dataValues.media as CrunchyEpisode).season_number,
+          (e.dataValues.media as CrunchyEpisode).episode_number,
           e.dataValues.quality,
           e.dataValues.dir,
           e.dataValues.format
         )
+      }
+      if (e.dataValues.service === 'ADN') { 
+        downloadADNPlaylist(
+          (e.dataValues.media as ADNEpisode).id,
+          (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
+          (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
+          e.dataValues.id,
+          (e.dataValues.media as ADNEpisode).show.title,
+          (e.dataValues.media as ADNEpisode).season,
+          (e.dataValues.media as ADNEpisode).shortNumber,
+          e.dataValues.quality,
+          e.dataValues.dir,
+          e.dataValues.format
+        )
+        console.log(e.dataValues.media)
       }
     }
   }
@@ -124,6 +141,98 @@ async function checkPlaylists() {
 cron.schedule('*/2 * * * * *', () => {
   checkPlaylists()
 })
+
+// Download ADN Playlist
+export async function downloadADNPlaylist(
+  e: number,
+  dubs: Array<string>,
+  subs: Array<string>,
+  downloadID: number,
+  name: string,
+  season: string,
+  episode: string,
+  quality: 1080 | 720 | 480 | 360 | 240,
+  downloadPath: string,
+  format: 'mp4' | 'mkv'
+) {
+  downloading.push({
+    id: downloadID,
+    downloadedParts: 0,
+    partsToDownload: 0,
+    downloadSpeed: 0
+  })
+
+  if (!season) {
+    season = "1"
+  }
+
+  await updatePlaylistByID(downloadID, 'downloading')
+
+  var playlist = await adnGetPlaylist(e)
+
+  const subFolder = await createFolder()
+
+  const videoFolder = await createFolder()
+
+  const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`, downloadPath)
+
+  const subDownload = async () => {
+    if (!playlist) return
+    const sbs: Array<string> = []
+    const name = await downloadADNSub(playlist.data.links.subtitles.all, subFolder, playlist.secret)
+    sbs.push(name)
+    return sbs
+  }
+
+  const downloadVideo = async () => {
+    var code
+
+    if (!playlist) return
+
+    var link: string = '';
+
+    switch (quality) {
+      case 1080:
+        link = playlist.data.links.streaming.vostde.fhd
+        break
+      case 720:
+        link = playlist.data.links.streaming.vostde.hd
+        break
+      case 480:
+        link = playlist.data.links.streaming.vostde.sd
+        break
+    }
+
+    if (!link) return
+
+    var m3u8 = await adnGetM3U8Playlist(link)
+
+    if (!m3u8) return
+
+    const dn = downloading.find((i) => i.id === downloadID)
+
+    if (dn) {
+      dn.partsToDownload = m3u8.length
+    }
+
+    const file = await downloadParts(m3u8, downloadID, videoFolder)
+
+    return file
+  }
+
+  const [subss, file] = await Promise.all([subDownload(), downloadVideo()])
+
+  if (!subss) return
+
+  await mergeVideoFile(file as string, [], [], String(playlist?.data.video.guid), seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format)
+
+  await updatePlaylistByID(downloadID, 'completed')
+
+  await deleteFolder(subFolder)
+  await deleteFolder(videoFolder)
+
+  return playlist
+}
 
 // Download Crunchyroll Playlist
 export async function downloadCrunchyrollPlaylist(
@@ -509,7 +618,7 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
     output.addInput(video)
     var options = ['-map_metadata -1', '-c copy', '-metadata:s:v:0 VARIANT_BITRATE=0', '-map 0']
     if (format === 'mp4') {
-        options.push('-c:s mov_text')
+      options.push('-c:s mov_text')
     }
 
     for (const [index, a] of audios.entries()) {

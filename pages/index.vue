@@ -6,19 +6,27 @@
         Delete Playlist
       </button> -->
       <div v-for="p in playlist" class="flex flex-row gap-4 h-40 p-5 bg-[#636363] border-b-[1px] border-gray-400">
-        <div class="flex min-w-52 w-52">
-          <img :src="p.media.images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-xl" />
+        <div v-if="p.service === 'CR'" class="flex min-w-52 w-52">
+          <img :src="(p.media as CrunchyEpisode).images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-xl" />
+        </div>
+        <div v-if="p.service === 'ADN'" class="flex min-w-52 w-52">
+          <img :src="(p.media as ADNEpisode).image2x" alt="Image" class="object-cover rounded-xl" />
         </div>
         <div class="flex flex-col w-full">
           <div class="flex flex-row">
             <div class="text-sm capitalize">
-            {{ p.status }}
+              {{ p.status }}
+            </div>
+            <div class="text-sm capitalize ml-auto">
+              {{ p.service === 'CR' ? 'Crunchyroll' : 'ADN' }}
+            </div>
           </div>
-          <div class="text-sm capitalize ml-auto">
-            {{ p.service === 'CR' ? 'Crunchyroll' : 'ADN' }}
+          <div v-if="p.service === 'CR'" class="text-base capitalize">
+            {{ (p.media as CrunchyEpisode).series_title }} Season {{ (p.media as CrunchyEpisode).season_number }} Episode {{ (p.media as CrunchyEpisode).episode_number }}
           </div>
+          <div v-if="p.service === 'ADN'" class="text-base capitalize">
+            {{ (p.media as ADNEpisode).show.title }} Season {{ (p.media as ADNEpisode).season ? (p.media as ADNEpisode).season : 1 }} Episode {{ (p.media as ADNEpisode).shortNumber }}
           </div>
-          <div class="text-base capitalize"> {{ p.media.series_title }} Season {{ p.media.season_number }} Episode {{ p.media.episode_number }} </div>
           <div class="relative w-full min-h-5 bg-[#bdbbbb] mt-1 rounded">
             <div
               v-if="p.partsleft && p.status === 'downloading'"
@@ -38,19 +46,20 @@
             <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-sm">{{ p.downloadspeed }} MB/s</div>
           </div>
         </div>
-      </div> </div
-    >s
+      </div>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+import type { ADNEpisode } from '~/components/ADN/Types'
 import type { CrunchyEpisode } from '~/components/Episode/Types'
 
 const playlist = ref<
   Array<{
     id: number
     status: string
-    media: CrunchyEpisode
+    media: CrunchyEpisode | ADNEpisode
     dub: Array<{ locale: string; name: string }>
     sub: Array<{ locale: string; name: string }>
     dir: string
@@ -68,7 +77,7 @@ const getPlaylist = async () => {
     Array<{
       id: number
       status: string
-      media: CrunchyEpisode
+      media: CrunchyEpisode | ADNEpisode
       dub: Array<{ locale: string; name: string }>
       sub: Array<{ locale: string; name: string }>
       dir: string
