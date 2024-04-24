@@ -404,7 +404,7 @@ export async function downloadCrunchyrollPlaylist(
   const subDownload = async () => {
     const sbs: Array<string> = []
     for (const sub of subDownloadList) {
-      const name = await downloadCRSub(sub, subFolder)
+      const name = await downloadCRSub(sub, subFolder, quality)
       sbs.push(name)
     }
     return sbs
