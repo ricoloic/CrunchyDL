@@ -15,30 +15,30 @@ export async function downloadCRSub(
   qual: 1080 | 720 | 480 | 360 | 240
 ) {
   const path = `${dir}/${sub.language}${sub.isDub ? `-FORCED` : ''}.${sub.format}`
-  var qualX;
-  var qualY;
+  var qualX
+  var qualY
 
   switch (qual) {
     case 1080:
       qualX = 1920
       qualY = 1080
-      break;
+      break
     case 720:
       qualX = 1280
       qualY = 720
-      break;
+      break
     case 480:
       qualX = 720
       qualY = 480
-      break;
+      break
     case 360:
       qualX = 640
       qualY = 360
-      break;
+      break
     case 240:
       qualX = 426
       qualY = 240
-      break;
+      break
   }
 
   const stream = fs.createWriteStream(path)
@@ -61,7 +61,7 @@ export async function downloadCRSub(
 
   const fixed = stringify(parsedASS)
 
-  const resampledSubs = resamplePOSSubtitle(fixed,parseInt(parsedASS.info.PlayResX), parseInt(parsedASS.info.PlayResY), qualX, qualY)
+  const resampledSubs = resamplePOSSubtitle(fixed, 640, 360, qualX, qualY)
 
   const readableStream = Readable.from([resampledSubs])
 
@@ -77,20 +77,64 @@ function resamplePOSSubtitle(subtitle: string, ox: number, oy: number, nx: numbe
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i]
 
-    if (line.includes('\\pos(')) {
-      let posMatch = line.match(/\\pos\((\d+),(\d+)\)/)
-      if (posMatch) {
+    if (line.includes('pos(')) {
+      let posMatches = line.matchAll(/pos\((-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\)/g)
+      for (let posMatch of posMatches) {
         let oldX = parseInt(posMatch[1])
         let oldY = parseInt(posMatch[2])
 
         let newX = Math.round((oldX / ox) * nx)
         let newY = Math.round((oldY / oy) * ny)
 
-        let newPos = `\\pos(${newX},${newY})`
+        let newPos = `pos(${newX},${newY})`
 
-        line = line.replace(/\\pos\(\d+,\d+\)/, newPos)
-        lines[i] = line
+        line = line.replace(posMatch[0], newPos)
       }
+      lines[i] = line
+    }
+
+    if (line.includes('move(')) {
+      let posMatches = line.matchAll(/move\((-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g)
+      for (let posMatch of posMatches) {
+        let fromX = parseInt(posMatch[1])
+        let fromY = parseInt(posMatch[2])
+        let toX = parseInt(posMatch[3])
+        let toY = parseInt(posMatch[4])
+        let time1 = parseInt(posMatch[5])
+        let time2 = parseInt(posMatch[6])
+
+        let newFromX = Math.round((fromX / ox) * nx)
+        let newFromY = Math.round((fromY / oy) * ny)
+        let newToX = Math.round((toX / ox) * nx)
+        let newToY = Math.round((toY / oy) * ny)
+
+        let newMov = `move(${newFromX},${newFromY},${newToX},${newToY},${time1},${time2})`
+
+        line = line.replace(posMatch[0], newMov)
+      }
+      lines[i] = line
+    }
+
+    if (line.includes('\\fs')) {
+      let posMatches = line.matchAll(/\\fs(-?\d+(?:\.\d+)?)/g)
+      for (let posMatch of posMatches) {
+        let font = parseInt(posMatch[1])
+        let newFontSize = Math.round((font / oy) * ny)
+        let newFont = `\\fs${newFontSize}`
+        line = line.replace(posMatch[0], newFont)
+      }
+      lines[i] = line
+    }
+
+    if (line.includes('\\bord')) {
+      let posMatches = line.matchAll(/\\bord(-?\d+(?:\.\d+)?)/g)
+      for (let posMatch of posMatches) {
+        let oldBord = parseInt(posMatch[1])
+        let newBord = Math.round((oldBord / oy) * ny)
+        let bord = `\\bord${newBord}`
+        line = line.replace(posMatch[0], bord)
+      }
+      lines[i] = line
     }
   }
 
