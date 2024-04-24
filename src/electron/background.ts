@@ -7,6 +7,7 @@ import titleBarActionsModule from './modules/titleBarActions'
 import updaterModule from './modules/updater'
 import macMenuModule from './modules/macMenu'
 import startAPI from '../api/api'
+import settings from 'electron-settings'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const isProduction = process.env.NODE_ENV !== 'development'
@@ -144,16 +145,26 @@ ipcMain.handle('dialog:openDirectory', async () => {
     properties: ['openDirectory']
   })
   if (canceled) {
-    return
+    return await settings.get('downloadPath')
   } else {
+    await settings.set('downloadPath', filePaths[0])
     return filePaths[0]
   }
 })
 
 ipcMain.handle('dialog:defaultDirectory', async () => {
-  const path = app.getPath('documents')
+  const savedPath = await settings.get('downloadPath')
 
-  return path
+  if (!savedPath) {
+    const path = app.getPath('documents')
+    
+    await settings.set('downloadPath', path)
+
+    return path
+  }
+
+  return savedPath
+
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

@@ -638,7 +638,7 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
     var output = Ffmpeg().setFfmpegPath(ffmpegPath).setFfprobePath(ffprobePath)
     var ffindex = 1
     output.addInput(video)
-    var options = ['-map_metadata -1', '-c copy', '-metadata:s:v:0 VARIANT_BITRATE=0', '-map 0']
+    var options = ['-map_metadata -1', '-metadata:s:v:0 VENDOR_ID=', '-metadata:s:v:0 language=', '-c copy', '-map 0']
     if (format === 'mp4') {
       options.push('-c:s mov_text')
     }
@@ -663,8 +663,6 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
             : a.split('/')[1].split('.aac')[0]
         }`
       )
-
-      options.push(`-metadata:s:a:${index} VARIANT_BITRATE=0`)
     }
 
     options.push(`-disposition:a:0 default`)
