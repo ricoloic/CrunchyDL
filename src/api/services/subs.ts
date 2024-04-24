@@ -20,14 +20,16 @@ export async function downloadCRSub(
 
   var parsedASS = parse(await response.text())
 
-  // Disabling Changing ASS because still broken in vlc
+  parsedASS.info['Original Script'] = 'crd  [https://github.com/stratuma/]'
 
-  // parsedASS.info.PlayResX = "1920";
-  // parsedASS.info.PlayResY = "1080";
+  parsedASS.info.PlayResX = "1920";
+  parsedASS.info.PlayResY = "1080";
 
-  // for (const s of parsedASS.styles.style) {
-  //     (s.Fontsize = "54"), (s.Outline = "4");
-  // }
+  for (const s of parsedASS.styles.style) {
+    if (s.Fontname === 'Arial') {
+      (s.Fontsize = "54"), (s.Outline = "4");
+    }
+  }
 
   const fixed = stringify(parsedASS)
 
