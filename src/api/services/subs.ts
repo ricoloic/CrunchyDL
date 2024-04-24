@@ -18,7 +18,9 @@ export async function downloadCRSub(
   const stream = fs.createWriteStream(path)
   const response = await fetch(sub.url)
 
-  var parsedASS = parse(await response.text())
+  var resampledSubs = resamplePOSSubtitle(await response.text())
+
+  var parsedASS = parse(resampledSubs)
 
   parsedASS.info['Original Script'] = 'crd  [https://github.com/stratuma/]'
 
@@ -27,7 +29,10 @@ export async function downloadCRSub(
 
   for (const s of parsedASS.styles.style) {
     if (s.Fontname === 'Arial') {
-      (s.Fontsize = "54"), (s.Outline = "4");
+      (s.Fontsize = "54"), (s.Outline = "4"), (s.MarginV = "60");
+    }
+    if (s.Name === 'TypePlaceholder') {
+      (s.Fontsize = "57"), (s.Outline = "4"), (s.MarginL = "30"), (s.MarginR = "30"), (s.MarginV = "60");
     }
   }
 
@@ -39,6 +44,32 @@ export async function downloadCRSub(
   console.log(`Sub ${sub.language}.${sub.format} downloaded`)
 
   return path
+}
+
+function resamplePOSSubtitle(subtitle: string) {
+  let lines = subtitle.split('\n');
+
+  for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+
+      if (line.includes("\\pos(")) {
+          let posMatch = line.match(/\\pos\((\d+),(\d+)\)/);
+          if (posMatch) {
+              let oldX = parseInt(posMatch[1]);
+              let oldY = parseInt(posMatch[2]);
+
+              let newX = Math.round((oldX / 640) * 1920);
+              let newY = Math.round((oldY / 360) * 1080);
+
+              let newPos = `\\pos(${newX},${newY})`;
+
+              line = line.replace(/\\pos\(\d+,\d+\)/, newPos);
+              lines[i] = line;
+          }
+      }
+  }
+
+  return lines.join('\n');
 }
 
 export async function downloadADNSub(link: string, dir: string, secret: string) {
