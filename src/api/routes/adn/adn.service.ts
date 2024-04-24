@@ -217,9 +217,11 @@ export async function adnGetPlaylist(animeid: number) {
       const data: ADNLink = await JSON.parse(await response.text())
       return { data: data, secret: token.random }
     } else {
-      const data: ADNLink = JSON.parse(await response.text())
+      const data: {  message: string, code: string, statusCode: string} = JSON.parse(await response.text())
 
-      return { data: data, secret: token.random }
+      messageBox('error', ['Cancel'], 2, 'Failed to fetch Playlist', 'Failed to fetch ADN Playlist', `${data.message} - ${data.code}`)
+
+      return null
     }
   } catch (e) {
     throw new Error(e as string)

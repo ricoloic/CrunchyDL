@@ -1,7 +1,7 @@
 import { Account, Playlist } from '../../db/database'
 import { downloadMPDAudio } from '../../services/audio'
 import { concatenateTSFiles } from '../../services/concatenate'
-import { createFolder, createFolderName, deleteFolder } from '../../services/folder'
+import { createFolder, createFolderName, deleteFolder, deleteTemporaryFolders } from '../../services/folder'
 import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
 import { crunchyGetPlaylist, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
@@ -43,6 +43,16 @@ export async function getPlaylist() {
 
   return episodes
 }
+
+
+// Delete Playlist and TEMP folders After Start
+async function deletePlaylistandTMP() {
+  await Playlist.truncate()
+
+  deleteTemporaryFolders()
+}
+
+deletePlaylistandTMP()
 
 // Update Playlist Item
 export async function updatePlaylistByID(id: number, status: 'waiting' | 'preparing' | 'downloading' | 'completed' | 'merging' | 'failed') {
@@ -177,7 +187,10 @@ export async function downloadADNPlaylist(
   const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`, downloadPath)
 
   const subDownload = async () => {
-    if (!playlist) return
+    if (!playlist) {
+      await updatePlaylistByID(downloadID, 'failed')
+      return
+    }
     const sbs: Array<string> = []
     const name = await downloadADNSub(playlist.data.links.subtitles.all, subFolder, playlist.secret)
     sbs.push(name)
@@ -185,9 +198,10 @@ export async function downloadADNPlaylist(
   }
 
   const downloadVideo = async () => {
-    var code
-
-    if (!playlist) return
+    if (!playlist) {
+      await updatePlaylistByID(downloadID, 'failed')
+      return
+    }
 
     var link: string = '';
 
@@ -222,9 +236,17 @@ export async function downloadADNPlaylist(
 
   const [subss, file] = await Promise.all([subDownload(), downloadVideo()])
 
-  if (!subss) return
+  if (!subss) {
+    await updatePlaylistByID(downloadID, 'failed')
+    return
+  }
 
-  await mergeVideoFile(file as string, [], [], String(playlist?.data.video.guid), seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format)
+  if (!file) {
+    await updatePlaylistByID(downloadID, 'failed')
+    return
+  }
+
+  await mergeVideoFile(file as string, [], subss, String(playlist?.data.video.guid), seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format)
 
   await updatePlaylistByID(downloadID, 'completed')
 

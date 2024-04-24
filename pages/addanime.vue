@@ -19,9 +19,6 @@
           <option value="adn">ADN</option>
         </select>
       </div>
-      <div v-if="service === 'adn'" class="text-sm text-center">
-        ADN downloader is still in beta and can only download ADN Germany
-      </div>
       <div v-if="(isLoggedInCR && service === 'crunchyroll') || (isLoggedInADN && service === 'adn')" class="relative flex flex-col">
         <input
           v-model="search"
@@ -188,6 +185,12 @@
           </button>
         </div>
       </div>
+      <div v-if="service === 'adn'" class="relative flex flex-col select-none">
+        <div class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+          Dub:
+          {{ selectedDubs.map((t) => t.name).join(', ') }}
+        </div>
+      </div>
       <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
         <div @click="selectSub ? (selectSub = false) : (selectSub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
           Subs:
@@ -204,6 +207,12 @@
           >
             {{ l.name }}
           </button>
+        </div>
+      </div>
+      <div v-if="service === 'adn'" class="relative flex flex-col select-none">
+        <div class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+          Sub:
+          {{ selectedSubs.length !== 0 ? selectedSubs.map((t) => t.name).join(', ') : 'No Subs selected' }}
         </div>
       </div>
       <div class="flex flex-row gap-3">
@@ -557,16 +566,15 @@ const switchToSeason = async () => {
   }
 
   if (ADNselectedShow.value) {
-    episodesADN.value = await getEpisodesWithShowIdADN(ADNselectedShow.value.id)
+    episodesADN.value = await getEpisodesWithShowIdADN(ADNselectedShow.value.id, 'de')
     if (!episodesADN.value) {
       isFetchingSeasons.value--
       return
-    }
+    };
     selectedStartEpisodeADN.value = episodesADN.value[0]
     selectedEndEpisodeADN.value = episodesADN.value[0]
     tab.value = 2
-    selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }],
-    selectedSubs.value = [{ locale: 'de-DE', name: 'DE' }]
+    selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }];
   }
 
   if (CRselectedShow.value) {

@@ -4,7 +4,8 @@ export interface ADNSearchFetch {
     url: string
     title: string
     image2x: string
-    episodeCount: number
+    episodeCount: number,
+    languages: Array<string>
   }>
 }
 

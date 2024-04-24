@@ -1,10 +1,10 @@
 import type { ADNEpisodes, ADNEpisodesFetch } from './Types'
 
-export async function getEpisodesWithShowIdADN(id: number) {
+export async function getEpisodesWithShowIdADN(id: number, lang: 'de' | 'fr') {
   const { data, error } = await useFetch<ADNEpisodesFetch>(`https://gw.api.animationdigitalnetwork.fr/video/show/${id}?offset=0&limit=-1&order=asc`, {
     method: 'GET',
     headers: {
-        "x-target-distribution": "de",
+        "x-target-distribution": lang,
     },
   })
 

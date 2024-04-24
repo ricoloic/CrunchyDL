@@ -3,7 +3,7 @@ import { app } from 'electron'
 import fs from 'fs'
 
 export async function createFolder() {
-  const tempFolderPath = path.join(app.getPath('documents'), (Math.random() + 1).toString(36).substring(2))
+  const tempFolderPath = path.join(app.getPath('documents'), `crd-tmp-${(Math.random() + 1).toString(36).substring(2)}`)
   try {
     await fs.promises.mkdir(tempFolderPath, { recursive: true })
     return tempFolderPath
@@ -51,4 +51,23 @@ export async function createFolderName(name: string, dir: string) {
 
 export async function deleteFolder(folderPath: string) {
   fs.rmSync(folderPath, { recursive: true, force: true })
+}
+
+export async function deleteTemporaryFolders() {
+  const documentsPath = app.getPath('documents');
+  const folderPrefix = 'crd-tmp-';
+
+  try {
+    const files = await fs.promises.readdir(documentsPath);
+    const tempFolders = files.filter(file => file.startsWith(folderPrefix));
+
+    for (const folder of tempFolders) {
+      const folderPath = path.join(documentsPath, folder);
+      await deleteFolder(folderPath);
+      console.log(`Temporary folder ${folder} deleted.`);
+    }
+  } catch (error) {
+    console.error('Error deleting temporary folders:', error);
+    throw error;
+  }
 }
