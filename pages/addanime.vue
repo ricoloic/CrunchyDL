@@ -619,6 +619,7 @@ const switchToSeason = async () => {
     selectedEndEpisodeADN.value = episodesADN.value[0]
     tab.value = 2
     selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+    selectedSubs.value = []
   }
 
   if (CRselectedShow.value) {
@@ -635,6 +636,7 @@ const switchToSeason = async () => {
     }
     tab.value = 2
     selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+    selectedSubs.value = []
   }
 
   if (url.value && url.value.includes('crunchyroll') && !CRselectedShow.value) {
@@ -653,6 +655,7 @@ const switchToSeason = async () => {
     }
     tab.value = 2
     selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+    selectedSubs.value = []
   }
 
   isFetchingSeasons.value--
