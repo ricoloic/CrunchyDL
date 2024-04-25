@@ -45,7 +45,6 @@ export async function getPlaylist() {
   return episodes
 }
 
-
 // Delete Playlist and TEMP folders After Start
 async function deletePlaylistandTMP() {
   await Playlist.truncate()
@@ -104,23 +103,24 @@ export async function getDownloading(id: number) {
   return null
 }
 
-function updateProgress(): void {
-  const totalParts = downloading.reduce((total, item) => total + item.partsToDownload, 0);
-  let downloadedParts = 0;
+// Download Progress Bar Updater
+function updateProgress() {
+  const totalParts = downloading.reduce((total, item) => total + item.partsToDownload, 0)
+  let downloadedParts = 0
 
   downloading.forEach((item) => {
-      downloadedParts += item.downloadedParts;
-  });
+    downloadedParts += item.downloadedParts
+  })
 
-  const progress = totalParts > 0 ? downloadedParts / totalParts : 0;
+  const progress = totalParts > 0 ? downloadedParts / totalParts : 0
 
-  setProgressBar(progress);
+  setProgressBar(progress)
 
-  const allDownloaded = downloading.every((item) => item.downloadedParts === item.partsToDownload);
+  const allDownloaded = downloading.every((item) => item.downloadedParts === item.partsToDownload)
 
   if (allDownloaded) {
-      setProgressBar(0);
-      return;
+    setProgressBar(0)
+    return
   }
 }
 
@@ -154,7 +154,7 @@ async function checkPlaylists() {
           e.dataValues.format
         )
       }
-      if (e.dataValues.service === 'ADN') { 
+      if (e.dataValues.service === 'ADN') {
         downloadADNPlaylist(
           (e.dataValues.media as ADNEpisode).id,
           (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
@@ -198,12 +198,12 @@ export async function downloadADNPlaylist(
   })
 
   if (!season) {
-    season = "1"
+    season = '1'
   }
 
   await updatePlaylistByID(downloadID, 'downloading')
 
-  var playlist = await adnGetPlaylist(e)
+  // var playlist = await adnGetPlaylist(e)
 
   const subFolder = await createFolder()
 
@@ -212,23 +212,42 @@ export async function downloadADNPlaylist(
   const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`, downloadPath)
 
   const subDownload = async () => {
-    if (!playlist) {
-      await updatePlaylistByID(downloadID, 'failed')
-      return
-    }
     const sbs: Array<string> = []
-    const name = await downloadADNSub(playlist.data.links.subtitles.all, subFolder, playlist.secret)
-    sbs.push(name)
+
+    if (subs.find((i) => i === 'de-DE')) {
+      const dePlaylist = await adnGetPlaylist(e, 'de')
+
+      if (!dePlaylist) return
+
+      const name = await downloadADNSub(dePlaylist.data.links.subtitles.all, subFolder, dePlaylist.secret, 'de-DE')
+      sbs.push(name)
+    }
+    if (subs.find((i) => i === 'fr-FR')) {
+      const frPlaylist = await adnGetPlaylist(e, 'fr')
+
+      if (!frPlaylist) return
+
+      const name = await downloadADNSub(frPlaylist.data.links.subtitles.all, subFolder, frPlaylist.secret, 'fr-FR')
+      sbs.push(name)
+    }
     return sbs
   }
 
   const downloadVideo = async () => {
+    var playlist
+
+    playlist = await adnGetPlaylist(e, 'de')
+
+    if (!playlist) {
+      playlist = await adnGetPlaylist(e, 'fr')
+    }
+
     if (!playlist) {
       await updatePlaylistByID(downloadID, 'failed')
       return
     }
 
-    var link: string = '';
+    var link: string = ''
 
     switch (quality) {
       case 1080:
@@ -271,14 +290,19 @@ export async function downloadADNPlaylist(
     return
   }
 
-  await mergeVideoFile(file as string, [], subss, String(playlist?.data.video.guid), seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format)
+  await mergeVideoFile(
+    file as string,
+    [],
+    subss,
+    seasonFolder,
+    `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`,
+    format
+  )
 
   await updatePlaylistByID(downloadID, 'completed')
 
   await deleteFolder(subFolder)
   await deleteFolder(videoFolder)
-
-  return playlist
 }
 
 // Download Crunchyroll Playlist
@@ -542,7 +566,7 @@ export async function downloadCrunchyrollPlaylist(
 
   if (!audios) return
 
-  await mergeVideoFile(file as string, audios, subss, String(playlist.assetId), seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format)
+  await mergeVideoFile(file as string, audios, subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format)
 
   await updatePlaylistByID(downloadID, 'completed')
 
@@ -631,7 +655,7 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
   }
 }
 
-async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<string>, name: string, path: string, filename: string, format: 'mp4' | 'mkv') {
+async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<string>, path: string, filename: string, format: 'mp4' | 'mkv') {
   const locales: Array<{
     locale: string
     name: string

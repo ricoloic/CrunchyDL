@@ -42,7 +42,6 @@ export async function adnLogin(user: string, passw: string) {
 
 async function adnLoginFetch(user: string, passw: string) {
   const headers = {
-    'x-target-distribution': 'de',
     'Content-Type': 'application/json'
   }
 
@@ -103,7 +102,7 @@ export async function getEpisodeADN(q: number) {
   }
 }
 
-export async function getPlayerConfigADN(id: number) {
+export async function getPlayerConfigADN(id: number, geo: 'de' | 'fr') {
 
   const account = await loggedInCheck('ADN')
 
@@ -117,7 +116,7 @@ export async function getPlayerConfigADN(id: number) {
     const response = await fetch(`https://gw.api.animationdigitalnetwork.fr/player/video/${id}/configuration`, {
       method: 'GET',
       headers: {
-        'x-target-distribution': 'de',
+        'x-target-distribution': geo,
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token.data.accessToken}`
       }
@@ -135,8 +134,8 @@ export async function getPlayerConfigADN(id: number) {
   }
 }
 
-async function getPlayerToken(id: number) {
-  const r = await getPlayerConfigADN(id)
+async function getPlayerToken(id: number, geo: 'de' | 'fr') {
+  const r = await getPlayerConfigADN(id, geo)
 
   if (!r) return
 
@@ -144,7 +143,7 @@ async function getPlayerToken(id: number) {
     const response = await fetch(`https://gw.api.animationdigitalnetwork.fr/player/refresh/token`, {
       method: 'POST',
       headers: {
-        'x-target-distribution': 'de',
+        'x-target-distribution': geo,
         'Content-Type': 'application/json',
         'X-Player-Refresh-Token': r.player.options.user.refreshToken
       }
@@ -175,8 +174,8 @@ function randomHexaString(length: number) {
   return result
 }
 
-async function getPlayerEncryptedToken(id: number) {
-  const token = await getPlayerToken(id)
+async function getPlayerEncryptedToken(id: number, geo: 'de' | 'fr') {
+  const token = await getPlayerToken(id, geo)
 
   if (!token) return
 
@@ -199,8 +198,8 @@ async function getPlayerEncryptedToken(id: number) {
   return { data: encryptedData, random: random }
 }
 
-export async function adnGetPlaylist(animeid: number) {
-  const token = await getPlayerEncryptedToken(animeid)
+export async function adnGetPlaylist(animeid: number, geo: 'de' | 'fr') {
+  const token = await getPlayerEncryptedToken(animeid, geo)
 
   if (!token) return
 
@@ -208,7 +207,7 @@ export async function adnGetPlaylist(animeid: number) {
     const response = await fetch(`https://gw.api.animationdigitalnetwork.fr/player/video/${animeid}/link`, {
       method: 'GET',
       headers: {
-        'x-target-distribution': 'de',
+        'x-target-distribution': geo,
         'X-Player-Token': token.data
       }
     })

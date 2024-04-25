@@ -198,7 +198,7 @@
           >
             JP
           </button>
-          <button
+          <!-- <button
             v-if="ADNselectedShow.languages.find((l) => l === 'vde')"
             @click="toggleDub({ locale: 'de-DE', name: 'DE' })"
             class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
@@ -213,7 +213,7 @@
             :class="selectedDubs.find((i) => i.locale === 'fr-FR') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
           >
             FR
-          </button>
+          </button> -->
         </div>
       </div>
       <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
