@@ -232,7 +232,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
   }
 
   if (parsedSubs.vostf) {
-    for (const s of parsedSubs.vostde) {
+    for (const s of parsedSubs.vostf) {
       const convertedStart = convertToTimeFormat(s.startTime)
       const convertedEnd = convertToTimeFormat(s.endTime)
 
