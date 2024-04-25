@@ -15,10 +15,11 @@ const platform: 'darwin' | 'win32' | 'linux' = process.platform as any
 const architucture: '64' | '32' = os.arch() === 'x64' ? '64' : '32'
 const headerSize = 32
 const modules = [titleBarActionsModule, macMenuModule, updaterModule]
+var mainWindow: BrowserWindow;
 
 function createWindow() {
   console.log('System info', { isProduction, platform, architucture })
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     title: 'Crunchyroll Downloader',
     icon: __dirname + '/icon/favicon.ico',
     width: 950,
@@ -134,6 +135,12 @@ export async function messageBox(
   console.log(response)
 }
 
+export async function setProgressBar(
+  c: number
+) {
+  mainWindow.setProgressBar(c)
+}
+
 ipcMain.handle('dialog:openDirectory', async () => {
   const window = BrowserWindow.getFocusedWindow()
 
@@ -157,14 +164,13 @@ ipcMain.handle('dialog:defaultDirectory', async () => {
 
   if (!savedPath) {
     const path = app.getPath('documents')
-    
+
     await settings.set('downloadPath', path)
 
     return path
   }
 
   return savedPath
-
 })
 
 // Quit when all windows are closed, except on macOS. There, it's common

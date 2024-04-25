@@ -49,7 +49,6 @@
             </div>
           </button>
           <button v-for="result in adnSearchResults" @click="selectShow(result)" class="flex flex-row gap-3 px-3 py-3 hover:bg-[#747474] rounded-xl h-20">
-            {{ result.languages }}
             <div class="min-w-10 w-10 h-14 bg-gray-700">
               <img :src="result.image2x" alt="Image Banner" class="h-full w-full object-cover" />
             </div>
