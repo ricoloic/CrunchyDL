@@ -49,6 +49,7 @@
             </div>
           </button>
           <button v-for="result in adnSearchResults" @click="selectShow(result)" class="flex flex-row gap-3 px-3 py-3 hover:bg-[#747474] rounded-xl h-20">
+            {{ result.languages }}
             <div class="min-w-10 w-10 h-14 bg-gray-700">
               <img :src="result.image2x" alt="Image Banner" class="h-full w-full object-cover" />
             </div>
@@ -185,10 +186,35 @@
           </button>
         </div>
       </div>
-      <div v-if="service === 'adn'" class="relative flex flex-col select-none">
-        <div class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-          Dub:
+      <div v-if="service === 'adn' && ADNselectedShow" class="relative flex flex-col select-none">
+        <div @click="selectDub ? (selectDub = false) : (selectDub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+          Dubs:
           {{ selectedDubs.map((t) => t.name).join(', ') }}
+        </div>
+        <div v-if="selectDub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
+          <button
+            @click="toggleDub({ locale: 'ja-JP', name: 'JP' })"
+            class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+            :class="selectedDubs.find((i) => i.locale === 'ja-JP') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+          >
+            JP
+          </button>
+          <button
+            v-if="ADNselectedShow.languages.find((l) => l === 'vde')"
+            @click="toggleDub({ locale: 'de-DE', name: 'DE' })"
+            class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+            :class="selectedDubs.find((i) => i.locale === 'de-DE') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+          >
+            DE
+          </button>
+          <button
+            v-if="ADNselectedShow.languages.find((l) => l === 'vf')"
+            @click="toggleDub({ locale: 'fr-FR', name: 'FR' })"
+            class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+            :class="selectedDubs.find((i) => i.locale === 'fr-FR') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+          >
+            FR
+          </button>
         </div>
       </div>
       <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
@@ -209,10 +235,28 @@
           </button>
         </div>
       </div>
-      <div v-if="service === 'adn'" class="relative flex flex-col select-none">
-        <div class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-          Sub:
+      <div v-if="service === 'adn' && ADNselectedShow" class="relative flex flex-col select-none">
+        <div @click="selectSub ? (selectSub = false) : (selectSub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+          Subs:
           {{ selectedSubs.length !== 0 ? selectedSubs.map((t) => t.name).join(', ') : 'No Subs selected' }}
+        </div>
+        <div v-if="selectSub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
+          <button
+            v-if="ADNselectedShow.languages.find((l) => l === 'vostde')"
+            @click="toggleSub({ locale: 'de-DE', name: 'DE' })"
+            class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+            :class="selectedSubs.find((i) => i.locale === 'de-DE') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+          >
+            DE
+          </button>
+          <button
+            v-if="ADNselectedShow.languages.find((l) => l === 'vostf')"
+            @click="toggleSub({ locale: 'fr-FR', name: 'FR' })"
+            class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+            :class="selectedSubs.find((i) => i.locale === 'fr-FR') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+          >
+            FR
+          </button>
         </div>
       </div>
       <div class="flex flex-row gap-3">
@@ -570,11 +614,11 @@ const switchToSeason = async () => {
     if (!episodesADN.value) {
       isFetchingSeasons.value--
       return
-    };
+    }
     selectedStartEpisodeADN.value = episodesADN.value[0]
     selectedEndEpisodeADN.value = episodesADN.value[0]
     tab.value = 2
-    selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }];
+    selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
   }
 
   if (CRselectedShow.value) {
@@ -722,4 +766,24 @@ const addToPlaylistADN = async () => {
 }
 </script>
 
-<style></style>
+<style scoped>
+::-webkit-scrollbar-track {
+  background: #303030;
+  border-radius: 0px 12px 12px 0px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #cac9c9;
+  border-radius: 0px 12px 12px 0px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+</style>
