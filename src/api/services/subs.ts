@@ -195,10 +195,34 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
       lineAlign: string
       text: string
     }>
+    vostf: Array<{
+      startTime: number
+      endTime: number
+      positionAligh: string
+      lineAlign: string
+      text: string
+    }>
+    vf: Array<{
+      startTime: number
+      endTime: number
+      positionAligh: string
+      lineAlign: string
+      text: string
+    }>
   } = await JSON.parse(subs)
 
-  if (parsedSubs.vde) {
-    for (const s of parsedSubs.vde) {
+  // if (parsedSubs.vde) {
+  //   for (const s of parsedSubs.vde) {
+  //     const convertedStart = convertToTimeFormat(s.startTime)
+  //     const convertedEnd = convertToTimeFormat(s.endTime)
+
+  //     templateASS =
+  //       templateASS + `Dialogue: 0,${convertedStart},${convertedEnd},Default,,0,0,0,,${s.text.replace('\n', '\\N').replace('<i>', '{\\i1}').replace('</i>', '{\\i0}')}\n`
+  //   }
+  // }
+
+  if (parsedSubs.vostde) {
+    for (const s of parsedSubs.vostde) {
       const convertedStart = convertToTimeFormat(s.startTime)
       const convertedEnd = convertToTimeFormat(s.endTime)
 
@@ -207,7 +231,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\
     }
   }
 
-  if (parsedSubs.vostde) {
+  if (parsedSubs.vostf) {
     for (const s of parsedSubs.vostde) {
       const convertedStart = convertToTimeFormat(s.startTime)
       const convertedEnd = convertToTimeFormat(s.endTime)
