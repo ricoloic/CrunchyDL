@@ -18,6 +18,6 @@ This Tool is still in Beta, so there might be some errors.
 #### Implemented Crunchyroll Login
 ![image](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/ac8a4188-2d90-4991-9433-3e4bc72fbb5a)
 #### Add Anime (with implemented anime search)
-![image](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/8db50091-1580-423c-8c13-0a428def4530)
+![image](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/f0a478d3-d5a8-4ac5-9673-5f983c09ec44)
 ![image](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/01dbf7df-7263-497a-a034-8cc8ea15ec3d)
 
