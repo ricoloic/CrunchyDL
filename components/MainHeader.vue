@@ -19,7 +19,7 @@
           PLAYLIST
         </div>
       </button> -->
-      <button  class="flex items-center justify-center px-2 py-2 gap-1 transition-all bg-[#ffffff16] hover:bg-[#ffffff25] rounded-lg select-none mr-[5.5rem]" style="-webkit-app-region: no-drag">
+      <button  class="flex items-center justify-center px-2 py-2 gap-1 transition-all bg-[#ffffff16] hover:bg-[#ffffff25] rounded-lg select-none" style="-webkit-app-region: no-drag">
         <Icon name="ic:round-settings" class="h-3.5 w-3.5 text-white" />
         <div class="text-[11px] text-white font-dm">
           SETTINGS
