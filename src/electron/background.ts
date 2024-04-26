@@ -24,7 +24,6 @@ function createWindow() {
     icon: __dirname + '/icon/favicon.ico',
     width: 950,
     height: 700,
-    backgroundColor: '#111111',
     webPreferences: {
       devTools: true,
       nodeIntegration: true,
@@ -33,11 +32,15 @@ function createWindow() {
     },
     titleBarStyle: 'hidden',
     titleBarOverlay: {
-      color: '#111111',
+      color: 'rgba(0,0,0,0)',
       symbolColor: '#ffffff',
-      height: 40
+      height: 40,
     },
-    resizable: false
+    resizable: false,
+    fullscreen: false,
+    maximizable: false,
+    vibrancy: 'fullscreen-ui',
+    backgroundMaterial: 'acrylic',
   })
 
   mainWindow.webContents.setWindowOpenHandler(() => {
@@ -58,9 +61,21 @@ function createWindow() {
           symbolColor: '#ffffff',
           height: 40
         },
-        resizable: false
+        resizable: false,
+        fullscreen: false,
+        maximizable: false,
+        vibrancy: 'fullscreen-ui',
+        backgroundMaterial: 'acrylic',
       }
     }
+  })
+
+  mainWindow.on('blur', () => {
+    mainWindow.setBackgroundColor('#00000000')
+  })
+  
+  mainWindow.on('focus', () => {
+    mainWindow.setBackgroundColor('#00000000')
   })
 
   // Lock app to single instance
@@ -192,7 +207,6 @@ ipcMain.handle(
       url: string
       width: number
       height: number
-      backgroundColor: string
     }
   ) => {
     const mainWindow = new BrowserWindow({
@@ -200,7 +214,6 @@ ipcMain.handle(
       icon: __dirname + '/icon/favicon.ico',
       width: opt.width,
       height: opt.height,
-      backgroundColor: opt.backgroundColor,
       webPreferences: {
         devTools: true,
         nodeIntegration: true,
@@ -209,11 +222,15 @@ ipcMain.handle(
       },
       titleBarStyle: 'hidden',
       titleBarOverlay: {
-        color: '#111111',
+        color: 'rgba(0,0,0,0)',
         symbolColor: '#ffffff',
         height: 40
       },
-      resizable: false
+      resizable: false,
+      fullscreen: false,
+      maximizable: false,
+      vibrancy: 'fullscreen-ui',
+      backgroundMaterial: 'acrylic',
     })
 
     mainWindow.webContents.once('did-finish-load', () => {

@@ -1,10 +1,10 @@
 <template>
-  <div class="h-screen overflow-hidden bg-[#111111] flex flex-col p-5 text-white" style="-webkit-app-region: drag">
+  <div class="h-screen overflow-hidden bg-[#11111189] flex flex-col p-5 text-white font-dm" style="-webkit-app-region: drag">
     <div class="relative flex flex-row items-center justify-center">
       <button
         v-if="tab === 2"
         @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null)"
-        class="absolute left-0 bg-[#5c5b5b] py-1 px-3 rounded-xl flex flex-row items-center justify-center gap-0.5 hover:bg-[#4b4a4a] transition-all"
+        class="absolute left-0 bg-[#5c5b5b9c] py-1.5 px-3 rounded-xl flex flex-row items-center justify-center gap-0.5 hover:bg-[#4b4a4a] transition-all text-sm"
         style="-webkit-app-region: no-drag"
       >
         <Icon name="formkit:arrowleft" class="h-5 w-5" />
@@ -14,7 +14,7 @@
     </div>
     <div v-if="tab === 1" class="flex flex-col mt-5 gap-3.5 h-full" style="-webkit-app-region: no-drag">
       <div class="relative flex flex-col">
-        <select v-model="service" name="service" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+        <select v-model="service" name="service" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer">
           <option value="crunchyroll">Crunchyroll</option>
           <option value="adn">ADN</option>
         </select>
@@ -23,18 +23,16 @@
         <input
           v-model="search"
           @input="handleInputChange"
-          type="search"
-          name="search"
-          placeholder="Search"
-          class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center"
+          placeholder="SEARCH"
+          class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center"
         />
-        <div v-if="isFetchingResults" class="absolute top-full left-0 h-28 w-full bg-[#868585] rounded-xl z-10 flex items-center justify-center">
+        <div class="absolute top-full left-0 h-28 w-full bg-[#868585] rounded-xl z-10 flex items-center justify-center transition-all duration-300" :class="isFetchingResults ? 'opacity-100' : 'opacity-0 pointer-events-none'">
           <Icon name="mdi:loading" class="h-8 w-8 animate-spin" />
         </div>
         <div
-          v-if="searchActive"
-          class="absolute top-full left-0 h-40 w-full bg-[#868585] rounded-xl overflow-y-scroll grid grid-cols-2 gap-3 p-2 z-10"
+          class="absolute top-full left-0 h-40 w-full bg-[#868585] rounded-xl overflow-y-scroll grid grid-cols-2 gap-3 p-2 z-10 transition-all duration-300"
           style="-webkit-app-region: no-drag"
+          :class="searchActive ? 'opacity-100' : 'opacity-0 pointer-events-none'"
         >
           <button v-for="result in crunchySearchResults" @click="selectShow(result)" class="flex flex-row gap-3 px-3 py-3 hover:bg-[#747474] rounded-xl">
             <div class="min-w-10 w-10 bg-gray-700">
@@ -62,7 +60,7 @@
         </div>
       </div>
       <div v-if="(isLoggedInCR && service === 'crunchyroll') || (isLoggedInADN && service === 'adn')" class="relative flex flex-col">
-        <input v-model="url" type="text" name="text" placeholder="URL" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center" />
+        <input v-model="url" type="text" name="text" placeholder="URL" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center" />
       </div>
       <div v-if="(isLoggedInCR && service === 'crunchyroll') || (isLoggedInADN && service === 'adn')" class="relative flex flex-col">
         <input
@@ -76,10 +74,10 @@
         />
       </div>
       <div v-if="!isLoggedInCR && service === 'crunchyroll'" class="relative flex flex-col">
-        <button @click="openCRLogin" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">Click to Login</button>
+        <button @click="openCRLogin" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer">Click to Login</button>
       </div>
       <div v-if="!isLoggedInADN && service === 'adn'" class="relative flex flex-col">
-        <button @click="openADNLogin" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">Click to Login</button>
+        <button @click="openADNLogin" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer">Click to Login</button>
       </div>
       <div class="relative flex flex-col mt-auto">
         <button @click="switchToSeason" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
@@ -787,5 +785,30 @@ const addToPlaylistADN = async () => {
 
 ::-webkit-scrollbar {
   width: 8px;
+}
+
+.font-dm {
+    font-family: "DM Sans", sans-serif;
+}
+
+.font-protest {
+    font-family: "Protest Riot", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.font-dm-big {
+    font-family: "DM Sans", sans-serif;
+    font-weight: 1000;
+    font-style: normal;
+}
+
+select {
+    background: url("data:image/svg+xml,<svg height='10px' width='10px' viewBox='0 0 16 16' fill='%23000000' xmlns='http://www.w3.org/2000/svg'><path d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/></svg>") no-repeat;
+    background-position: calc(100% - 0.75rem) center !important;
+    background-color: #5c5b5b;
+    -moz-appearance:none !important;
+    -webkit-appearance: none !important; 
+    appearance: none !important;
 }
 </style>

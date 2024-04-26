@@ -5,6 +5,11 @@ export default defineNuxtConfig({
     shim: false
   },
   ssr: false,
-  modules: ['@nuxtjs/tailwindcss', 'nuxt-icon'],
-  
+  modules: ['@nuxtjs/tailwindcss', 'nuxt-icon', '@nuxtjs/google-fonts'],
+  googleFonts: {
+    families: {
+      'DM+Sans': [600, '1000'],
+      'Protest+Riot': true
+    }
+  }
 })

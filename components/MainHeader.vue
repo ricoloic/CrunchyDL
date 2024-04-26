@@ -1,22 +1,29 @@
 <template>
-  <div class="fixed w-full flex flex-row bg-[#111111] h-16 z-10" style="-webkit-app-region: drag">
-    <div class="w-full flex gap-10 flex-row items-center justify-center px-">
-      <button @click="openAddAnime" class="px-6 py-0.5 border-2 border-[#ce6104] rounded-xl" style="-webkit-app-region: no-drag">
-        <Icon name="ph:plus-bold" class="h-7 w-7 text-[#ce6104]" />
-      </button>
-      <button class="px-6 py-0.5 border-2 border-[#ce6104] rounded-xl" style="-webkit-app-region: no-drag">
-        <Icon name="material-symbols:globe" class="h-7 w-7 text-[#ce6104]" />
+  <div class="fixed w-full flex flex-row px-2 bg-[#11111189] h-14 z-10 border-[#383838] gap-1" style="-webkit-app-region: drag">
+    <div class="w-full flex gap-10 flex-row items-center justify-center px-5">
+      <button @click="openAddAnime" class="flex items-center justify-center px-2 py-2 gap-1 transition-all bg-[#ffffff16] hover:bg-[#ffffff25] rounded-lg select-none" style="-webkit-app-region: no-drag">
+        <Icon name="ph:plus-bold" class="h-3.5 w-3.5 text-white" />
+        <div class="text-[11px] text-white font-dm">
+          ADD DOWNLOAD
+        </div>
       </button>
     </div>
     <div class="w-full flex flex-row items-center justify-center">
-      <div class="text-2xl text-white select-none">Crunchyroll Downloader</div>
+      <img src="/logo.png" class="h-8">
+      <div class="text-[10px] leading-[10px] text-opacity-90 text-white select-none">Crunchyroll <br> Downloader</div>
     </div>
-    <div class="w-full flex gap-4 flex-row items-center justify-start px-5">
-      <button class="px-6 py-0.5 border-2 border-[#ce6104] rounded-xl" style="-webkit-app-region: no-drag">
-        <Icon name="iconamoon:playlist" class="h-7 w-7 text-[#ce6104]" />
-      </button>
-      <button @click="openSettings" class="px-6 py-0.5 border-2 border-[#ce6104] rounded-xl" style="-webkit-app-region: no-drag">
-        <Icon name="ic:round-settings" class="h-7 w-7 text-[#ce6104]" />
+    <div class="w-full flex gap-2 flex-row items-center justify-center">
+      <!-- <button  class="flex items-center justify-center px-2 py-2 gap-1 transition-all bg-[#ffffff16] hover:bg-[#ffffff25] rounded-lg select-none" style="-webkit-app-region: no-drag">
+        <Icon name="iconamoon:playlist" class="h-3.5 w-3.5 text-white" />
+        <div class="text-[11px] text-white font-dm">
+          PLAYLIST
+        </div>
+      </button> -->
+      <button  class="flex items-center justify-center px-2 py-2 gap-1 transition-all bg-[#ffffff16] hover:bg-[#ffffff25] rounded-lg select-none mr-[5.5rem]" style="-webkit-app-region: no-drag">
+        <Icon name="ic:round-settings" class="h-3.5 w-3.5 text-white" />
+        <div class="text-[11px] text-white font-dm">
+          SETTINGS
+        </div>
       </button>
     </div>
   </div>
@@ -61,5 +68,3 @@ async function openAddAnime() {
   })
 }
 </script>
-
-<style></style>

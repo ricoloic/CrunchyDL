@@ -1,49 +1,62 @@
 <template>
   <div class="h-screen overflow-hidden">
     <MainHeader />
-    <div class="flex flex-col text-white mt-16 overflow-y-scroll h-[calc(100vh-4rem)]">
+    <div class="flex flex-col text-white gap-5 mt-14 p-5 overflow-y-scroll h-[calc(100vh-3.5rem)]">
       <!-- <button @click="deletePlaylist">
         Delete Playlist
       </button> -->
-      <div v-for="p in playlist" class="flex flex-row gap-4 h-40 p-5 bg-[#636363] border-b-[1px] border-gray-400">
-        <div v-if="p.service === 'CR'" class="flex min-w-52 w-52">
-          <img :src="(p.media as CrunchyEpisode).images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-xl" />
-        </div>
-        <div v-if="p.service === 'ADN'" class="flex min-w-52 w-52">
-          <img :src="(p.media as ADNEpisode).image2x" alt="Image" class="object-cover rounded-xl" />
-        </div>
-        <div class="flex flex-col w-full">
-          <div class="flex flex-row">
-            <div class="text-sm capitalize">
-              {{ p.status }}
+      <div v-for="p in playlist" class="relative flex flex-row gap-4 h-36 bg-[#63636383] rounded-xl font-dm overflow-hidden">
+        <div class="absolute top-0 left-0 w-full h-full bg-[#a1a1a141] transition-all duration-300" :style="`width: calc((${p.partsdownloaded} / ${p.partsleft}) * 100%);`"></div>
+        <div class="absolute h-full w-full flex flex-row gap-3 p-3.5">
+          <div v-if="p.service === 'CR'" class="flex w-48 min-w-48">
+            <img :src="(p.media as CrunchyEpisode).images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-lg" />
+          </div>
+          <div v-if="p.service === 'ADN'" class="flex min-w-52 w-52">
+            <img :src="(p.media as ADNEpisode).image2x" alt="Image" class="object-cover rounded-lg" />
+          </div>
+          <div class="flex flex-col w-full">
+            <div class="flex flex-row h-full">
+              <div class="flex flex-col">
+                <div v-if="p.status === 'waiting'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                  <Icon name="mdi:clock" class="h-3.5 w-3.5 text-white" />
+                  {{ p.status }}
+                </div>
+                <div v-if="p.status === 'preparing'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                  <Icon name="mdi:clock" class="h-3.5 w-3.5 text-white" />
+                  {{ p.status }}
+                </div>
+                <div v-if="p.status === 'downloading'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#60501b] rounded-lg">
+                  <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                  {{ p.status }}
+                </div>
+                <div v-if="p.status === 'merging'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                  <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                  {{ p.status }}
+                </div>
+                <div v-if="p.status === 'completed'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#266326] rounded-lg">
+                  <Icon name="material-symbols:check" class="h-3.5 w-3.5 text-white" />
+                  {{ p.status }}
+                </div>
+              </div>
+              <div class="text-xs capitalize ml-auto">
+                {{ p.service === 'CR' ? 'Crunchyroll' : 'ADN' }}
+              </div>
             </div>
-            <div class="text-sm capitalize ml-auto">
-              {{ p.service === 'CR' ? 'Crunchyroll' : 'ADN' }}
+            <div v-if="p.service === 'CR'" class="text-base capitalize h-full flex items-center">
+              {{ (p.media as CrunchyEpisode).series_title }} Season {{ (p.media as CrunchyEpisode).season_number }} Episode {{ (p.media as CrunchyEpisode).episode_number }}
             </div>
-          </div>
-          <div v-if="p.service === 'CR'" class="text-base capitalize">
-            {{ (p.media as CrunchyEpisode).series_title }} Season {{ (p.media as CrunchyEpisode).season_number }} Episode {{ (p.media as CrunchyEpisode).episode_number }}
-          </div>
-          <div v-if="p.service === 'ADN'" class="text-base capitalize">
-            {{ (p.media as ADNEpisode).show.title }} Season {{ (p.media as ADNEpisode).season ? (p.media as ADNEpisode).season : 1 }} Episode {{ (p.media as ADNEpisode).shortNumber }}
-          </div>
-          <div class="relative w-full min-h-5 bg-[#bdbbbb] mt-1 rounded">
-            <div
-              v-if="p.partsleft && p.status === 'downloading'"
-              class="w-full h-full rounded bg-[#4e422d] transition-all duration-300"
-              :style="`width: calc((${p.partsdownloaded} / ${p.partsleft}) * 100%);`"
-            ></div>
-            <div v-if="p.status === 'completed'" class="w-full h-full rounded bg-[#79ff77] transition-all duration-300"></div>
-            <div v-if="p.status === 'merging'" class="absolute top-0 w-20 h-full rounded bg-[#293129] transition-all duration-300 loading-a"></div>
-          </div>
-          <div class="flex h-full"> </div>
-          <div class="flex flex-row gap-2 mt-2">
-            <div class="text-sm">{{ p.quality }}p</div>
-            <div class="text-sm uppercase">{{ p.format }}</div>
-            <div class="text-sm">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
-            <div class="text-sm">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
-            <div v-if="p.partsleft && p.status === 'downloading'" class="text-sm ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
-            <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-sm">{{ p.downloadspeed }} MB/s</div>
+            <div v-if="p.service === 'ADN'" class="text-base capitalize h-full">
+              {{ (p.media as ADNEpisode).show.title }} Season {{ (p.media as ADNEpisode).season ? (p.media as ADNEpisode).season : 1 }} Episode
+              {{ (p.media as ADNEpisode).shortNumber }}
+            </div>
+            <div class="flex flex-row gap-2 h-full items-end">
+              <div class="text-xs">{{ p.quality }}p</div>
+              <div class="text-xs uppercase">{{ p.format }}</div>
+              <div class="text-xs">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
+              <div class="text-xs">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
+              <div v-if="p.partsleft && p.status === 'downloading'" class="text-xs ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
+              <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-xs">{{ p.downloadspeed }} MB/s</div>
+            </div>
           </div>
         </div>
       </div>
@@ -124,13 +137,36 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
+<style>
+body {
+  background: none;
+  background-color: none;
+  background: transparent;
+  background-color: transparent;
+}
+
+.font-dm {
+  font-family: 'DM Sans', sans-serif;
+}
+
+.font-protest {
+  font-family: 'Protest Riot', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.font-dm-big {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 1000;
+  font-style: normal;
+}
+
 .loading-a {
   animation: animation infinite 3s;
 }
 
 ::-webkit-scrollbar-track {
-  background: #303030;
+  background: #383838;
 }
 
 /* Handle */

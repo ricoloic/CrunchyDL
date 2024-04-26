@@ -16,10 +16,10 @@ const options = {
   buildDependenciesFromSource: true,
 
   directories: {
-    output: 'crunchyroll-downloader-output'
+    output: 'crunchyroll-downloader-output-${version}'
   },
   win: {
-    artifactName: 'crunchyd-Setup-${version}.${ext}',
+    artifactName: 'crunchyroll-downloader-${version}-windows-installer.${ext}',
     icon: "public/favicon.ico",
     target: [
       {

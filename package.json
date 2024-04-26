@@ -2,7 +2,7 @@
   "name": "crunchyroll-downloader",
   "author": "Stratum",
   "description": "Crunchyroll Downloader",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "main": ".output/src/electron/background.js",
   "scripts": {
@@ -17,11 +17,12 @@
   },
   "devDependencies": {
     "@nuxtjs/eslint-config-typescript": "^12.1.0",
+    "@nuxtjs/google-fonts": "^3.2.0",
     "@nuxtjs/tailwindcss": "^6.12.0",
     "@types/express": "^4.17.21",
     "concurrently": "^8.2.2",
-    "electron": "^23.3.13",
-    "electron-builder": "^23.6.0",
+    "electron": "^30.0.1",
+    "electron-builder": "^24.13.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -35,6 +36,7 @@
     "wait-on": "^7.2.0"
   },
   "dependencies": {
+    "7zip-bin": "^5.2.0",
     "@fastify/cors": "^9.0.1",
     "@pinia/nuxt": "^0.4.11",
     "@types/crypto-js": "^4.2.2",
@@ -60,6 +62,7 @@
     "uuid": "^9.0.1"
   },
   "build": {
+    "extends": null,
     "asarUnpack": [
       "node_modules/ffmpeg-static/bin/${os}/${arch}/ffmpeg",
       "node_modules/ffmpeg-static/index.js",
