@@ -93,13 +93,6 @@ function createWindow() {
 // App events
 // ==========
 app.whenReady().then(async () => {
-  if (!isProduction) {
-    try {
-      await session.defaultSession.loadExtension(path.join(__dirname, '../..', '__extensions', 'vue-devtools'))
-    } catch (err) {
-      console.log('[Electron::loadExtensions] An error occurred: ', err)
-    }
-  }
 
   startAPI()
 

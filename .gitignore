@@ -9,6 +9,7 @@ node_modules
 dist
 .DS_Store
 build/
+ffmpeg/
 
 # Electron
 crunchyroll-downloader-output

@@ -13,8 +13,8 @@ import Ffmpeg from 'fluent-ffmpeg'
 import { adnGetM3U8Playlist, adnGetPlaylist } from '../adn/adn.service'
 import { ADNEpisode } from '../../types/adn'
 import { setProgressBar } from '../../../electron/background'
-const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
-const ffprobePath = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
+import { getFFMPEGPath } from '../../services/ffmpeg'
+const ffmpegP = getFFMPEGPath()
 
 // DB Account existence check
 export async function loggedInCheck(service: string) {
@@ -639,8 +639,8 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
 
     return new Promise((resolve, reject) => {
       Ffmpeg()
-        .setFfmpegPath(ffmpegPath)
-        .setFfprobePath(ffprobePath)
+        .setFfmpegPath(ffmpegP.ffmpeg)
+        .setFfprobePath(ffmpegP.ffprobe)
         .input(concatenatedFile)
         .outputOptions('-c copy')
         .save(dir + `/${tempname}.mp4`)
@@ -684,7 +684,7 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
   ]
 
   return new Promise((resolve, reject) => {
-    var output = Ffmpeg().setFfmpegPath(ffmpegPath).setFfprobePath(ffprobePath)
+    var output = Ffmpeg().setFfmpegPath(ffmpegP.ffmpeg).setFfprobePath(ffmpegP.ffprobe)
     var ffindex = 1
     output.addInput(video)
     var options = ['-map_metadata -1', '-metadata:s:v:0 VENDOR_ID=', '-metadata:s:v:0 language=', '-c copy', '-map 0']

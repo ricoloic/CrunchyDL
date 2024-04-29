@@ -3,20 +3,40 @@ import { Readable } from 'stream'
 import { createFolder, deleteFolder } from './folder'
 import { concatenateTSFiles } from './concatenate'
 import Ffmpeg from 'fluent-ffmpeg'
-const ffmpegPath = require('ffmpeg-static').replace('app.asar', 'app.asar.unpacked')
-const ffprobePath = require('ffprobe-static').path.replace('app.asar', 'app.asar.unpacked')
+import { getFFMPEGPath } from './ffmpeg'
+const ffmpegP = getFFMPEGPath()
 
 export async function downloadMPDAudio(parts: { filename: string; url: string }[], dir: string, name: string) {
   const path = await createFolder()
+
+  const maxParallelDownloads = 5
   const downloadPromises = []
 
   for (const [index, part] of parts.entries()) {
-    const stream = fs.createWriteStream(`${path}/${part.filename}`)
-    const downloadPromise = fetchAndPipe(part.url, stream, index + 1)
-    downloadPromises.push(downloadPromise)
-  }
+    let retries = 0
 
-  await Promise.all(downloadPromises)
+    const downloadPromise = async () => {
+      let downloadSuccess = false
+      while (!downloadSuccess) {
+        try {
+          const stream = fs.createWriteStream(`${path}/${part.filename}`)
+          await fetchAndPipe(part.url, stream, index + 1)
+          downloadSuccess = true
+        } catch (error) {
+          retries++
+          console.error(`Failed to download part ${part.filename}, retrying (${retries})...`)
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+        }
+      }
+    }
+
+    downloadPromises.push(downloadPromise())
+
+    if (downloadPromises.length === maxParallelDownloads || index === parts.length - 1) {
+      await Promise.all(downloadPromises)
+      downloadPromises.length = 0
+    }
+  }
 
   return await mergePartsAudio(parts, path, dir, name)
 }
@@ -51,8 +71,8 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
 
     return new Promise((resolve, reject) => {
       Ffmpeg()
-        .setFfmpegPath(ffmpegPath)
-        .setFfprobePath(ffprobePath)
+        .setFfmpegPath(ffmpegP.ffmpeg)
+        .setFfprobePath(ffmpegP.ffprobe)
         .input(concatenatedFile)
         .outputOptions('-c copy')
         .save(`${dir}/${name}.aac`)

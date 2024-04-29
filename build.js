@@ -18,6 +18,7 @@ const options = {
   directories: {
     output: 'crunchyroll-downloader-output-${version}'
   },
+
   win: {
     artifactName: 'crunchyroll-downloader-${version}-windows-installer.${ext}',
     icon: "public/favicon.ico",
