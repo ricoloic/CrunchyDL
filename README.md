@@ -1,5 +1,5 @@
 # Crunchyroll Downloader
-<img align="right" width="150" height="150" src="https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/6aba2e4a-06ac-459e-8932-62a9b9c8640e">
+<img align="right" width="90" height="90" src="https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/6aba2e4a-06ac-459e-8932-62a9b9c8640e">
 
 
 ![GitHub Repo stars](https://img.shields.io/github/stars/stratuma/Crunchyroll-Downloader-v4.0?style=for-the-badge&logo=&color=a1a1a1)
