@@ -39,22 +39,17 @@ function createWindow() {
     fullscreen: false,
     maximizable: false,
     vibrancy: 'fullscreen-ui',
+    // Not working when unfocusing the window somehow?
     backgroundMaterial: 'acrylic',
     show: false
   })
 
-  mainWindow.on('blur', () => {
-    mainWindow.setBackgroundColor('#00000000')
-  })
-
-  mainWindow.on('focus', () => {
-    mainWindow.setBackgroundColor('#00000000')
-  })
-
+  // Show window after loading page
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
   })
 
+  // Closes all windows if mainwindow is being closed
   mainWindow.on('closed', () => {
     app.quit()
   })
@@ -152,16 +147,13 @@ ipcMain.handle('dialog:defaultDirectory', async () => {
   return savedPath
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
 })
 
-const openWindows = new Map();
+const openWindows = new Map()
 
 // Open New Window
 ipcMain.handle(
@@ -176,9 +168,9 @@ ipcMain.handle(
     }
   ) => {
     if (openWindows.has(opt.title)) {
-      const existingWindow = openWindows.get(opt.title);
-      existingWindow.focus();
-      return;
+      const existingWindow = openWindows.get(opt.title)
+      existingWindow.focus()
+      return
     }
 
     const newWindow = new BrowserWindow({
@@ -204,18 +196,18 @@ ipcMain.handle(
       vibrancy: 'fullscreen-ui',
       backgroundMaterial: 'acrylic',
       show: false
-    });
+    })
 
     newWindow.once('ready-to-show', () => {
-      newWindow.show();
-    });
+      newWindow.show()
+    })
 
-    newWindow.loadURL(opt.url);
+    newWindow.loadURL(opt.url)
 
-    openWindows.set(opt.title, newWindow);
+    openWindows.set(opt.title, newWindow)
 
     newWindow.on('closed', () => {
-      openWindows.delete(opt.title);
-    });
+      openWindows.delete(opt.title)
+    })
   }
-);
+)
