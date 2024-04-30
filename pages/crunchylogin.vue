@@ -72,4 +72,17 @@ const login = async () => {
     font-weight: 1000;
     font-style: normal;
 }
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body {
+  animation: fadein 0.5s;
+}
 </style>

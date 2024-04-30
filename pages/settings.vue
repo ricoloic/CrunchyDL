@@ -28,4 +28,17 @@ const options = ref(["Main", "Output", "Naming", "Crunchyroll", "About"]);
 const activeIndex = ref(0);
 </script>
 
-<style></style>
+<style>
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body {
+  animation: fadein 0.5s;
+}
+</style>

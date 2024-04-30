@@ -811,4 +811,17 @@ select {
     -webkit-appearance: none !important; 
     appearance: none !important;
 }
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body {
+  animation: fadein 0.5s;
+}
 </style>

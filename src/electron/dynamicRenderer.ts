@@ -11,7 +11,7 @@ const isProduction = process.env.NODE_ENV !== 'development'
 
 // Dynamic Renderer
 // ================
-export default function (mainWindow: BrowserWindow) {
+export default async function (mainWindow: BrowserWindow) {
   if (!isProduction) return mainWindow.loadURL('http://localhost:3000/')
   const app = express()
   app.use('/', serveStatic(path.join(__dirname, '../../public')))

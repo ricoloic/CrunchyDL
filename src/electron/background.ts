@@ -13,9 +13,8 @@ process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const isProduction = process.env.NODE_ENV !== 'development'
 const platform: 'darwin' | 'win32' | 'linux' = process.platform as any
 const architucture: '64' | '32' = os.arch() === 'x64' ? '64' : '32'
-const headerSize = 32
 const modules = [titleBarActionsModule, macMenuModule, updaterModule]
-var mainWindow: BrowserWindow;
+var mainWindow: BrowserWindow
 
 function createWindow() {
   console.log('System info', { isProduction, platform, architucture })
@@ -34,48 +33,30 @@ function createWindow() {
     titleBarOverlay: {
       color: 'rgba(0,0,0,0)',
       symbolColor: '#ffffff',
-      height: 40,
+      height: 40
     },
     resizable: false,
     fullscreen: false,
     maximizable: false,
     vibrancy: 'fullscreen-ui',
     backgroundMaterial: 'acrylic',
-  })
-
-  mainWindow.webContents.setWindowOpenHandler(() => {
-    return {
-      action: 'allow',
-      overrideBrowserWindowOptions: {
-        icon: __dirname + '/icon/favicon.ico',
-        backgroundColor: '#111111',
-        webPreferences: {
-          devTools: true,
-          nodeIntegration: true,
-          contextIsolation: true,
-          preload: path.join(__dirname, 'preload.js')
-        },
-        titleBarStyle: 'hidden',
-        titleBarOverlay: {
-          color: '#111111',
-          symbolColor: '#ffffff',
-          height: 40
-        },
-        resizable: false,
-        fullscreen: false,
-        maximizable: false,
-        vibrancy: 'fullscreen-ui',
-        backgroundMaterial: 'acrylic',
-      }
-    }
+    show: false
   })
 
   mainWindow.on('blur', () => {
     mainWindow.setBackgroundColor('#00000000')
   })
-  
+
   mainWindow.on('focus', () => {
     mainWindow.setBackgroundColor('#00000000')
+  })
+
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show()
+  })
+
+  mainWindow.on('closed', () => {
+    app.quit()
   })
 
   // Lock app to single instance
@@ -93,14 +74,13 @@ function createWindow() {
 // App events
 // ==========
 app.whenReady().then(async () => {
-
   startAPI()
 
   const mainWindow = createWindow()
   if (!mainWindow) return
 
   // Load renderer process
-  dynamicRenderer(mainWindow)
+  await dynamicRenderer(mainWindow)
 
   // Initialize modules
   console.log('-'.repeat(30) + '\n[+] Loading modules...')
@@ -113,13 +93,6 @@ app.whenReady().then(async () => {
   })
 
   console.log('[!] Loading modules: Done.' + '\r\n' + '-'.repeat(30))
-
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    // if (BrowserWindow.getAllWindows().length === 0) createWindow()
-    mainWindow.show()
-  })
 })
 
 export async function messageBox(
@@ -143,9 +116,7 @@ export async function messageBox(
   console.log(response)
 }
 
-export async function setProgressBar(
-  c: number
-) {
+export async function setProgressBar(c: number) {
   mainWindow.setProgressBar(c)
 }
 
@@ -190,6 +161,8 @@ app.on('window-all-closed', () => {
   }
 })
 
+const openWindows = new Map();
+
 // Open New Window
 ipcMain.handle(
   'window:openNewWindow',
@@ -202,7 +175,13 @@ ipcMain.handle(
       height: number
     }
   ) => {
-    const mainWindow = new BrowserWindow({
+    if (openWindows.has(opt.title)) {
+      const existingWindow = openWindows.get(opt.title);
+      existingWindow.focus();
+      return;
+    }
+
+    const newWindow = new BrowserWindow({
       title: opt.title,
       icon: __dirname + '/icon/favicon.ico',
       width: opt.width,
@@ -224,12 +203,19 @@ ipcMain.handle(
       maximizable: false,
       vibrancy: 'fullscreen-ui',
       backgroundMaterial: 'acrylic',
-    })
+      show: false
+    });
 
-    mainWindow.webContents.once('did-finish-load', () => {
-      mainWindow.show()
-    })
+    newWindow.once('ready-to-show', () => {
+      newWindow.show();
+    });
 
-    mainWindow.loadURL(opt.url)
+    newWindow.loadURL(opt.url);
+
+    openWindows.set(opt.title, newWindow);
+
+    newWindow.on('closed', () => {
+      openWindows.delete(opt.title);
+    });
   }
-)
+);

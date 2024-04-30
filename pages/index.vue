@@ -196,4 +196,17 @@ body {
     left: 0%;
   }
 }
+
+@keyframes fadein {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+body {
+  animation: fadein 0.5s;
+}
 </style>
