@@ -6,7 +6,7 @@
       <!-- <button @click="deletePlaylist">
         Delete Playlist
       </button> -->
-      <div v-for="p in playlist" class="relative flex flex-row gap-4 h-36 bg-[#63636383] rounded-xl font-dm overflow-hidden">
+      <div v-for="p in playlist" class="relative flex flex-row gap-4 min-h-36 bg-[#63636383] rounded-xl font-dm overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-full bg-[#a1a1a141] transition-all duration-300" :style="`width: calc((${p.partsdownloaded} / ${p.partsleft}) * 100%);`"></div>
         <div class="absolute h-full w-full flex flex-row gap-3 p-3.5">
           <div v-if="p.service === 'CR'" class="flex w-48 min-w-48">
