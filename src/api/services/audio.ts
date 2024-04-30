@@ -70,6 +70,7 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
     await concatenateTSFiles(list, concatenatedFile)
 
     return new Promise((resolve, reject) => {
+      if (!ffmpegP.ffmpeg || !ffmpegP.ffprobe) return
       Ffmpeg()
         .setFfmpegPath(ffmpegP.ffmpeg)
         .setFfprobePath(ffmpegP.ffprobe)

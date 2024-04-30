@@ -638,6 +638,7 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
     await concatenateTSFiles(list, concatenatedFile)
 
     return new Promise((resolve, reject) => {
+      if (!ffmpegP.ffmpeg || !ffmpegP.ffprobe) return
       Ffmpeg()
         .setFfmpegPath(ffmpegP.ffmpeg)
         .setFfprobePath(ffmpegP.ffprobe)
@@ -684,6 +685,7 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
   ]
 
   return new Promise((resolve, reject) => {
+    if (!ffmpegP.ffmpeg || !ffmpegP.ffprobe) return
     var output = Ffmpeg().setFfmpegPath(ffmpegP.ffmpeg).setFfprobePath(ffmpegP.ffprobe)
     var ffindex = 1
     output.addInput(video)

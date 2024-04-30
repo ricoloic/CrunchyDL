@@ -55,8 +55,10 @@
               <div class="text-xs uppercase">{{ p.format }}</div>
               <div class="text-xs">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
               <div class="text-xs">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
-              <div v-if="p.partsleft && p.status === 'downloading'" class="text-xs ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
-              <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-xs">{{ p.downloadspeed }} MB/s</div>
+              <div class="flex flex-col ml-auto gap-0.5">
+                <div v-if="p.partsleft && p.status === 'downloading'" class="text-xs ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
+                <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-xs">{{ p.downloadspeed }} MB/s</div>
+              </div>
             </div>
           </div>
         </div>
@@ -68,7 +70,7 @@
 <script lang="ts" setup>
 import type { ADNEpisode } from '~/components/ADN/Types'
 import type { CrunchyEpisode } from '~/components/Episode/Types'
-import Updater from '~/components/Updater.vue';
+import Updater from '~/components/Updater.vue'
 
 const playlist = ref<
   Array<{
