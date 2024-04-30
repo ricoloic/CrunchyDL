@@ -17,197 +17,197 @@ const modules = [titleBarActionsModule, macMenuModule, updaterModule]
 var mainWindow: BrowserWindow
 
 function createWindow() {
-  console.log('System info', { isProduction, platform, architucture })
-  mainWindow = new BrowserWindow({
-    title: 'Crunchyroll Downloader',
-    icon: __dirname + '/icon/favicon.ico',
-    width: 950,
-    height: 700,
-    webPreferences: {
-      devTools: true,
-      nodeIntegration: true,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
-    },
-    titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: 'rgba(0,0,0,0)',
-      symbolColor: '#ffffff',
-      height: 40
-    },
-    resizable: false,
-    fullscreen: false,
-    maximizable: false,
-    vibrancy: 'fullscreen-ui',
-    // Not working when unfocusing the window somehow?
-    backgroundMaterial: 'acrylic',
-    show: false
-  })
-
-  // Show window after loading page
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show()
-  })
-
-  // Closes all windows if mainwindow is being closed
-  mainWindow.on('closed', () => {
-    app.quit()
-  })
-
-  // Lock app to single instance
-  if (singleInstance(app, mainWindow)) return
-
-  // Open the DevTools.
-  !isProduction &&
-    mainWindow.webContents.openDevTools({
-      mode: 'bottom'
+    console.log('System info', { isProduction, platform, architucture })
+    mainWindow = new BrowserWindow({
+        title: 'Crunchyroll Downloader',
+        icon: __dirname + '/icon/favicon.ico',
+        width: 950,
+        height: 700,
+        webPreferences: {
+            devTools: true,
+            nodeIntegration: true,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'preload.js')
+        },
+        titleBarStyle: 'hidden',
+        titleBarOverlay: {
+            color: 'rgba(0,0,0,0)',
+            symbolColor: '#ffffff',
+            height: 40
+        },
+        resizable: false,
+        fullscreen: false,
+        maximizable: false,
+        vibrancy: 'fullscreen-ui',
+        // Not working when unfocusing the window somehow?
+        backgroundMaterial: 'acrylic',
+        show: false
     })
 
-  return mainWindow
+    // Show window after loading page
+    mainWindow.once('ready-to-show', () => {
+        mainWindow.show()
+    })
+
+    // Closes all windows if mainwindow is being closed
+    mainWindow.on('closed', () => {
+        app.quit()
+    })
+
+    // Lock app to single instance
+    if (singleInstance(app, mainWindow)) return
+
+    // Open the DevTools.
+    !isProduction &&
+        mainWindow.webContents.openDevTools({
+            mode: 'bottom'
+        })
+
+    return mainWindow
 }
 
 // App events
 // ==========
 app.whenReady().then(async () => {
-  startAPI()
+    startAPI()
 
-  const mainWindow = createWindow()
-  if (!mainWindow) return
+    const mainWindow = createWindow()
+    if (!mainWindow) return
 
-  // Load renderer process
-  await dynamicRenderer(mainWindow)
+    // Load renderer process
+    await dynamicRenderer(mainWindow)
 
-  // Initialize modules
-  console.log('-'.repeat(30) + '\n[+] Loading modules...')
-  modules.forEach((module) => {
-    try {
-      module(mainWindow)
-    } catch (err: any) {
-      console.log('[!] Module error: ', err.message || err)
-    }
-  })
+    // Initialize modules
+    console.log('-'.repeat(30) + '\n[+] Loading modules...')
+    modules.forEach((module) => {
+        try {
+            module(mainWindow)
+        } catch (err: any) {
+            console.log('[!] Module error: ', err.message || err)
+        }
+    })
 
-  console.log('[!] Loading modules: Done.' + '\r\n' + '-'.repeat(30))
+    console.log('[!] Loading modules: Done.' + '\r\n' + '-'.repeat(30))
 })
 
 export async function messageBox(
-  type: 'none' | 'info' | 'error' | 'question' | 'warning' | undefined,
-  buttons: Array<'Cancel'>,
-  defaultId: number,
-  title: string,
-  message: string,
-  detail: string | undefined
+    type: 'none' | 'info' | 'error' | 'question' | 'warning' | undefined,
+    buttons: Array<'Cancel'>,
+    defaultId: number,
+    title: string,
+    message: string,
+    detail: string | undefined
 ) {
-  const options = {
-    type: type as 'none' | 'info' | 'error' | 'question' | 'warning' | undefined,
-    buttons: buttons,
-    defaultId: defaultId,
-    title: title,
-    message: message,
-    detail: detail
-  }
+    const options = {
+        type: type as 'none' | 'info' | 'error' | 'question' | 'warning' | undefined,
+        buttons: buttons,
+        defaultId: defaultId,
+        title: title,
+        message: message,
+        detail: detail
+    }
 
-  const response = dialog.showMessageBox(options)
-  console.log(response)
+    const response = dialog.showMessageBox(options)
+    console.log(response)
 }
 
 export async function setProgressBar(c: number) {
-  mainWindow.setProgressBar(c)
+    mainWindow.setProgressBar(c)
 }
 
 ipcMain.handle('dialog:openDirectory', async () => {
-  const window = BrowserWindow.getFocusedWindow()
+    const window = BrowserWindow.getFocusedWindow()
 
-  if (!window) {
-    return
-  }
+    if (!window) {
+        return
+    }
 
-  const { canceled, filePaths } = await dialog.showOpenDialog(window, {
-    properties: ['openDirectory']
-  })
-  if (canceled) {
-    return await settings.get('downloadPath')
-  } else {
-    await settings.set('downloadPath', filePaths[0])
-    return filePaths[0]
-  }
+    const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+        properties: ['openDirectory']
+    })
+    if (canceled) {
+        return await settings.get('downloadPath')
+    } else {
+        await settings.set('downloadPath', filePaths[0])
+        return filePaths[0]
+    }
 })
 
 ipcMain.handle('dialog:defaultDirectory', async () => {
-  const savedPath = await settings.get('downloadPath')
+    const savedPath = await settings.get('downloadPath')
 
-  if (!savedPath) {
-    const path = app.getPath('documents')
+    if (!savedPath) {
+        const path = app.getPath('documents')
 
-    await settings.set('downloadPath', path)
+        await settings.set('downloadPath', path)
 
-    return path
-  }
+        return path
+    }
 
-  return savedPath
+    return savedPath
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
+    if (process.platform !== 'darwin') {
+        app.quit()
+    }
 })
 
 const openWindows = new Map()
 
 // Open New Window
 ipcMain.handle(
-  'window:openNewWindow',
-  async (
-    events,
-    opt: {
-      title: string
-      url: string
-      width: number
-      height: number
+    'window:openNewWindow',
+    async (
+        events,
+        opt: {
+            title: string
+            url: string
+            width: number
+            height: number
+        }
+    ) => {
+        if (openWindows.has(opt.title)) {
+            const existingWindow = openWindows.get(opt.title)
+            existingWindow.focus()
+            return
+        }
+
+        const newWindow = new BrowserWindow({
+            title: opt.title,
+            icon: __dirname + '/icon/favicon.ico',
+            width: opt.width,
+            height: opt.height,
+            webPreferences: {
+                devTools: true,
+                nodeIntegration: true,
+                contextIsolation: true,
+                preload: path.join(__dirname, 'preload.js')
+            },
+            titleBarStyle: 'hidden',
+            titleBarOverlay: {
+                color: 'rgba(0,0,0,0)',
+                symbolColor: '#ffffff',
+                height: 40
+            },
+            resizable: false,
+            fullscreen: false,
+            maximizable: false,
+            vibrancy: 'fullscreen-ui',
+            backgroundMaterial: 'acrylic',
+            show: false
+        })
+
+        newWindow.once('ready-to-show', () => {
+            newWindow.show()
+        })
+
+        newWindow.loadURL(opt.url)
+
+        openWindows.set(opt.title, newWindow)
+
+        newWindow.on('closed', () => {
+            openWindows.delete(opt.title)
+        })
     }
-  ) => {
-    if (openWindows.has(opt.title)) {
-      const existingWindow = openWindows.get(opt.title)
-      existingWindow.focus()
-      return
-    }
-
-    const newWindow = new BrowserWindow({
-      title: opt.title,
-      icon: __dirname + '/icon/favicon.ico',
-      width: opt.width,
-      height: opt.height,
-      webPreferences: {
-        devTools: true,
-        nodeIntegration: true,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
-      },
-      titleBarStyle: 'hidden',
-      titleBarOverlay: {
-        color: 'rgba(0,0,0,0)',
-        symbolColor: '#ffffff',
-        height: 40
-      },
-      resizable: false,
-      fullscreen: false,
-      maximizable: false,
-      vibrancy: 'fullscreen-ui',
-      backgroundMaterial: 'acrylic',
-      show: false
-    })
-
-    newWindow.once('ready-to-show', () => {
-      newWindow.show()
-    })
-
-    newWindow.loadURL(opt.url)
-
-    openWindows.set(opt.title, newWindow)
-
-    newWindow.on('closed', () => {
-      openWindows.delete(opt.title)
-    })
-  }
 )

@@ -2,25 +2,25 @@ import { crunchyLogin } from './Account'
 import type { CrunchyEpisodesFetch } from './Types'
 
 export async function listEpisodeCrunchy(q: string) {
-  const { data: token, error: tokenerror } = await crunchyLogin()
+    const { data: token, error: tokenerror } = await crunchyLogin()
 
-  if (!token.value) {
-    return
-  }
-
-  const { data, error } = await useFetch<CrunchyEpisodesFetch>(`https://beta-api.crunchyroll.com/content/v2/cms/seasons/${q}/episodes`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token.value.access_token}`
+    if (!token.value) {
+        return
     }
-  })
 
-  if (error.value) {
-    console.error(error.value)
-    throw new Error(JSON.stringify(error.value))
-  }
+    const { data, error } = await useFetch<CrunchyEpisodesFetch>(`https://beta-api.crunchyroll.com/content/v2/cms/seasons/${q}/episodes`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token.value.access_token}`
+        }
+    })
 
-  if (!data.value) return
+    if (error.value) {
+        console.error(error.value)
+        throw new Error(JSON.stringify(error.value))
+    }
 
-  return data.value.data
+    if (!data.value) return
+
+    return data.value.data
 }
