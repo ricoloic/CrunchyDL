@@ -5,6 +5,7 @@
   "version": "1.0.4",
   "private": true,
   "main": ".output/src/electron/background.js",
+  "repository": "https://github.com/stratuma/Crunchyroll-Downloader-v4.0",
   "scripts": {
     "dev": "nuxt dev -o",
     "build": "nuxt generate",

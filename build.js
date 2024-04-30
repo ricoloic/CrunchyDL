@@ -6,7 +6,7 @@ const Platform = builder.Platform
  * @type {import('electron-builder').Configuration}
  */
 const options = {
-  appId: 'com.app.id',
+  appId: 'com.stratum.crunchyrolldownloader',
   productName: 'Crunchyroll Downloader',
 
   compression: 'maximum',
@@ -15,13 +15,18 @@ const options = {
   nodeGypRebuild: true,
   buildDependenciesFromSource: true,
 
+  publish: {
+    provider: 'github',
+    releaseType: 'release'
+  },
+
   directories: {
     output: 'crunchyroll-downloader-output-${version}'
   },
 
   win: {
     artifactName: 'crunchyroll-downloader-${version}-windows-installer.${ext}',
-    icon: "public/favicon.ico",
+    icon: 'public/favicon.ico',
     target: [
       {
         target: 'nsis',
