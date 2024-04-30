@@ -1,14 +1,3 @@
-// This is the preload script for Electron.
-// It runs in the renderer process before the page is loaded.
-// --------------------------------------------
-
-// import { contextBridge } from 'electron'
-
-// process.once('loaded', () => {
-//   - Exposed variables will be accessible at "window.versions".
-//   contextBridge.exposeInMainWorld('versions', process.env)
-// })
-
 import {contextBridge, ipcRenderer} from 'electron'
 
 contextBridge.exposeInMainWorld('myAPI', {
@@ -21,4 +10,7 @@ contextBridge.exposeInMainWorld('myAPI', {
     height: number,
     backgroundColor: string
   }) => ipcRenderer.invoke('window:openNewWindow', opt),
+  getUpdateStatus: () => ipcRenderer.invoke('updater:getUpdateStatus'),
+  startUpdateDownload: () => ipcRenderer.invoke('updater:download'),
+  startUpdateInstall: () => ipcRenderer.invoke('updater:quitAndInstall'),
 })

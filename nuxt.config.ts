@@ -11,5 +11,5 @@ export default defineNuxtConfig({
       'DM+Sans': [600, '1000'],
       'Protest+Riot': true
     }
-  }
+  },
 })

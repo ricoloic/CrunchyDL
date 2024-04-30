@@ -2,42 +2,51 @@ import { BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import log from 'electron-log'
 
+var status: { status: string, info: any } = { status: "", info: null }
+
 autoUpdater.logger = log
 ;(autoUpdater.logger as typeof log).transports.file.level = 'info'
 
-autoUpdater.autoDownload = true
-autoUpdater.autoInstallOnAppQuit = true
+autoUpdater.autoDownload = false
+autoUpdater.autoInstallOnAppQuit = false
+
+ipcMain.handle('updater:getUpdateStatus', async () => {
+  return status
+})
 
 export default (mainWindow: BrowserWindow) => {
-
   let readyToInstall = false
-  function sendUpdaterStatus(...args: any[]) {
-    mainWindow.webContents.send('updater:statusChanged', args)
+  function updateStatus(statusA: string, info?: any) {
+    status = { status: statusA, info: info }
   }
 
   autoUpdater.on('checking-for-update', () => {
-    sendUpdaterStatus('check-for-update')
+    updateStatus('check-for-update')
   })
   autoUpdater.on('update-available', (_info) => {
-    sendUpdaterStatus('update-available')
+    updateStatus('update-available', _info)
   })
   autoUpdater.on('update-not-available', (_info) => {
-    sendUpdaterStatus('update-not-available')
+    updateStatus('update-not-available', _info)
   })
   autoUpdater.on('error', (_err) => {
-    sendUpdaterStatus('update-error')
+    updateStatus('update-error', _err)
   })
   autoUpdater.on('download-progress', (progress) => {
-    sendUpdaterStatus('downloading', progress)
+    updateStatus('downloading', progress)
   })
   autoUpdater.on('update-downloaded', (_info) => {
-    sendUpdaterStatus('update-downloaded')
+    updateStatus('update-downloaded', _info)
     mainWindow.webContents.send('updater:readyToInstall')
     readyToInstall = true
   })
 
   ipcMain.handle('updater:check', async (_event) => {
     return await autoUpdater.checkForUpdates()
+  })
+
+  ipcMain.handle('updater:download', async (_event) => {
+    return await autoUpdater.downloadUpdate()
   })
 
   ipcMain.handle('updater:quitAndInstall', (_event) => {

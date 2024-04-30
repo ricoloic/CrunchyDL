@@ -1,5 +1,6 @@
 <template>
-  <div class="h-screen overflow-hidden">
+  <div class="relative h-screen overflow-hidden">
+    <Updater />
     <MainHeader />
     <div class="flex flex-col text-white gap-5 mt-14 p-5 overflow-y-scroll h-[calc(100vh-3.5rem)]">
       <!-- <button @click="deletePlaylist">
@@ -67,6 +68,7 @@
 <script lang="ts" setup>
 import type { ADNEpisode } from '~/components/ADN/Types'
 import type { CrunchyEpisode } from '~/components/Episode/Types'
+import Updater from '~/components/Updater.vue';
 
 const playlist = ref<
   Array<{
