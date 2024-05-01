@@ -37,6 +37,10 @@
                                     <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                     {{ p.status }}
                                 </div>
+                                <div v-if="p.status === 'decrypting'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                    <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                    {{ p.status }}
+                                </div>
                                 <div v-if="p.status === 'completed'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#266326] rounded-lg">
                                     <Icon name="material-symbols:check" class="h-3.5 w-3.5 text-white" />
                                     {{ p.status }}

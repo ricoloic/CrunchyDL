@@ -10,11 +10,12 @@
                 <div class="text-[11px] text-white font-dm"> ADD DOWNLOAD </div>
             </button>
         </div>
-        <div class="w-full flex flex-row items-center justify-center">
+        <div class="relative w-full flex flex-row items-center justify-center">
             <img src="/logo.png" class="h-8" />
             <div class="text-[10px] leading-[10px] text-opacity-90 text-white select-none"
                 >Crunchyroll <br />
-                Downloader</div
+                Downloader <br />
+                Advanced</div
             >
         </div>
         <div class="w-full flex gap-2 flex-row items-center justify-center">

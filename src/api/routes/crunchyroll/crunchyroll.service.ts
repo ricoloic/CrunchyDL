@@ -149,11 +149,12 @@ export async function crunchyGetPlaylistDRM(q: string) {
     if (!login) return
 
     const headers = {
-        Authorization: `Bearer ${login.access_token}`
+        Authorization: `Bearer ${login.access_token}`,
+        'x-cr-stream-limits': 'false'
     }
 
     try {
-        const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}/web/chrome/play`, {
+        const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}/tv/samsung/play`, {
             method: 'GET',
             headers: headers
         })
@@ -170,6 +171,36 @@ export async function crunchyGetPlaylistDRM(q: string) {
             throw new Error(await response.text())
         }
     } catch (e) {
+        throw new Error(e as string)
+    }
+}
+
+export async function deleteVideoToken(content: string, token: string) {
+    const account = await loggedInCheck('CR')
+
+    if (!account) return
+
+    const { data: login, error } = await crunchyLogin(account.username, account.password)
+
+    if (!login) return
+
+    const headers = {
+        Authorization: `Bearer ${login.access_token}`,
+    }
+
+    try {
+        const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}`, {
+            method: 'DELETE',
+            headers: headers
+        })
+
+        if (response.ok) {
+            return 'ok'
+        } else {
+            throw new Error(await response.text())
+        }
+    } catch (e) {
+        console.log('Delete token failed')
         throw new Error(e as string)
     }
 }

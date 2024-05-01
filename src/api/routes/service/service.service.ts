@@ -4,7 +4,7 @@ import { concatenateTSFiles } from '../../services/concatenate'
 import { createFolder, createFolderName, deleteFolder, deleteTemporaryFolders } from '../../services/folder'
 import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
-import { crunchyGetPlaylist, crunchyGetPlaylistDRM, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
+import { crunchyGetPlaylist, crunchyGetPlaylistDRM, crunchyGetPlaylistMPD, deleteVideoToken } from '../crunchyroll/crunchyroll.service'
 import fs from 'fs'
 var cron = require('node-cron')
 import { Readable } from 'stream'
@@ -60,7 +60,7 @@ async function deletePlaylistandTMP() {
 deletePlaylistandTMP()
 
 // Update Playlist Item
-export async function updatePlaylistByID(id: number, status: 'waiting' | 'preparing' | 'downloading' | 'completed' | 'merging' | 'failed') {
+export async function updatePlaylistByID(id: number, status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed') {
     await Playlist.update({ status: status }, { where: { id: id } })
 }
 
@@ -71,7 +71,7 @@ export async function addEpisodeToPlaylist(
     d: Array<string>,
     dir: string,
     hardsub: boolean,
-    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed',
+    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed',
     quality: 1080 | 720 | 480 | 360 | 240,
     service: 'CR' | 'ADN',
     format: 'mp4' | 'mkv'
@@ -150,6 +150,7 @@ async function checkPlaylists() {
                     (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
                     (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
                     e.dataValues.hardsub,
+                    (e.dataValues.media as CrunchyEpisode).id,
                     e.dataValues.id,
                     (e.dataValues.media as CrunchyEpisode).series_title,
                     (e.dataValues.media as CrunchyEpisode).season_number,
@@ -308,6 +309,7 @@ export async function downloadCrunchyrollPlaylist(
     dubs: Array<string>,
     subs: Array<string>,
     hardsub: boolean,
+    episodeID: string,
     downloadID: number,
     name: string,
     season: number,
@@ -325,7 +327,7 @@ export async function downloadCrunchyrollPlaylist(
 
     await updatePlaylistByID(downloadID, 'downloading')
 
-    var playlist = await crunchyGetPlaylist(e)
+    var playlist = await crunchyGetPlaylistDRM(e)
 
     if (!playlist) {
         console.log('Playlist not found')
@@ -336,7 +338,8 @@ export async function downloadCrunchyrollPlaylist(
         if (playlist.data.audioLocale !== subs[0]) {
             const found = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (found) {
-                playlist = await crunchyGetPlaylist(found.guid)
+                await deleteVideoToken(episodeID, playlist.data.token)
+                playlist = await crunchyGetPlaylistDRM(found.guid)
             }
         }
     }
@@ -345,6 +348,8 @@ export async function downloadCrunchyrollPlaylist(
         console.log('Exact Playlist not found')
         return
     }
+
+    await deleteVideoToken(episodeID, playlist.data.token)
 
     const subFolder = await createFolder()
 
@@ -395,6 +400,8 @@ export async function downloadCrunchyrollPlaylist(
         } else {
             console.warn(`Subtitle ${s}.ass not found, skipping`)
         }
+
+        await deleteVideoToken(episodeID, playlist.data.token)
     }
 
     for (const d of dubs) {
@@ -412,6 +419,8 @@ export async function downloadCrunchyrollPlaylist(
                 } else {
                     console.log(`No Dub Sub Found for ${d}`)
                 }
+
+                await deleteVideoToken(episodeID, playlist.data.token)
             }
             dubDownloadList.push(found)
             console.log(`Audio ${d}.aac found, adding to download`)
@@ -465,9 +474,16 @@ export async function downloadCrunchyrollPlaylist(
 
             if (!playlist) return
 
-            const assetId = playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].uri.match(/\/assets\/(?:p\/)?([^_,]+)/)
+            await deleteVideoToken(episodeID, list.data.token)
 
-            if (!assetId) return
+            const assetId = playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].resolvedUri.match(/\/assets\/(?:p\/)?([^_,]+)/)
+
+            if (!assetId) {
+                console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0])
+                console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].uri)
+                console.log('No AssetID found, exiting.')
+                return
+            }
 
             var pssh
             var keys: { kid: string; key: string }[] | undefined
@@ -475,7 +491,10 @@ export async function downloadCrunchyrollPlaylist(
             var p: { filename: string; url: string }[] = []
 
             if (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection) {
-                if (!playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh) return
+                if (!playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh) {
+                    console.log('No PSSH found, exiting.')
+                    return
+                }
                 pssh = Uint8ArrayToBase64(playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh)
 
                 keys = await getDRMKeys(pssh, assetId[1], list.account_id)
@@ -542,19 +561,27 @@ export async function downloadCrunchyrollPlaylist(
 
         if (!mdp) return
 
+        await deleteVideoToken(episodeID, play.data.token)
+
         var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.height === quality)
 
         if (!hq) return
 
-        const assetId = hq.segments[0].uri.match(/\/assets\/(?:p\/)?([^_,]+)/)
+        const assetId = hq.segments[0].resolvedUri.match(/\/assets\/(?:p\/)?([^_,]+)/)
 
-        if (!assetId) return
+        if (!assetId) {
+            console.log('No AssetID found, exiting.')
+            return
+        }
 
         var pssh
         var keys: { kid: string; key: string }[] | undefined
 
         if (hq.contentProtection) {
-            if (!hq.contentProtection['com.widevine.alpha'].pssh) return
+            if (!hq.contentProtection['com.widevine.alpha'].pssh) {
+                console.log('No PSSH found, exiting.')
+                return
+            }
             pssh = Uint8ArrayToBase64(hq.contentProtection['com.widevine.alpha'].pssh)
 
             keys = await getDRMKeys(pssh, assetId[1], play.account_id)
@@ -670,13 +697,16 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
         await concatenateTSFiles(list, concatenatedFile)
 
         if (drmkeys) {
+            await updatePlaylistByID(downloadID, 'decrypting')
+            console.log('Video Decryption started')
             const inputFilePath = `${tmp}/temp-main.m4s`
             const outputFilePath = `${tmp}/main.m4s`
             const keyArgument = `--show-progress --key ${drmkeys[1].kid}:${drmkeys[1].key}`
 
             const command = `${mp4e} ${keyArgument} "${inputFilePath}" "${outputFilePath}"`
 
-            const { stdout, stderr } = await exec(command)
+            await exec(command)
+            console.log('Video Decryption finished')
             concatenatedFile = `${tmp}/main.m4s`
         }
 
