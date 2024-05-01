@@ -1,11 +1,10 @@
 {
-    "name": "crunchyroll-downloader",
+    "name": "crunchyroll-downloader-advanced",
     "author": "Stratum",
-    "description": "Crunchyroll Downloader",
-    "version": "1.1.0",
+    "description": "Crunchyroll Downloader Advanced",
+    "version": "1.0.0",
     "private": true,
     "main": ".output/src/electron/background.js",
-    "repository": "https://github.com/stratuma/Crunchyroll-Downloader-v4.0",
     "scripts": {
         "dev": "nuxt dev -o",
         "build": "nuxt generate",

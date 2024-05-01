@@ -10,14 +10,14 @@ dist
 .DS_Store
 
 # Electron
-crunchyroll-downloader-output
+crunchyroll-downloader-advanced-output
 debug.log
 debug.log
 *.log
 debug.json
 errors.json
 build/
-crunchyroll-downloader-output-*/
+crunchyroll-downloader-advanced-output-*/
 
 # FFMPEG
 ffmpeg/
