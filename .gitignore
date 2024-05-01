@@ -8,8 +8,6 @@ node_modules
 .env
 dist
 .DS_Store
-build/
-ffmpeg/
 
 # Electron
 crunchyroll-downloader-output
@@ -18,3 +16,8 @@ debug.log
 *.log
 debug.json
 errors.json
+build/
+crunchyroll-downloader-output-*/
+
+# FFMPEG
+ffmpeg/

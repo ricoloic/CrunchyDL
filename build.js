@@ -65,7 +65,7 @@ builder
         targets: Platform[platform].createTarget(),
         config: options
     })
-    .then((result: any) => {
+    .then((result) => {
         console.log('----------------------------')
         console.log('Platform:', platform)
         console.log('Output:', JSON.stringify(result, null, 2))

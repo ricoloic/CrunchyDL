@@ -56,12 +56,9 @@ export default (mainWindow: BrowserWindow) => {
 
     autoUpdater.checkForUpdates()
 
-    setInterval(
-        () => {
-            autoUpdater.checkForUpdates()
-        },
-        1000 * 60 * 60 * 2
-    )
+    setInterval(() => {
+        autoUpdater.checkForUpdates()
+    }, 1000 * 60 * 60 * 2)
 
     console.log('[-] MODULE::updater Initialized')
 }

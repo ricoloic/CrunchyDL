@@ -14,8 +14,8 @@
         "transpile-src": "tsc -p ./src --outDir .output/src",
         "dev:electron": "NODE_ENV=development concurrently --kill-others \"nuxt dev\" \"tsc-watch -p ./src --outDir .output/src --onSuccess 'electron ./.output/src/electron/background.js'\"",
         "dev:electron:win": "set NODE_ENV=development& concurrently --kill-others \"nuxt dev\" \"tsc-watch -p ./src --outDir .output/src --onSuccess run.electron\"",
-        "build:electron": "pnpm prettier:fix && pnpm build && pnpm transpile-src && node build.ts",
-        "prettier:fix": "pnpm prettier src --write && pnpm prettier components --write && pnpm prettier pages --write && pnpm prettier build.ts --write"
+        "build:electron": "pnpm prettier:fix && pnpm build && pnpm transpile-src && node build.js",
+        "prettier:fix": "pnpm prettier src --write && pnpm prettier components --write && pnpm prettier pages --write && pnpm prettier build.js --write"
     },
     "devDependencies": {
         "7zip-bin": "^5.2.0",
@@ -28,11 +28,12 @@
         "dotenv": "^16.4.5",
         "electron": "^30.0.1",
         "electron-builder": "^24.13.3",
+        "eslint": "^8.57.0",
         "eslint-config-prettier": "^8.10.0",
         "eslint-plugin-prettier": "^4.2.1",
         "nuxt": "^3.11.2",
         "nuxt-icon": "^0.6.10",
-        "prettier": "^3.2.5",
+        "prettier": "^2.8.8",
         "sass": "^1.75.0",
         "sass-loader": "^13.3.3",
         "tsc-watch": "^6.2.0",
