@@ -21,3 +21,7 @@ crunchyroll-downloader-output-*/
 
 # FFMPEG
 ffmpeg/
+
+# MP4DECRYPT
+mp4decrypt/
+keys/

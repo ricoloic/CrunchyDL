@@ -4,7 +4,7 @@ import { concatenateTSFiles } from '../../services/concatenate'
 import { createFolder, createFolderName, deleteFolder, deleteTemporaryFolders } from '../../services/folder'
 import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
-import { crunchyGetPlaylist, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
+import { crunchyGetPlaylist, crunchyGetPlaylistDRM, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
 import fs from 'fs'
 var cron = require('node-cron')
 import { Readable } from 'stream'
@@ -14,7 +14,12 @@ import { adnGetM3U8Playlist, adnGetPlaylist } from '../adn/adn.service'
 import { ADNEpisode } from '../../types/adn'
 import { setProgressBar } from '../../../electron/background'
 import { getFFMPEGPath } from '../../services/ffmpeg'
+import { getDRMKeys, Uint8ArrayToBase64 } from '../../services/decryption'
+import { getMP4DecryptPath } from '../../services/mp4decrypt'
 const ffmpegP = getFFMPEGPath()
+const mp4e = getMP4DecryptPath()
+import util from 'util'
+const exec = util.promisify(require('child_process').exec)
 
 // DB Account existence check
 export async function loggedInCheck(service: string) {
@@ -327,9 +332,9 @@ export async function downloadCrunchyrollPlaylist(
         return
     }
 
-    if (playlist.versions && playlist.versions.length !== 0) {
-        if (playlist.audioLocale !== subs[0]) {
-            const found = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
+    if (playlist.data.versions && playlist.data.versions.length !== 0) {
+        if (playlist.data.audioLocale !== subs[0]) {
+            const found = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (found) {
                 playlist = await crunchyGetPlaylist(found.guid)
             }
@@ -369,10 +374,10 @@ export async function downloadCrunchyrollPlaylist(
     for (const s of subs) {
         var subPlaylist
 
-        if (playlist.audioLocale !== 'ja-JP') {
-            const foundStream = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
+        if (playlist.data.audioLocale !== 'ja-JP') {
+            const foundStream = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (foundStream) {
-                subPlaylist = await crunchyGetPlaylist(foundStream.guid)
+                subPlaylist = await crunchyGetPlaylistDRM(foundStream.guid)
             }
         } else {
             subPlaylist = playlist
@@ -383,7 +388,7 @@ export async function downloadCrunchyrollPlaylist(
             return
         }
 
-        const found = subPlaylist.subtitles.find((sub) => sub.language === s)
+        const found = subPlaylist.data.subtitles.find((sub) => sub.language === s)
         if (found) {
             subDownloadList.push({ ...found, isDub: false })
             console.log(`Subtitle ${s}.ass found, adding to download`)
@@ -394,14 +399,14 @@ export async function downloadCrunchyrollPlaylist(
 
     for (const d of dubs) {
         var found
-        if (playlist.versions) {
-            found = playlist.versions.find((p) => p.audio_locale === d)
+        if (playlist.data.versions) {
+            found = playlist.data.versions.find((p) => p.audio_locale === d)
         }
 
         if (found) {
-            const list = await crunchyGetPlaylist(found.guid)
+            const list = await crunchyGetPlaylistDRM(found.guid)
             if (list) {
-                const foundSub = list.subtitles.find((sub) => sub.language === d)
+                const foundSub = list.data.subtitles.find((sub) => sub.language === d)
                 if (foundSub) {
                     subDownloadList.push({ ...foundSub, isDub: true })
                 } else {
@@ -410,8 +415,8 @@ export async function downloadCrunchyrollPlaylist(
             }
             dubDownloadList.push(found)
             console.log(`Audio ${d}.aac found, adding to download`)
-        } else if (playlist.versions.length === 0) {
-            const foundSub = playlist.subtitles.find((sub) => sub.language === d)
+        } else if (playlist.data.versions.length === 0) {
+            const foundSub = playlist.data.subtitles.find((sub) => sub.language === d)
             if (foundSub) {
                 subDownloadList.push({ ...foundSub, isDub: true })
             } else {
@@ -432,7 +437,7 @@ export async function downloadCrunchyrollPlaylist(
     }
 
     if (dubDownloadList.length === 0) {
-        const jpVersion = playlist.versions.find((v) => v.audio_locale === 'ja-JP')
+        const jpVersion = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
 
         if (jpVersion) {
             console.log('Using ja-JP Audio because no Audio in download list')
@@ -452,15 +457,29 @@ export async function downloadCrunchyrollPlaylist(
     const audioDownload = async () => {
         const audios: Array<string> = []
         for (const v of dubDownloadList) {
-            const list = await crunchyGetPlaylist(v.guid)
+            const list = await crunchyGetPlaylistDRM(v.guid)
 
             if (!list) return
 
-            const playlist = await crunchyGetPlaylistMPD(list.url)
+            const playlist = await crunchyGetPlaylistMPD(list.data.url)
 
             if (!playlist) return
 
+            const assetId = playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].uri.match(/\/assets\/(?:p\/)?([^_,]+)/)
+
+            if (!assetId) return
+
+            var pssh
+            var keys: { kid: string; key: string }[] | undefined
+
             var p: { filename: string; url: string }[] = []
+
+            if (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection) {
+                if (!playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh) return
+                pssh = Uint8ArrayToBase64(playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh)
+
+                keys = await getDRMKeys(pssh, assetId[1], list.account_id)
+            }
 
             p.push({
                 filename: (playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
@@ -474,7 +493,7 @@ export async function downloadCrunchyrollPlaylist(
                 })
             }
 
-            const path = await downloadMPDAudio(p, audioFolder, list.audioLocale)
+            const path = await downloadMPDAudio(p, audioFolder, list.data.audioLocale, keys ? keys : undefined)
 
             audios.push(path as string)
         }
@@ -486,11 +505,11 @@ export async function downloadCrunchyrollPlaylist(
 
         if (!playlist) return
 
-        if (playlist.versions && playlist.versions.length !== 0) {
-            if (playlist.versions.find((p) => p.audio_locale === dubs[0])) {
-                code = playlist.versions.find((p) => p.audio_locale === dubs[0])?.guid
+        if (playlist.data.versions && playlist.data.versions.length !== 0) {
+            if (playlist.data.versions.find((p) => p.audio_locale === dubs[0])) {
+                code = playlist.data.versions.find((p) => p.audio_locale === dubs[0])?.guid
             } else {
-                code = playlist.versions.find((p) => p.audio_locale === 'ja-JP')?.guid
+                code = playlist.data.versions.find((p) => p.audio_locale === 'ja-JP')?.guid
             }
         } else {
             code = e
@@ -498,24 +517,24 @@ export async function downloadCrunchyrollPlaylist(
 
         if (!code) return console.error('No clean stream found')
 
-        const play = await crunchyGetPlaylist(code)
+        const play = await crunchyGetPlaylistDRM(code)
 
         if (!play) return
 
         var downloadURL
 
         if (hardsub) {
-            const hardsubURL = play.hardSubs.find((h) => h.hlang === subs[0])?.url
+            const hardsubURL = play.data.hardSubs.find((h) => h.hlang === subs[0])?.url
 
             if (hardsubURL) {
                 downloadURL = hardsubURL
                 console.log('Hardsub Playlist found')
             } else {
-                downloadURL = play.url
+                downloadURL = play.data.url
                 console.log('Hardsub Playlist not found')
             }
         } else {
-            downloadURL = play.url
+            downloadURL = play.data.url
             console.log('Hardsub disabled, skipping')
         }
 
@@ -526,6 +545,20 @@ export async function downloadCrunchyrollPlaylist(
         var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.height === quality)
 
         if (!hq) return
+
+        const assetId = hq.segments[0].uri.match(/\/assets\/(?:p\/)?([^_,]+)/)
+
+        if (!assetId) return
+
+        var pssh
+        var keys: { kid: string; key: string }[] | undefined
+
+        if (hq.contentProtection) {
+            if (!hq.contentProtection['com.widevine.alpha'].pssh) return
+            pssh = Uint8ArrayToBase64(hq.contentProtection['com.widevine.alpha'].pssh)
+
+            keys = await getDRMKeys(pssh, assetId[1], play.account_id)
+        }
 
         var p: { filename: string; url: string }[] = []
 
@@ -547,7 +580,7 @@ export async function downloadCrunchyrollPlaylist(
             dn.partsToDownload = p.length
         }
 
-        const file = await downloadParts(p, downloadID, videoFolder)
+        const file = await downloadParts(p, downloadID, videoFolder, keys ? keys : undefined)
 
         return file
     }
@@ -562,12 +595,11 @@ export async function downloadCrunchyrollPlaylist(
 
     await deleteFolder(subFolder)
     await deleteFolder(audioFolder)
-    await deleteFolder(videoFolder)
 
     return playlist
 }
 
-async function downloadParts(parts: { filename: string; url: string }[], downloadID: number, dir: string) {
+async function downloadParts(parts: { filename: string; url: string }[], downloadID: number, dir: string, drmkeys?: { kid: string; key: string }[] | undefined) {
     const path = await createFolder()
     const dn = downloading.find((i) => i.id === downloadID)
 
@@ -578,7 +610,10 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
         let success = false
         while (!success) {
             try {
-                const stream = fs.createWriteStream(`${path}/${part.filename}`)
+                var stream
+
+                stream = fs.createWriteStream(`${path}/${part.filename}`)
+
                 const { body } = await fetch(part.url)
 
                 const readableStream = Readable.from(body as any)
@@ -608,10 +643,10 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
         }
     }
 
-    return await mergeParts(parts, downloadID, path, dir)
+    return await mergeParts(parts, downloadID, path, dir, drmkeys)
 }
 
-async function mergeParts(parts: { filename: string; url: string }[], downloadID: number, tmp: string, dir: string) {
+async function mergeParts(parts: { filename: string; url: string }[], downloadID: number, tmp: string, dir: string, drmkeys: { kid: string; key: string }[] | undefined) {
     const tempname = (Math.random() + 1).toString(36).substring(2)
 
     try {
@@ -624,8 +659,26 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
             list.push(`${tmp}/${part.filename}`)
         }
 
-        const concatenatedFile = `${tmp}/main.m4s`
+        var concatenatedFile: string
+
+        if (drmkeys) {
+            concatenatedFile = `${tmp}/temp-main.m4s`
+        } else {
+            concatenatedFile = `${tmp}/main.m4s`
+        }
+
         await concatenateTSFiles(list, concatenatedFile)
+
+        if (drmkeys) {
+            const inputFilePath = `${tmp}/temp-main.m4s`
+            const outputFilePath = `${tmp}/main.m4s`
+            const keyArgument = `--show-progress --key ${drmkeys[1].kid}:${drmkeys[1].key}`
+
+            const command = `${mp4e} ${keyArgument} "${inputFilePath}" "${outputFilePath}"`
+
+            const { stdout, stderr } = await exec(command)
+            concatenatedFile = `${tmp}/main.m4s`
+        }
 
         return new Promise((resolve, reject) => {
             if (!ffmpegP.ffmpeg || !ffmpegP.ffprobe) return
