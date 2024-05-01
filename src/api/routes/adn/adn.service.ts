@@ -290,8 +290,6 @@ export async function parseSubs(url: string, secret: string) {
 
     var key = secret + '7fac1178830cfe0c'
 
-    console.log(key)
-
     var parsedSubtitle = CryptoJS.enc.Base64.parse(data.substring(0, 24))
     var sec = CryptoJS.enc.Hex.parse(key)
     var som = data.substring(24)

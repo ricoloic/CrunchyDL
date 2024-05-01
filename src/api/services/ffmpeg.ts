@@ -14,9 +14,6 @@ export function getFFMPEGPath() {
         const ffmpeg = process.env.FFMPEG_PATH
         const ffprobe = process.env.FFPROBE_PATH
 
-        console.log(ffmpeg)
-        console.log(ffprobe)
-
         return { ffmpeg: ffmpeg, ffprobe: ffprobe }
     } else {
         const ffmpeg = path.join(ffmpegPath, 'ffmpeg.exe')

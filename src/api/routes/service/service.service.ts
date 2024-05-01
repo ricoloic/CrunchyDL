@@ -167,7 +167,6 @@ async function checkPlaylists() {
                     e.dataValues.dir,
                     e.dataValues.format
                 )
-                console.log(e.dataValues.media)
             }
         }
     }
@@ -322,8 +321,6 @@ export async function downloadCrunchyrollPlaylist(
     await updatePlaylistByID(downloadID, 'downloading')
 
     var playlist = await crunchyGetPlaylist(e)
-
-    console.log(playlist)
 
     if (!playlist) {
         console.log('Playlist not found')

@@ -283,8 +283,6 @@ function convertToTimeFormat(time: number) {
 export async function ADNparseSub(raw: string, secret: string) {
     var key = secret + '7fac1178830cfe0c'
 
-    console.log(key)
-
     var parsedSubtitle = CryptoJS.enc.Base64.parse(raw.substring(0, 24))
     var sec = CryptoJS.enc.Hex.parse(key)
     var som = raw.substring(24)

@@ -8,8 +8,6 @@ export async function listSeasonCrunchy(q: string) {
         return
     }
 
-    console.log(q)
-
     const { data, error } = await useFetch<CrunchySeasonsFetch>(`https://beta-api.crunchyroll.com/content/v2/cms/series/${q}/seasons`, {
         method: 'GET',
         headers: {
