@@ -185,7 +185,7 @@ export async function deleteVideoToken(content: string, token: string) {
     if (!login) return
 
     const headers = {
-        Authorization: `Bearer ${login.access_token}`,
+        Authorization: `Bearer ${login.access_token}`
     }
 
     try {

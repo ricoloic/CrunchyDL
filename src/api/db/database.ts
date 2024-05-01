@@ -29,7 +29,7 @@ interface AccountCreateAttributes {
 
 interface PlaylistAttributes {
     id: number
-    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed' 
+    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed'
     media: CrunchyEpisode | ADNEpisode
     dub: Array<string>
     sub: Array<string>
