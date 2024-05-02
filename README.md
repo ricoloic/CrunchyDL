@@ -21,3 +21,6 @@
 **Step 2:** Run it.
 
 **Thats it!** Now you can start download!
+
+## DRM Protected Streams
+If Crunchyroll disables access to the last DRM free accesspoint I will post a guide on [Discord](https://discord.gg/grGkK4bH95) explaining the widevine stuff and how to bypass it with the downloader.
