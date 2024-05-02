@@ -4,7 +4,7 @@ import { concatenateTSFiles } from '../../services/concatenate'
 import { createFolder, createFolderName, deleteFolder, deleteTemporaryFolders } from '../../services/folder'
 import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
-import { crunchyGetPlaylist, crunchyGetPlaylistDRM, crunchyGetPlaylistMPD, deleteVideoToken } from '../crunchyroll/crunchyroll.service'
+import { crunchyGetPlaylist, crunchyGetPlaylistMPD, deleteVideoToken } from '../crunchyroll/crunchyroll.service'
 import fs from 'fs'
 var cron = require('node-cron')
 import { Readable } from 'stream'
@@ -327,7 +327,7 @@ export async function downloadCrunchyrollPlaylist(
 
     await updatePlaylistByID(downloadID, 'downloading')
 
-    var playlist = await crunchyGetPlaylistDRM(e)
+    var playlist = await crunchyGetPlaylist(e)
 
     if (!playlist) {
         await updatePlaylistByID(downloadID, 'failed')
@@ -340,7 +340,7 @@ export async function downloadCrunchyrollPlaylist(
             const found = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (found) {
                 await deleteVideoToken(episodeID, playlist.data.token)
-                playlist = await crunchyGetPlaylistDRM(found.guid)
+                playlist = await crunchyGetPlaylist(found.guid)
             } else {
                 console.log('Exact Playlist not found, taking what crunchy gives.'),
                     messageBox(
@@ -394,7 +394,7 @@ export async function downloadCrunchyrollPlaylist(
         if (playlist.data.audioLocale !== 'ja-JP') {
             const foundStream = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (foundStream) {
-                subPlaylist = await crunchyGetPlaylistDRM(foundStream.guid)
+                subPlaylist = await crunchyGetPlaylist(foundStream.guid)
             }
         } else {
             subPlaylist = playlist
@@ -424,7 +424,7 @@ export async function downloadCrunchyrollPlaylist(
         }
 
         if (found) {
-            const list = await crunchyGetPlaylistDRM(found.guid)
+            const list = await crunchyGetPlaylist(found.guid)
             if (list) {
                 const foundSub = list.data.subtitles.find((sub) => sub.language === d)
                 if (foundSub) {
@@ -479,7 +479,7 @@ export async function downloadCrunchyrollPlaylist(
     const audioDownload = async () => {
         const audios: Array<string> = []
         for (const v of dubDownloadList) {
-            const list = await crunchyGetPlaylistDRM(v.guid)
+            const list = await crunchyGetPlaylist(v.guid)
 
             if (!list) return
 
@@ -554,7 +554,7 @@ export async function downloadCrunchyrollPlaylist(
             return
         }
 
-        const play = await crunchyGetPlaylistDRM(code)
+        const play = await crunchyGetPlaylist(code)
 
         if (!play) {
             await updatePlaylistByID(downloadID, 'failed')

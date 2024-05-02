@@ -10,18 +10,19 @@ dist
 .DS_Store
 
 # Electron
-crunchyroll-downloader-advanced-output
+crunchyroll-downloader-output
 debug.log
 debug.log
 *.log
 debug.json
 errors.json
 build/
-crunchyroll-downloader-advanced-output-*/
+crunchyroll-downloader-output-*/
+updater/
 
 # FFMPEG
 ffmpeg/
 
 # MP4DECRYPT
 mp4decrypt/
-keys/
+src/api/services/widevine.ts

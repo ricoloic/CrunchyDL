@@ -14,8 +14,7 @@
             <img src="/logo.png" class="h-8" />
             <div class="text-[10px] leading-[10px] text-opacity-90 text-white select-none"
                 >Crunchyroll <br />
-                Downloader <br />
-                Advanced</div
+                Downloader</div
             >
         </div>
         <div class="w-full flex gap-2 flex-row items-center justify-center">
