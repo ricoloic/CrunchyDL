@@ -12,7 +12,7 @@ import { finished } from 'stream/promises'
 import Ffmpeg from 'fluent-ffmpeg'
 import { adnGetM3U8Playlist, adnGetPlaylist } from '../adn/adn.service'
 import { ADNEpisode } from '../../types/adn'
-import { setProgressBar } from '../../../electron/background'
+import { messageBox, setProgressBar } from '../../../electron/background'
 import { getFFMPEGPath } from '../../services/ffmpeg'
 import { getDRMKeys, Uint8ArrayToBase64 } from '../../services/decryption'
 import { getMP4DecryptPath } from '../../services/mp4decrypt'
@@ -342,7 +342,15 @@ export async function downloadCrunchyrollPlaylist(
                 await deleteVideoToken(episodeID, playlist.data.token)
                 playlist = await crunchyGetPlaylistDRM(found.guid)
             } else {
-                console.log('Exact Playlist not found, taking what crunchy gives.')
+                console.log('Exact Playlist not found, taking what crunchy gives.'),
+                    messageBox(
+                        'error',
+                        ['Cancel'],
+                        2,
+                        'Not found japanese stream',
+                        'Not found japanese stream',
+                        'This usually happens when Crunchyroll displays JP as dub on a language but its not available. The download will fail, just start a new download and remove JP from dubs'
+                    )
             }
         }
     }
