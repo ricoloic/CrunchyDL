@@ -1,6 +1,5 @@
 import { app } from 'electron'
 import path from 'path'
-import { messageBox } from '../../electron/background'
 const isDev = process.env.NODE_ENV === 'development'
 const appPath = app.getAppPath()
 const resourcesPath = path.dirname(appPath)

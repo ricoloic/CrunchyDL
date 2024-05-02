@@ -29,7 +29,7 @@ interface AccountCreateAttributes {
 
 interface PlaylistAttributes {
     id: number
-    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed'
+    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed'
     media: CrunchyEpisode | ADNEpisode
     dub: Array<string>
     sub: Array<string>
@@ -48,7 +48,7 @@ interface PlaylistCreateAttributes {
     dir: string
     quality: 1080 | 720 | 480 | 360 | 240
     hardsub: boolean
-    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'completed' | 'failed'
+    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed'
     service: 'CR' | 'ADN'
     format: 'mp4' | 'mkv'
 }

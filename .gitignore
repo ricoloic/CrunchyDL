@@ -18,6 +18,11 @@ debug.json
 errors.json
 build/
 crunchyroll-downloader-output-*/
+updater/
 
 # FFMPEG
 ffmpeg/
+
+# MP4DECRYPT
+mp4decrypt/
+src/api/services/widevine.ts

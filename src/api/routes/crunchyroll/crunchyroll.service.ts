@@ -6,6 +6,9 @@ import { parse as mpdParse } from 'mpd-parser'
 import { loggedInCheck } from '../service/service.service'
 import { app } from 'electron'
 
+// Disable when Crunchyroll turns off switch endpoint
+const enableDRMBypass = false
+
 const crErrors = [
     {
         error: 'invalid_grant',
@@ -108,28 +111,25 @@ export async function crunchyGetPlaylist(q: string) {
 
     if (!account) return
 
-    const { data, error } = await crunchyLogin(account.username, account.password)
+    const { data: login, error } = await crunchyLogin(account.username, account.password)
 
-    if (!data) return
+    if (!login) return
 
     const headers = {
-        Authorization: `Bearer ${data.access_token}`,
+        Authorization: `Bearer ${login.access_token}`,
         'X-Cr-Disable-Drm': 'true'
     }
 
-    const query: any = {
-        q: q,
-        n: 100,
-        type: 'series',
-        ratings: false,
-        locale: 'de-DE'
-    }
-
     try {
-        const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}/console/switch/play`, {
-            method: 'GET',
-            headers: headers
-        })
+        const response = await fetch(
+            enableDRMBypass
+                ? `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}/tv/samsung/play`
+                : `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}/console/switch/play`,
+            {
+                method: 'GET',
+                headers: headers
+            }
+        )
 
         if (response.ok) {
             const data: VideoPlaylist = JSON.parse(await response.text())
@@ -138,11 +138,41 @@ export async function crunchyGetPlaylist(q: string) {
 
             data.subtitles = Object.values((data as any).subtitles)
 
-            return data
+            return { data: data, account_id: login.account_id }
         } else {
             throw new Error(await response.text())
         }
     } catch (e) {
+        throw new Error(e as string)
+    }
+}
+
+export async function deleteVideoToken(content: string, token: string) {
+    const account = await loggedInCheck('CR')
+
+    if (!account) return
+
+    const { data: login, error } = await crunchyLogin(account.username, account.password)
+
+    if (!login) return
+
+    const headers = {
+        Authorization: `Bearer ${login.access_token}`
+    }
+
+    try {
+        const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}`, {
+            method: 'DELETE',
+            headers: headers
+        })
+
+        if (response.ok) {
+            return 'ok'
+        } else {
+            throw new Error(await response.text())
+        }
+    } catch (e) {
+        console.log('Delete token failed')
         throw new Error(e as string)
     }
 }
@@ -157,8 +187,7 @@ export async function crunchyGetPlaylistMPD(q: string) {
     if (!data) return
 
     const headers = {
-        Authorization: `Bearer ${data.access_token}`,
-        'X-Cr-Disable-Drm': 'true'
+        Authorization: `Bearer ${data.access_token}`
     }
 
     try {
@@ -168,7 +197,9 @@ export async function crunchyGetPlaylistMPD(q: string) {
         })
 
         if (response.ok) {
-            const parsed = mpdParse(await response.text())
+            const raw = await response.text()
+
+            const parsed = mpdParse(raw)
 
             return parsed
         } else {

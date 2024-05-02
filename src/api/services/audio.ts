@@ -4,9 +4,13 @@ import { createFolder, deleteFolder } from './folder'
 import { concatenateTSFiles } from './concatenate'
 import Ffmpeg from 'fluent-ffmpeg'
 import { getFFMPEGPath } from './ffmpeg'
+import { getMP4DecryptPath } from '../services/mp4decrypt'
 const ffmpegP = getFFMPEGPath()
+const mp4e = getMP4DecryptPath()
+import util from 'util'
+const exec = util.promisify(require('child_process').exec)
 
-export async function downloadMPDAudio(parts: { filename: string; url: string }[], dir: string, name: string) {
+export async function downloadMPDAudio(parts: { filename: string; url: string }[], dir: string, name: string, drmkeys?: { kid: string; key: string }[] | undefined) {
     const path = await createFolder()
 
     const maxParallelDownloads = 5
@@ -38,7 +42,7 @@ export async function downloadMPDAudio(parts: { filename: string; url: string }[
         }
     }
 
-    return await mergePartsAudio(parts, path, dir, name)
+    return await mergePartsAudio(parts, path, dir, name, drmkeys)
 }
 
 async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number) {
@@ -58,7 +62,7 @@ async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number) 
     })
 }
 
-async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: string, dir: string, name: string) {
+async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: string, dir: string, name: string, drmkeys?: { kid: string; key: string }[] | undefined) {
     try {
         const list: Array<string> = []
 
@@ -66,8 +70,26 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
             list.push(`${tmp}/${part.filename}`)
         }
 
-        const concatenatedFile = `${tmp}/main.m4s`
+        var concatenatedFile: string
+
+        if (drmkeys) {
+            concatenatedFile = `${tmp}/temp-main.m4s`
+        } else {
+            concatenatedFile = `${tmp}/main.m4s`
+        }
+
         await concatenateTSFiles(list, concatenatedFile)
+
+        if (drmkeys) {
+            const inputFilePath = `${tmp}/temp-main.m4s`
+            const outputFilePath = `${tmp}/main.m4s`
+            const keyArgument = `--show-progress --key ${drmkeys[1].kid}:${drmkeys[1].key}`
+
+            const command = `${mp4e} ${keyArgument} "${inputFilePath}" "${outputFilePath}"`
+
+            await exec(command)
+            concatenatedFile = `${tmp}/main.m4s`
+        }
 
         return new Promise((resolve, reject) => {
             if (!ffmpegP.ffmpeg || !ffmpegP.ffprobe) return

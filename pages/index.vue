@@ -1,6 +1,5 @@
 <template>
     <div class="relative h-screen overflow-hidden">
-        <Updater />
         <MainHeader />
         <div class="flex flex-col text-white gap-5 mt-14 p-5 overflow-y-scroll h-[calc(100vh-3.5rem)]">
             <!-- <button @click="deletePlaylist">
@@ -21,6 +20,10 @@
                     <div class="flex flex-col w-full">
                         <div class="flex flex-row h-full">
                             <div class="flex flex-col">
+                                <div v-if="p.status === 'failed'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#863232] rounded-lg">
+                                    <Icon name="bitcoin-icons:cross-filled" class="h-3.5 w-3.5 text-white" />
+                                    {{ p.status }}
+                                </div>
                                 <div v-if="p.status === 'waiting'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
                                     <Icon name="mdi:clock" class="h-3.5 w-3.5 text-white" />
                                     {{ p.status }}
@@ -34,6 +37,10 @@
                                     {{ p.status }}
                                 </div>
                                 <div v-if="p.status === 'merging'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                    <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                    {{ p.status }}
+                                </div>
+                                <div v-if="p.status === 'decrypting'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
                                     <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                     {{ p.status }}
                                 </div>
@@ -74,7 +81,6 @@
 <script lang="ts" setup>
 import type { ADNEpisode } from '~/components/ADN/Types'
 import type { CrunchyEpisode } from '~/components/Episode/Types'
-import Updater from '~/components/Updater.vue'
 
 const playlist = ref<
     Array<{
