@@ -1,10 +1,9 @@
 # Crunchyroll Downloader
 <img align="right" width="90" height="90" src="https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/6aba2e4a-06ac-459e-8932-62a9b9c8640e">
 
-
+![Downloads](https://img.shields.io/github/downloads/stratuma/Crunchyroll-Downloader-v4.0/total?style=for-the-badge&logo=&color=a1a1a1)
 ![GitHub Repo stars](https://img.shields.io/github/stars/stratuma/Crunchyroll-Downloader-v4.0?style=for-the-badge&logo=&color=a1a1a1)
 ![Repo size](https://img.shields.io/github/repo-size/stratuma/Crunchyroll-Downloader-v4.0?label=total%20size&style=for-the-badge&logo=&color=a1a1a1&logoColor=a1a1a1)
-![Maintenance](https://img.shields.io/maintenance/yes/2024?style=for-the-badge&logo=&color=a1a1a1)
 
 **A simple tool for downloading videos from Crunchyroll and ADN.**
 
