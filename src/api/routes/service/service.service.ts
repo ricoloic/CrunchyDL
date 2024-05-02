@@ -330,6 +330,7 @@ export async function downloadCrunchyrollPlaylist(
     var playlist = await crunchyGetPlaylistDRM(e)
 
     if (!playlist) {
+        await updatePlaylistByID(downloadID, 'failed')
         console.log('Playlist not found')
         return
     }
@@ -340,11 +341,14 @@ export async function downloadCrunchyrollPlaylist(
             if (found) {
                 await deleteVideoToken(episodeID, playlist.data.token)
                 playlist = await crunchyGetPlaylistDRM(found.guid)
+            } else {
+                console.log('Exact Playlist not found, taking what crunchy gives.')
             }
         }
     }
 
     if (!playlist) {
+        await updatePlaylistByID(downloadID, 'failed')
         console.log('Exact Playlist not found')
         return
     }
@@ -389,6 +393,7 @@ export async function downloadCrunchyrollPlaylist(
         }
 
         if (!subPlaylist) {
+            await updatePlaylistByID(downloadID, 'failed')
             console.log('Subtitle Playlist not found')
             return
         }
@@ -482,6 +487,7 @@ export async function downloadCrunchyrollPlaylist(
                 console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0])
                 console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].uri)
                 console.log('No AssetID found, exiting.')
+                await updatePlaylistByID(downloadID, 'failed')
                 return
             }
 
@@ -534,11 +540,19 @@ export async function downloadCrunchyrollPlaylist(
             code = e
         }
 
-        if (!code) return console.error('No clean stream found')
+        if (!code) {
+            await updatePlaylistByID(downloadID, 'failed')
+            console.log('No Clean stream found')
+            return
+        }
 
         const play = await crunchyGetPlaylistDRM(code)
 
-        if (!play) return
+        if (!play) {
+            await updatePlaylistByID(downloadID, 'failed')
+            console.log('Failed to get Playlist in download Video')
+            return
+        }
 
         var downloadURL
 
