@@ -37,19 +37,9 @@ const options = {
     nsis: {
         deleteAppDataOnUninstall: true
     },
-    mac: {
-        category: 'public.app-category.entertainment',
-        hardenedRuntime: false,
-        gatekeeperAssess: false,
-        target: [
-            {
-                target: 'default',
-                arch: ['x64', 'arm64']
-            }
-        ]
-    },
     linux: {
         maintainer: 'Stratum',
+        category: 'AudioVideo',
         desktop: {
             StartupNotify: 'false',
             Encoding: 'UTF-8',

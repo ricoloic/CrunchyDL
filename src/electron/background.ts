@@ -38,10 +38,13 @@ function createWindow() {
         resizable: false,
         fullscreen: false,
         maximizable: false,
+        frame: false,
         vibrancy: 'fullscreen-ui',
         // Not working when unfocusing the window somehow?
         backgroundMaterial: 'acrylic',
-        show: false
+        show: false,
+        // For Linux
+        autoHideMenuBar: true
     })
 
     // Show window after loading page
@@ -195,7 +198,9 @@ ipcMain.handle(
             maximizable: false,
             vibrancy: 'fullscreen-ui',
             backgroundMaterial: 'acrylic',
-            show: false
+            show: false,
+            // For Linux
+            autoHideMenuBar: true
         })
 
         newWindow.once('ready-to-show', () => {
