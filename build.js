@@ -40,6 +40,7 @@ const options = {
     linux: {
         maintainer: 'Stratum',
         category: 'AudioVideo',
+        icon: 'public/favicon.icns',
         desktop: {
             StartupNotify: 'false',
             Encoding: 'UTF-8',

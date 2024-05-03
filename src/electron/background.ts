@@ -23,6 +23,8 @@ function createWindow() {
         icon: __dirname + '/icon/favicon.ico',
         width: 950,
         height: 700,
+        // Linux:
+        // backgroundColor: '#2222222',
         webPreferences: {
             devTools: true,
             nodeIntegration: true,
@@ -181,6 +183,8 @@ ipcMain.handle(
             icon: __dirname + '/icon/favicon.ico',
             width: opt.width,
             height: opt.height,
+            // Linux:
+            // backgroundColor: '#2222222',
             webPreferences: {
                 devTools: true,
                 nodeIntegration: true,
