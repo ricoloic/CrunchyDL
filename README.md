@@ -13,6 +13,7 @@
 
 ## Supported Platforms
 - Windows
+- Linux
 
 ## Getting Started
 **Step 1:** Install the latest installer [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
