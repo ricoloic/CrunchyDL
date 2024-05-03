@@ -15,10 +15,19 @@
 - Windows
 - Linux
 
-## Getting Started
-**Step 1:** Install the latest installer [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
+## Getting Started on Windows
+**Step 1:** Download the latest windows installer [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
 
-**Step 2:** Run it.
+**Step 2:** Run the installer. The app starts automatically after install and creates a desktop shortcut.
+
+**Thats it!** Now you can start download!
+
+## Getting Started on Linux
+**Step 1:** Download one of the latest linux builds [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
+
+**Step 2 for .AppImage:** Just run it, the downloader will appear!
+
+**Step 2 for .deb:** Run the .deb file with your package manager and install it!
 
 **Thats it!** Now you can start download!
 
