@@ -6,7 +6,7 @@ import { parse as mpdParse } from 'mpd-parser'
 import { loggedInCheck } from '../service/service.service'
 
 // Disable when Crunchyroll turns off switch endpoint
-const enableDRMBypass = true
+const enableDRMBypass = false
 
 const crErrors = [
     {
