@@ -12,7 +12,7 @@ import { finished } from 'stream/promises'
 import Ffmpeg from 'fluent-ffmpeg'
 import { adnGetM3U8Playlist, adnGetPlaylist } from '../adn/adn.service'
 import { ADNEpisode } from '../../types/adn'
-import { messageBox, setProgressBar } from '../../../electron/background'
+import { messageBox } from '../../../electron/background'
 import { getFFMPEGPath } from '../../services/ffmpeg'
 import { getDRMKeys, Uint8ArrayToBase64 } from '../../services/decryption'
 import { getMP4DecryptPath } from '../../services/mp4decrypt'
@@ -107,31 +107,6 @@ export async function getDownloading(id: number) {
 
     return null
 }
-
-// Download Progress Bar Updater
-function updateProgress() {
-    const totalParts = downloading.reduce((total, item) => total + item.partsToDownload, 0)
-    let downloadedParts = 0
-
-    downloading.forEach((item) => {
-        downloadedParts += item.downloadedParts
-    })
-
-    const progress = totalParts > 0 ? downloadedParts / totalParts : 0
-
-    setProgressBar(progress)
-
-    const allDownloaded = downloading.every((item) => item.downloadedParts === item.partsToDownload)
-
-    if (allDownloaded) {
-        setProgressBar(0)
-        return
-    }
-}
-
-cron.schedule('*/2 * * * * *', () => {
-    updateProgress()
-})
 
 // Define IsDownloading Count
 var isDownloading: number = 0

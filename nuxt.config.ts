@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss', 'nuxt-icon', '@nuxtjs/google-fonts'],
   googleFonts: {
     families: {
-      'DM+Sans': [600, '1000'],
+      'DM+Sans': ['600', '1000'],
       'Protest+Riot': true
     }
   },

@@ -66,7 +66,7 @@
         "extraResources": [
             "./ffmpeg/**",
             "./mp4decrypt/**",
-            "./updater/**"
+            "./keys/**"
         ]
     }
 }

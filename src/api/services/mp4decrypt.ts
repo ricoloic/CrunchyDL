@@ -10,7 +10,7 @@ if (isDev) {
 
 export function getMP4DecryptPath() {
     if (isDev) {
-        const mp4Decrypt = process.env.MP4DECRYPT
+        const mp4Decrypt = process.env.MP4DECRYPT_PATH
 
         return mp4Decrypt
     } else {

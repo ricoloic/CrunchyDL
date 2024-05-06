@@ -1,8 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { crunchyLogin } from './crunchyroll.service'
-import { dialog } from 'electron'
-import { messageBox } from '../../../electron/background'
-import { CrunchyEpisodes, CrunchySeason } from '../../types/crunchyroll'
 import { loggedInCheck } from '../service/service.service'
 
 export async function loginController(request: FastifyRequest, reply: FastifyReply) {

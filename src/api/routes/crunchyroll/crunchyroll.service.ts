@@ -4,10 +4,9 @@ import { VideoPlaylist } from '../../types/crunchyroll'
 import { useFetch } from '../useFetch'
 import { parse as mpdParse } from 'mpd-parser'
 import { loggedInCheck } from '../service/service.service'
-import { app } from 'electron'
 
 // Disable when Crunchyroll turns off switch endpoint
-const enableDRMBypass = false
+const enableDRMBypass = true
 
 const crErrors = [
     {

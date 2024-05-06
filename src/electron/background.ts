@@ -116,10 +116,6 @@ export async function messageBox(
     console.log(response)
 }
 
-export async function setProgressBar(c: number) {
-    mainWindow.setProgressBar(c)
-}
-
 ipcMain.handle('dialog:openDirectory', async () => {
     const window = BrowserWindow.getFocusedWindow()
 
