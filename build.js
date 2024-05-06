@@ -41,8 +41,10 @@ const options = {
     mac: {
         category: 'public.app-category.entertainment',
         icon: 'public/favicon.icns',
-        hardenedRuntime: false,
+        hardenedRuntime: true,
         gatekeeperAssess: false,
+        entitlements: 'public/mac/entitlements.mac.plist',
+        entitlementsInherit: 'public/mac/entitlements.mac.plist',
         target: [
             {
                 target: 'default',
