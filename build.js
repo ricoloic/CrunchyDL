@@ -15,6 +15,7 @@ const options = {
     nodeGypRebuild: true,
     buildDependenciesFromSource: true,
 
+    // test
     publish: {
         provider: 'github',
         releaseType: 'release'
