@@ -8,6 +8,7 @@ import { loggedInCheck } from '../service/service.service'
 // Disable when Crunchyroll turns off switch endpoint
 const enableDRMBypass = false
 
+// Crunchyroll Error message list
 const crErrors = [
     {
         error: 'invalid_grant',
@@ -15,6 +16,7 @@ const crErrors = [
     }
 ]
 
+// Crunchyroll Login Handler
 export async function crunchyLogin(user: string, passw: string) {
     const cachedData:
         | {
@@ -62,6 +64,7 @@ export async function crunchyLogin(user: string, passw: string) {
     return { data: cachedData, error: null }
 }
 
+// Crunchyroll Login Fetch
 async function crunchyLoginFetch(user: string, passw: string) {
     const headers = {
         Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
@@ -105,6 +108,7 @@ async function crunchyLoginFetch(user: string, passw: string) {
     return { data: data, error: null }
 }
 
+// Crunchyroll Playlist Fetch
 export async function crunchyGetPlaylist(q: string) {
     const account = await loggedInCheck('CR')
 
@@ -146,6 +150,7 @@ export async function crunchyGetPlaylist(q: string) {
     }
 }
 
+// Crunchyroll Delete Video Token Fetch
 export async function deleteVideoToken(content: string, token: string) {
     const account = await loggedInCheck('CR')
 
@@ -176,6 +181,7 @@ export async function deleteVideoToken(content: string, token: string) {
     }
 }
 
+// Crunchyroll MPD Fetch
 export async function crunchyGetPlaylistMPD(q: string) {
     const account = await loggedInCheck('CR')
 
