@@ -24,14 +24,14 @@
           PLAYLIST
         </div>
       </button> -->
-            <!-- <button
+            <button
                 @click="openSettings"
                 class="flex items-center justify-center px-2 py-2 gap-1 transition-all bg-[#ffffff16] hover:bg-[#ffffff25] rounded-lg select-none"
                 style="-webkit-app-region: no-drag"
             >
                 <Icon name="ic:round-settings" class="h-3.5 w-3.5 text-white" />
                 <div class="text-[11px] text-white font-dm"> SETTINGS </div>
-            </button> -->
+            </button>
         </div>
     </div>
 </template>
@@ -53,18 +53,6 @@ async function openSettings() {
 }
 
 async function openAddAnime() {
-    // const { data, error } = await checkAccount()
-
-    // if (error.value) {
-    //   (window as any).myAPI.openWindow({
-    //   title: "Crunchyroll Login",
-    //   url: isProduction ? 'http://localhost:8079/crunchylogin' : 'http://localhost:3000/crunchylogin',
-    //   width: 600,
-    //   height: 300,
-    //   backgroundColor: "#111111"
-    // })
-    //   return
-    // }
 
     ;(window as any).myAPI.openWindow({
         title: 'Add Anime',
@@ -75,3 +63,21 @@ async function openAddAnime() {
     })
 }
 </script>
+
+<style>
+.font-dm {
+    font-family: 'DM Sans', sans-serif;
+}
+
+.font-protest {
+    font-family: 'Protest Riot', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.font-dm-big {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 1000;
+    font-style: normal;
+}
+</style>

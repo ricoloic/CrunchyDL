@@ -720,7 +720,7 @@ const addToPlaylist = async () => {
         format: format.value
     }
 
-    const { error } = await useFetch('http://localhost:8080/api/service/playlist', {
+    const { error } = await useFetch('http://localhost:9941/api/service/playlist', {
         method: 'POST',
         body: JSON.stringify(data)
     })
@@ -756,7 +756,7 @@ const addToPlaylistADN = async () => {
         format: format.value
     }
 
-    const { error } = await useFetch('http://localhost:8080/api/service/playlist', {
+    const { error } = await useFetch('http://localhost:9941/api/service/playlist', {
         method: 'POST',
         body: JSON.stringify(data)
     })

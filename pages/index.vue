@@ -117,7 +117,7 @@ const getPlaylist = async () => {
             service: string
             format: string
         }>
-    >('http://localhost:8080/api/service/playlist')
+    >('http://localhost:9941/api/service/playlist')
 
     if (error.value) {
         alert(error.value)
@@ -132,7 +132,7 @@ const getPlaylist = async () => {
 }
 
 const deletePlaylist = async () => {
-    const { data, error } = await useFetch('http://localhost:8080/api/service/playlist', {
+    const { data, error } = await useFetch('http://localhost:9941/api/service/playlist', {
         method: 'delete'
     })
 

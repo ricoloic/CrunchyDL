@@ -1,5 +1,5 @@
 <template>
-    <div class="h-screen bg-[#111111] flex flex-col p-5 text-white" style="-webkit-app-region: drag">
+    <div class="h-screen bg-[#11111189] flex flex-col p-5 text-white font-dm" style="-webkit-app-region: drag">
         <div class="flex flex-row items-center justify-center">
             <div class="text-2xl">Settings</div>
         </div>
@@ -7,17 +7,19 @@
             <button
                 v-for="(option, index) in options"
                 @click="activeIndex = index"
-                class="w-full flex items-center justify-center py-2 border-b-2 transition-all"
+                class="w-full flex items-center text-sm justify-center py-2 border-b-2 transition-all"
                 :class="activeIndex === index ? 'border-[#ce6104]' : 'border-[#ce620428]'"
             >
                 {{ option }}
             </button>
         </div>
+        <SettingsMain v-if="activeIndex === 0" />
+        <SettingsAbout v-if="activeIndex === 1" />
     </div>
 </template>
 
 <script lang="ts" setup>
-const options = ref(['Main', 'Output', 'Naming', 'Crunchyroll', 'About'])
+const options = ref<Array<string>>(['Main', 'About'])
 const activeIndex = ref(0)
 </script>
 
@@ -33,5 +35,21 @@ const activeIndex = ref(0)
 
 body {
     animation: fadein 0.5s;
+}
+
+.font-dm {
+    font-family: 'DM Sans', sans-serif;
+}
+
+.font-protest {
+    font-family: 'Protest Riot', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.font-dm-big {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 1000;
+    font-style: normal;
 }
 </style>

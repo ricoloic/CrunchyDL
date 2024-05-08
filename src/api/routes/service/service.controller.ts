@@ -1,6 +1,6 @@
 import { FastifyReply, FastifyRequest } from 'fastify'
 import { crunchyLogin } from '../crunchyroll/crunchyroll.service'
-import { addEpisodeToPlaylist, getDownloading, getPlaylist, loggedInCheck, safeLoginData } from './service.service'
+import { addEpisodeToPlaylist, deleteAccountID, getAllAccounts, getDownloading, getPlaylist, loggedInCheck, safeLoginData } from './service.service'
 import { CrunchyEpisodes } from '../../types/crunchyroll'
 import { adnLogin } from '../adn/adn.service'
 
@@ -62,6 +62,34 @@ export async function loginController(
     }
 
     await safeLoginData(body.user, body.password, params.id)
+
+    return reply.code(200).send()
+}
+
+export async function getAllAccountsHandler(
+    request: FastifyRequest,
+    reply: FastifyReply
+) {
+
+    const accounts = await getAllAccounts();
+
+    return reply.code(200).send(accounts)
+}
+
+export async function deleteAccountHandler(
+    request: FastifyRequest<{
+        Params: {
+            id: number,
+        }
+    }>,
+    reply: FastifyReply
+) {
+
+    try {
+        await deleteAccountID(request.params.id)
+    } catch (e) {
+        return reply.code(500).send(e)
+    }
 
     return reply.code(200).send()
 }

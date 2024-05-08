@@ -55,4 +55,20 @@ onMounted(() => {
 })
 </script>
 
-<style></style>
+<style>
+.font-dm {
+    font-family: 'DM Sans', sans-serif;
+}
+
+.font-protest {
+    font-family: 'Protest Riot', sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.font-dm-big {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 1000;
+    font-style: normal;
+}
+</style>

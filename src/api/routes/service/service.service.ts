@@ -21,6 +21,26 @@ const mp4e = getMP4DecryptPath()
 import util from 'util'
 const exec = util.promisify(require('child_process').exec)
 
+// Get All Accounts
+export async function getAllAccounts() {
+    const accounts = await Account.findAll({
+        attributes: {exclude: ['password']},
+    })
+
+    return accounts
+}
+
+// Delete Account
+export async function deleteAccountID(id: number) {
+    const account = await Account.destroy({
+        where: {
+            id: id
+        }
+    })
+
+    return account
+}
+
 // DB Account existence check
 export async function loggedInCheck(service: string) {
     const login = await Account.findOne({

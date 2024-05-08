@@ -46,7 +46,7 @@ server.register(crunchyrollRoutes, { prefix: 'api/crunchyroll' })
 server.register(serviceRoutes, { prefix: 'api/service' })
 
 function startAPI() {
-    server.listen({ port: 8080 }, (err, address) => {
+    server.listen({ port: 9941 }, (err, address) => {
         if (err) {
             console.error(err)
             return
