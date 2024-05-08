@@ -81,6 +81,7 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
         await concatenateTSFiles(list, concatenatedFile)
 
         if (drmkeys) {
+            console.log(`Audio Decryption started`)
             const inputFilePath = `${tmp}/temp-main.m4s`
             const outputFilePath = `${tmp}/main.m4s`
             const keyArgument = `--show-progress --key ${drmkeys[1].kid}:${drmkeys[1].key}`
@@ -89,6 +90,7 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
 
             await exec(command)
             concatenatedFile = `${tmp}/main.m4s`
+            console.log(`Audio Decryption finished`)
         }
 
         return new Promise((resolve, reject) => {
