@@ -24,7 +24,7 @@ const exec = util.promisify(require('child_process').exec)
 // Get All Accounts
 export async function getAllAccounts() {
     const accounts = await Account.findAll({
-        attributes: {exclude: ['password']},
+        attributes: { exclude: ['password'] }
     })
 
     return accounts

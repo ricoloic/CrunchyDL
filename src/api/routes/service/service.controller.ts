@@ -66,12 +66,8 @@ export async function loginController(
     return reply.code(200).send()
 }
 
-export async function getAllAccountsHandler(
-    request: FastifyRequest,
-    reply: FastifyReply
-) {
-
-    const accounts = await getAllAccounts();
+export async function getAllAccountsHandler(request: FastifyRequest, reply: FastifyReply) {
+    const accounts = await getAllAccounts()
 
     return reply.code(200).send(accounts)
 }
@@ -79,12 +75,11 @@ export async function getAllAccountsHandler(
 export async function deleteAccountHandler(
     request: FastifyRequest<{
         Params: {
-            id: number,
+            id: number
         }
     }>,
     reply: FastifyReply
 ) {
-
     try {
         await deleteAccountID(request.params.id)
     } catch (e) {

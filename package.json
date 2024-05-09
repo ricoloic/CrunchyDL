@@ -27,14 +27,15 @@
         "concurrently": "^8.2.2",
         "dotenv": "^16.4.5",
         "electron": "^30.0.2",
-        "electron-builder": "^24.6.3",
+        "electron-builder": "^24.13.3",
         "eslint": "^8.57.0",
         "eslint-config-prettier": "^8.10.0",
         "eslint-plugin-prettier": "^4.2.1",
+        "modclean": "3.0.0-beta.1",
         "nuxt": "^3.11.2",
         "nuxt-icon": "^0.6.10",
         "prettier": "^2.8.8",
-        "sass": "^1.76.0",
+        "sass": "^1.77.0",
         "sass-loader": "^13.3.3",
         "tsc-watch": "^6.2.0",
         "typescript": "^5.4.5",
@@ -51,7 +52,7 @@
         "electron-settings": "^4.0.4",
         "electron-updater": "^6.1.8",
         "express": "^4.19.2",
-        "fastify": "^4.26.2",
+        "fastify": "^4.27.0",
         "fluent-ffmpeg": "^2.1.2",
         "jsencrypt": "^3.3.2",
         "long": "^5.2.3",
@@ -63,6 +64,16 @@
         "sqlite3": "5.1.6"
     },
     "build": {
+        "files": [
+            "!**/pages/*",
+            "!**/ffmpeg/*",
+            "!**/mp4decrypt/*",
+            "!**/keys/*",
+            "!**/.git/*",
+            "!**/.github/*",
+            "!**/.nuxt/*",
+            "!**/.vscode/*"
+        ],
         "extraResources": [
             "./ffmpeg/**",
             "./mp4decrypt/**",

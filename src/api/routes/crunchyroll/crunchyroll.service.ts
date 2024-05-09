@@ -187,7 +187,7 @@ export async function crunchyGetPlaylistMPD(q: string) {
 
     if (!account) return
 
-    const { data, error } = await crunchyLogin(account.username, account.password)
+    const { data } = await crunchyLogin(account.username, account.password)
 
     if (!data) return
 

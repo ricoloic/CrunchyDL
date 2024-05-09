@@ -53,7 +53,6 @@ async function openSettings() {
 }
 
 async function openAddAnime() {
-
     ;(window as any).myAPI.openWindow({
         title: 'Add Anime',
         url: isProduction ? 'http://localhost:8079/addanime' : 'http://localhost:3000/addanime',

@@ -6,7 +6,7 @@
                 <Icon v-if="account.service === 'CR'" name="simple-icons:crunchyroll" class="h-6 w-6 text-white" />
                 <Icon v-if="account.service === 'ADN'" name="arcticons:animeultima" class="h-6 w-6 text-white" />
                 <div class="text-xs ml-1.5">
-                    {{ services.find(s => s.service === account.service)?.name }}
+                    {{ services.find((s) => s.service === account.service)?.name }}
                 </div>
                 <div class="text-xs ml-auto">
                     {{ account.username }}
@@ -50,8 +50,7 @@ const getAccounts = async () => {
     accounts.value = data.value
 }
 
-getAccounts();
-
+getAccounts()
 
 const deleteAccount = async (id: number) => {
     const { error } = await useFetch(`http://localhost:9941/api/service/account/${id}`, {
@@ -63,9 +62,8 @@ const deleteAccount = async (id: number) => {
         return
     }
 
-    getAccounts();
+    getAccounts()
 }
-
 </script>
 
 <style></style>

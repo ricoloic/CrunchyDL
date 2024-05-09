@@ -15,6 +15,8 @@ const options = {
     nodeGypRebuild: true,
     buildDependenciesFromSource: true,
 
+    includeSubNodeModules: false,
+
     publish: {
         provider: 'github',
         releaseType: 'release'
@@ -25,6 +27,7 @@ const options = {
     },
 
     win: {
+        compression: 'maximum',
         artifactName: 'crunchyroll-downloader-${version}-windows-installer.${ext}',
         icon: 'public/favicon.ico',
         target: [
