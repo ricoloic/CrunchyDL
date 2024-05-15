@@ -40,7 +40,6 @@ function createWindow() {
         resizable: false,
         fullscreen: false,
         maximizable: false,
-        frame: false,
         vibrancy: 'fullscreen-ui',
         // Not working when unfocusing the window somehow?
         backgroundMaterial: 'acrylic',

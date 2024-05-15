@@ -3,7 +3,7 @@
         <div class="relative flex flex-row items-center justify-center">
             <button
                 v-if="tab === 2"
-                @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null)"
+                @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null), (url = '')"
                 class="absolute left-0 bg-[#5c5b5b9c] py-1.5 px-3 rounded-xl flex flex-row items-center justify-center gap-0.5 hover:bg-[#4b4a4a] transition-all text-sm"
                 style="-webkit-app-region: no-drag"
             >
@@ -323,7 +323,7 @@
             </div>
             <div v-if="added" class="relative flex flex-row gap-5 mt-auto">
                 <button
-                    @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null)"
+                    @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null), (url = '')"
                     class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center cursor-default w-full"
                 >
                     <div class="flex gap-1 flex-row items-center justify-center transition-all">
