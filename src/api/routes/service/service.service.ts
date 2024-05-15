@@ -118,6 +118,7 @@ var downloading: Array<{
     downloadedParts: number
     partsToDownload: number
     downloadSpeed: number
+    totalDownloaded: number
 }> = []
 
 // Get Downloading Episodes
@@ -195,7 +196,8 @@ export async function downloadADNPlaylist(
         id: downloadID,
         downloadedParts: 0,
         partsToDownload: 0,
-        downloadSpeed: 0
+        downloadSpeed: 0,
+        totalDownloaded: 0
     })
 
     if (!season) {
@@ -318,7 +320,8 @@ export async function downloadCrunchyrollPlaylist(
         id: downloadID,
         downloadedParts: 0,
         partsToDownload: 0,
-        downloadSpeed: 0
+        downloadSpeed: 0,
+        totalDownloaded: 0
     })
 
     await updatePlaylistByID(downloadID, 'downloading')
@@ -685,7 +688,8 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
     const path = await createFolder()
     const dn = downloading.find((i) => i.id === downloadID)
 
-    let totalDownloadedBytes = 0
+    let totalDownloadedBytes = 0;
+    let totalSizeBytes = 0;
     let startTime = Date.now()
 
     for (const [index, part] of parts.entries()) {
@@ -700,9 +704,12 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
 
                 const readableStream = Readable.from(body as any)
                 let partDownloadedBytes = 0
+                let partSizeBytes = 0;
+                
                 readableStream.on('data', (chunk) => {
                     partDownloadedBytes += chunk.length
                     totalDownloadedBytes += chunk.length
+                    totalSizeBytes += chunk.length;
                 })
 
                 await finished(readableStream.pipe(stream))
@@ -710,10 +717,12 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
                 console.log(`Fragment ${index + 1} downloaded`)
 
                 if (dn) {
+                    const tot = totalSizeBytes
                     dn.downloadedParts++
                     const endTime = Date.now()
                     const durationInSeconds = (endTime - startTime) / 1000
                     dn.downloadSpeed = totalDownloadedBytes / 1024 / 1024 / durationInSeconds
+                    dn.totalDownloaded = tot;
                 }
 
                 success = true

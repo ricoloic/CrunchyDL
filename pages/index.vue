@@ -62,14 +62,15 @@
                             {{ (p.media as ADNEpisode).show.title }} Season {{ (p.media as ADNEpisode).season ? (p.media as ADNEpisode).season : 1 }} Episode
                             {{ (p.media as ADNEpisode).shortNumber }}
                         </div>
-                        <div class="flex flex-row gap-2 h-full items-end">
+                        <div class="relative flex flex-row gap-2 h-full items-end">
                             <div class="text-xs">{{ p.quality }}p</div>
                             <div class="text-xs uppercase">{{ p.format }}</div>
                             <div class="text-xs">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
                             <div class="text-xs">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
-                            <div class="flex flex-col ml-auto gap-0.5">
+                            <div class="absolute flex flex-col ml-auto gap-0.5 right-0 bottom-0">
+                                <div v-if="p.totaldownloaded && p.status === 'downloading'" class="text-xs ml-auto">{{ (p.totaldownloaded / Math.pow(1024, 2)).toFixed(2) }} MB</div>
                                 <div v-if="p.partsleft && p.status === 'downloading'" class="text-xs ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
-                                <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-xs">{{ p.downloadspeed }} MB/s</div>
+                                <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-xs ml-auto">{{ p.downloadspeed }} MB/s</div>
                             </div>
                         </div>
                     </div>
@@ -95,6 +96,7 @@ const playlist = ref<
         partsleft: number
         partsdownloaded: number
         downloadspeed: number
+        totaldownloaded: number
         quality: number
         service: string
         format: string
@@ -113,6 +115,7 @@ const getPlaylist = async () => {
             partsleft: number
             partsdownloaded: number
             downloadspeed: number
+            totaldownloaded: number
             quality: number
             service: string
             format: string

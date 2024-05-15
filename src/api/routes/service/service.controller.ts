@@ -124,7 +124,8 @@ export async function getPlaylistController(request: FastifyRequest, reply: Fast
                     ...v.dataValues,
                     partsleft: found.partsToDownload,
                     partsdownloaded: found.downloadedParts,
-                    downloadspeed: found.downloadSpeed.toFixed(2)
+                    downloadspeed: found.downloadSpeed.toFixed(2),
+                    totaldownloaded: found.totalDownloaded
                 }
             }
         }
