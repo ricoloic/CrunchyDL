@@ -133,6 +133,26 @@ ipcMain.handle('dialog:openDirectory', async () => {
     }
 })
 
+ipcMain.handle('dialog:openFile', async (events, type: string) => {
+    if (!type) return
+
+    const window = BrowserWindow.getFocusedWindow()
+
+    if (!window) {
+        return
+    }
+
+    const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+        properties: ['openFile']
+    })
+    if (canceled) {
+        return await settings.get(type)
+    } else {
+        await settings.set(type, filePaths[0])
+        return filePaths[0]
+    }
+})
+
 ipcMain.handle('dialog:defaultDirectory', async () => {
     const savedPath = await settings.get('downloadPath')
 
@@ -142,6 +162,19 @@ ipcMain.handle('dialog:defaultDirectory', async () => {
         await settings.set('downloadPath', path)
 
         return path
+    }
+
+    return savedPath
+})
+
+ipcMain.handle('dialog:defaultFile', async (events, type: string) => {
+
+    if (!type) return
+
+    const savedPath = await settings.get(type)
+
+    if (!savedPath) {
+        return ''
     }
 
     return savedPath
