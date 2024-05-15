@@ -167,6 +167,24 @@ ipcMain.handle('dialog:defaultDirectory', async () => {
     return savedPath
 })
 
+ipcMain.handle('dialog:selectEndpoint', async (events, nr: number) => {
+    await settings.set('CREndpoint', nr)
+
+    return nr
+})
+
+ipcMain.handle('dialog:getEndpoint', async (events, nr: number) => {
+    const endpointNr = await settings.get('CREndpoint')
+
+    if (!endpointNr) {
+        await settings.set('CREndpoint', 1)
+
+        return 1
+    }
+
+    return endpointNr
+})
+
 ipcMain.handle('dialog:defaultFile', async (events, type: string) => {
 
     if (!type) return

@@ -1,11 +1,12 @@
 import { Session } from '../modules/license'
 import { readFileSync } from 'fs'
 import { getWVKPath } from './widevine'
-const keys = getWVKPath()
 
 export async function getDRMKeys(pssh: string, assetID: string, userID: string) {
     const auth = await getWVKey(assetID, userID)
     const depssh = Buffer.from(pssh, 'base64')
+
+    const keys = await getWVKPath()
 
     if (!keys) return
 

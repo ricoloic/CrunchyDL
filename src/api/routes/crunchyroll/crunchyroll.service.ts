@@ -4,9 +4,10 @@ import { VideoPlaylist } from '../../types/crunchyroll'
 import { useFetch } from '../useFetch'
 import { parse as mpdParse } from 'mpd-parser'
 import { loggedInCheck } from '../service/service.service'
+import settings from 'electron-settings'
 
 // Disable when Crunchyroll turns off switch endpoint
-const enableDRMBypass = false
+const enableDRMBypass = true
 
 // Crunchyroll Error message list
 const crErrors = [
@@ -110,6 +111,84 @@ async function crunchyLoginFetch(user: string, passw: string) {
 
 // Crunchyroll Playlist Fetch
 export async function crunchyGetPlaylist(q: string) {
+
+    var endpoint = await settings.get('CREndpoint');
+    const drmL3blob = await settings.get('l3blob');
+    const drmL3key = await settings.get('l3key');
+
+    if (!drmL3blob || !drmL3key) {
+        await settings.set('CREndpoint', 1);
+        endpoint = 1
+    }
+
+    const endpoints: { id: number, name: string, url: string }[] = [
+        {
+            id: 1,
+            name: 'Switch',
+            url: `/console/switch/play`
+        },
+        {
+            id: 2,
+            name: 'PS4',
+            url: `/console/ps4/play`
+        },
+        {
+            id: 3,
+            name: 'PS5',
+            url: `/console/ps5/play`
+        },
+        {
+            id: 4,
+            name: 'XBOX One',
+            url: `/console/xbox_one/play`
+        },
+        {
+            id: 5,
+            name: 'Firefox',
+            url: `/web/firefox/play`
+        },
+        {
+            id: 6,
+            name: 'Edge',
+            url: `/web/edge/play`
+        },
+        {
+            id: 7,
+            name: 'Safari',
+            url: `/web/safari/play`
+        },
+        {
+            id: 8,
+            name: 'Chrome',
+            url: `/web/chrome/play`
+        },
+        {
+            id: 9,
+            name: 'Web Fallback',
+            url: `/web/fallback/play`
+        },
+        {
+            id: 10,
+            name: 'Iphone',
+            url: `/ios/iphone/play`
+        },
+        {
+            id: 11,
+            name: 'Ipad',
+            url: `/ios/ipad/play`
+        },
+        {
+            id: 12,
+            name: 'Android',
+            url: `/android/phone/play`
+        },
+        {
+            id: 13,
+            name: 'Samsung TV',
+            url: `/tv/samsung/play`
+        },
+    ]
+
     const account = await loggedInCheck('CR')
 
     if (!account) return
@@ -125,9 +204,7 @@ export async function crunchyGetPlaylist(q: string) {
 
     try {
         const response = await fetch(
-            enableDRMBypass
-                ? `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}/tv/samsung/play`
-                : `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}/console/switch/play`,
+            `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${endpoints.find(e=> e.id === endpoint) ? endpoints.find(e=> e.id === endpoint)?.url : '/console/switch/play'}`,
             {
                 method: 'GET',
                 headers: headers
@@ -143,7 +220,11 @@ export async function crunchyGetPlaylist(q: string) {
 
             return { data: data, account_id: login.account_id }
         } else {
-            throw new Error(await response.text())
+
+            const error = await response.text()
+
+            messageBox('error', ['Cancel'], 2, 'Failed to get MPD Playlist', 'Failed to get MPD Playlist', error)
+            throw new Error(error)
         }
     } catch (e) {
         throw new Error(e as string)

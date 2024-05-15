@@ -19,6 +19,7 @@ import { getMP4DecryptPath } from '../../services/mp4decrypt'
 const ffmpegP = getFFMPEGPath()
 const mp4e = getMP4DecryptPath()
 import util from 'util'
+import settings from 'electron-settings'
 const exec = util.promisify(require('child_process').exec)
 
 // Get All Accounts
@@ -366,6 +367,9 @@ export async function downloadCrunchyrollPlaylist(
 
     const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`, downloadPath)
 
+    const drmL3blob = await settings.get('l3blob')
+    const drmL3key = await settings.get('l3key')
+
     const dubDownloadList: Array<{
         audio_locale: string
         guid: string
@@ -509,6 +513,22 @@ export async function downloadCrunchyrollPlaylist(
                 keys = await getDRMKeys(pssh, assetId[1], list.account_id)
             }
 
+            if (
+                (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection && !drmL3blob && !drmL3key) ||
+                (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection && !drmL3blob) ||
+                (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection && !drmL3key)
+            ) {
+                await updatePlaylistByID(downloadID, 'failed')
+                messageBox(
+                    'error',
+                    ['Cancel'],
+                    2,
+                    'Audio Widevine encrypted but no key provided',
+                    'Audio Widevine encrypted but no key provided',
+                    'To download Widevine encrypted videos add the L3 Widevine keys in Settings > Widewine > L3 Keys'
+                )
+                return
+            }
             p.push({
                 filename: (playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
                 url: playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.resolvedUri
@@ -602,6 +622,23 @@ export async function downloadCrunchyrollPlaylist(
             pssh = Uint8ArrayToBase64(hq.contentProtection['com.widevine.alpha'].pssh)
 
             keys = await getDRMKeys(pssh, assetId[1], play.account_id)
+        }
+
+        if (
+            (hq.contentProtection && !drmL3blob && !drmL3key) ||
+            (hq.contentProtection && !drmL3blob) ||
+            (hq.contentProtection && !drmL3key)
+        ) {
+            await updatePlaylistByID(downloadID, 'failed')
+            messageBox(
+                'error',
+                ['Cancel'],
+                2,
+                'Audio Widevine encrypted but no key provided',
+                'Audio Widevine encrypted but no key provided',
+                'To download Widevine encrypted videos add the L3 Widevine keys in Settings > Widewine > L3 Keys'
+            )
+            return
         }
 
         var p: { filename: string; url: string }[] = []

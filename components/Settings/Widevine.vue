@@ -21,7 +21,7 @@
                 readonly
             />
         </div>
-        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
+        <!-- <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
             <div class="text-sm mb-2">L1 Keys</div>
             <input
                 @click="getFilePathL1Blob()"
@@ -41,7 +41,7 @@
                 class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer mt-2"
                 readonly
             />
-        </div>
+        </div> -->
     </div>
 </template>
 

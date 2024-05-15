@@ -68,7 +68,6 @@
             "!**/pages/*",
             "!**/ffmpeg/*",
             "!**/mp4decrypt/*",
-            "!**/keys/*",
             "!**/.git/*",
             "!**/.github/*",
             "!**/.nuxt/*",
@@ -76,8 +75,7 @@
         ],
         "extraResources": [
             "./ffmpeg/**",
-            "./mp4decrypt/**",
-            "./keys/**"
+            "./mp4decrypt/**"
         ]
     }
 }

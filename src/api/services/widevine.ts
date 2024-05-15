@@ -1,23 +1,14 @@
 import { app } from 'electron'
+import settings from 'electron-settings'
 import path from 'path'
-const isDev = process.env.NODE_ENV === 'development'
-const appPath = app.getAppPath()
-const resourcesPath = path.dirname(appPath)
-const keyPath = path.join(resourcesPath, 'keys')
-if (isDev) {
-    require('dotenv').config()
-}
 
-export function getWVKPath() {
-    if (isDev) {
-        const key = process.env.KEY_KEY
-        const client = process.env.KEY_CLIENT
+export async function getWVKPath() {
+    const drmL3blob = await settings.get('l3blob') as string
+    const drmL3key = await settings.get('l3key') as string
 
-        return { key: key, client: client }
-    } else {
-        const key = path.join(keyPath, 'key')
-        const client = path.join(keyPath, 'client')
-
-        return { key: key, client: client }
+    if (!drmL3blob || !drmL3key) {
+        return
     }
+
+    return { key: drmL3key, client: drmL3blob }
 }
