@@ -6,9 +6,6 @@ import { parse as mpdParse } from 'mpd-parser'
 import { loggedInCheck } from '../service/service.service'
 import settings from 'electron-settings'
 
-// Disable when Crunchyroll turns off switch endpoint
-const enableDRMBypass = true
-
 // Crunchyroll Error message list
 const crErrors = [
     {
