@@ -605,7 +605,18 @@ export async function downloadCrunchyrollPlaylist(
 
         var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.height === quality)
 
-        if (!hq) return
+        if (!hq) {
+            console.log(`Res ${quality}p not found, using res ${mdp.playlists[0].attributes.RESOLUTION?.height}p instead`)
+            messageBox(
+                'warning',
+                ['OK'],
+                5,
+                `Resolution ${quality}p not found`,
+                `Resolution ${quality}p not found`,
+                `Resolution ${quality}p not found, using resolution ${mdp.playlists[0].attributes.RESOLUTION?.height}p instead`
+            )
+            hq = mdp.playlists[0]
+        }
 
         const assetId = hq.segments[0].resolvedUri.match(/\/assets\/(?:p\/)?([^_,]+)/)
 

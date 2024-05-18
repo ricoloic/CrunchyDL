@@ -96,7 +96,7 @@ app.whenReady().then(async () => {
 
 export async function messageBox(
     type: 'none' | 'info' | 'error' | 'question' | 'warning' | undefined,
-    buttons: Array<'Cancel'>,
+    buttons: Array<'Cancel' | 'OK'>,
     defaultId: number,
     title: string,
     message: string,
@@ -197,6 +197,20 @@ ipcMain.handle('dialog:defaultFile', async (events, type: string) => {
 
     return savedPath
 })
+
+ipcMain.handle('dialog:defaultArray', async (events, type: string) => {
+
+    if (!type) return
+
+    const savedPath = await settings.get(type)
+
+    if (!savedPath) {
+        return []
+    }
+
+    return savedPath
+})
+
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {

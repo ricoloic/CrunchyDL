@@ -66,7 +66,7 @@ export async function crunchyLogin(user: string, passw: string) {
 async function crunchyLoginFetch(user: string, passw: string) {
     const headers = {
         Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
         'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
     }
 
@@ -88,9 +88,9 @@ async function crunchyLoginFetch(user: string, passw: string) {
         country: string
         account_id: string
         profile_id: string
-    }>('https://beta-api.crunchyroll.com/auth/v1/token', {
+    }>('https://crd.cx/auth/v1/token', {
         type: 'POST',
-        body: new URLSearchParams(body).toString(),
+        body: JSON.stringify(body),
         header: headers,
         credentials: 'same-origin'
     })
@@ -102,6 +102,8 @@ async function crunchyLoginFetch(user: string, passw: string) {
     if (!data) {
         return { data: null, error: null }
     }
+
+    console.log(data.country)
 
     return { data: data, error: null }
 }
