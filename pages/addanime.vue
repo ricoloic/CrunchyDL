@@ -381,6 +381,8 @@ const locales = ref<Array<{ locale: string; name: string }>>([
 const isProduction = process.env.NODE_ENV !== 'development'
 const selectDub = ref<boolean>(false)
 const selectedDubs = ref<Array<{ name: string | undefined; locale: string }>>([{ locale: 'ja-JP', name: 'JP' }])
+const dubLocales = ref<Array<{ locale: string; name: string }>>([])
+const subLocales = ref<Array<{ locale: string; name: string }>>([])
 
 const selectSub = ref<boolean>(false)
 const selectedSubs = ref<Array<{ name: string | undefined; locale: string }>>([])
@@ -525,6 +527,12 @@ onMounted(() => {
     ;(window as any).myAPI.getFolder().then((result: any) => {
         path.value = result
     })
+    ;(window as any).myAPI.getArray('defdubarray').then((result: any) => {
+        dubLocales.value = JSON.parse(result)
+    })
+    ;(window as any).myAPI.getArray('defsubarray').then((result: any) => {
+        subLocales.value = JSON.parse(result)
+    })
 })
 
 const getFolderPath = () => {
@@ -637,8 +645,29 @@ const switchToSeason = async () => {
             selectedEndEpisode.value = episodes.value[0]
         }
         tab.value = 2
-        selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+
+        selectedDubs.value = []
         selectedSubs.value = []
+
+        if (dubLocales.value && dubLocales.value.length !== 0) {
+            for (const a of dubLocales.value) {
+                if (CRselectedShow.value.Dubs.find(cr => cr === a.locale)) {
+                    toggleDub(a)
+                }
+            }
+        } else {
+            selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+        }
+
+        if (subLocales.value && subLocales.value.length !== 0) {
+            for (const a of subLocales.value) {
+                if (CRselectedShow.value.Subs.find(cr => cr === a.locale)) {
+                    toggleSub(a)
+                }
+            }
+        } else {
+            selectedSubs.value = []
+        }
     }
 
     if (url.value && url.value.includes('crunchyroll') && !CRselectedShow.value) {
@@ -657,8 +686,29 @@ const switchToSeason = async () => {
             selectedEndEpisode.value = episodes.value[0]
         }
         tab.value = 2
-        selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+
+        selectedDubs.value = []
         selectedSubs.value = []
+
+        if (dubLocales.value && dubLocales.value.length !== 0) {
+            for (const a of dubLocales.value) {
+                if (CRselectedShow.value.Dubs.find(cr => cr === a.locale)) {
+                    toggleDub(a)
+                }
+            }
+        } else {
+            selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+        }
+
+        if (subLocales.value && subLocales.value.length !== 0) {
+            for (const a of subLocales.value) {
+                if (CRselectedShow.value.Subs.find(cr => cr === a.locale)) {
+                    toggleSub(a)
+                }
+            }
+        } else {
+            selectedSubs.value = []
+        }
     }
 
     isFetchingSeasons.value--

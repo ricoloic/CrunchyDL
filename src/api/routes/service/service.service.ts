@@ -82,7 +82,11 @@ async function deletePlaylistandTMP() {
 deletePlaylistandTMP()
 
 // Update Playlist Item
-export async function updatePlaylistByID(id: number, status?: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed', quality?: 1080 | 720 | 480 | 360 | 240) {
+export async function updatePlaylistByID(
+    id: number,
+    status?: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed',
+    quality?: 1080 | 720 | 480 | 360 | 240
+) {
     await Playlist.update({ status: status, quality: quality }, { where: { id: id } })
 }
 
@@ -156,7 +160,7 @@ async function checkPlaylists() {
                     e.dataValues.quality,
                     e.dataValues.dir,
                     e.dataValues.format,
-                    (e.dataValues.media as CrunchyEpisode).geo,
+                    (e.dataValues.media as CrunchyEpisode).geo
                 )
             }
             if (e.dataValues.service === 'ADN') {
@@ -653,11 +657,7 @@ export async function downloadCrunchyrollPlaylist(
             keys = await getDRMKeys(pssh, assetId[1], play.account_id)
         }
 
-        if (
-            (hq.contentProtection && !drmL3blob && !drmL3key) ||
-            (hq.contentProtection && !drmL3blob) ||
-            (hq.contentProtection && !drmL3key)
-        ) {
+        if ((hq.contentProtection && !drmL3blob && !drmL3key) || (hq.contentProtection && !drmL3blob) || (hq.contentProtection && !drmL3key)) {
             await updatePlaylistByID(downloadID, 'failed')
             messageBox(
                 'error',
@@ -714,8 +714,8 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
     const path = await createFolder()
     const dn = downloading.find((i) => i.id === downloadID)
 
-    let totalDownloadedBytes = 0;
-    let totalSizeBytes = 0;
+    let totalDownloadedBytes = 0
+    let totalSizeBytes = 0
     let startTime = Date.now()
 
     for (const [index, part] of parts.entries()) {
@@ -730,12 +730,12 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
 
                 const readableStream = Readable.from(body as any)
                 let partDownloadedBytes = 0
-                let partSizeBytes = 0;
-                
+                let partSizeBytes = 0
+
                 readableStream.on('data', (chunk) => {
                     partDownloadedBytes += chunk.length
                     totalDownloadedBytes += chunk.length
-                    totalSizeBytes += chunk.length;
+                    totalSizeBytes += chunk.length
                 })
 
                 await finished(readableStream.pipe(stream))
@@ -748,7 +748,7 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
                     const endTime = Date.now()
                     const durationInSeconds = (endTime - startTime) / 1000
                     dn.downloadSpeed = totalDownloadedBytes / 1024 / 1024 / durationInSeconds
-                    dn.totalDownloaded = tot;
+                    dn.totalDownloaded = tot
                 }
 
                 success = true
@@ -941,42 +941,47 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
     })
 }
 
-
 export async function checkProxies() {
-
-    const cachedData = server.CacheController.get('proxycheck') as { name: string, code: string, url: string, status: string | undefined }[];
+    const cachedData = server.CacheController.get('proxycheck') as { name: string; code: string; url: string; status: string | undefined }[]
 
     if (!cachedData) {
-        const proxies: { name: string, code: string, url: string, status: string | undefined }[] = [{
-            name: 'US Proxy', code: 'US', url: 'https://us-proxy.crd.cx/', status: undefined
-        },
-        {
-            name: 'UK Proxy', code: 'GB', url: 'https://uk-proxy.crd.cx/', status: undefined
-        },
-        {
-            name: 'DE Proxy', code: 'DE', url: 'https://de-proxy.crd.cx/', status: undefined
-        }]
-    
+        const proxies: { name: string; code: string; url: string; status: string | undefined }[] = [
+            {
+                name: 'US Proxy',
+                code: 'US',
+                url: 'https://us-proxy.crd.cx/',
+                status: undefined
+            },
+            {
+                name: 'UK Proxy',
+                code: 'GB',
+                url: 'https://uk-proxy.crd.cx/',
+                status: undefined
+            },
+            {
+                name: 'DE Proxy',
+                code: 'DE',
+                url: 'https://de-proxy.crd.cx/',
+                status: undefined
+            }
+        ]
+
         for (const p of proxies) {
-            const response = await fetch(
-                p.url + 'health',
-                {
-                    method: 'GET',
-                }
-            )
-    
+            const response = await fetch(p.url + 'health', {
+                method: 'GET'
+            })
+
             if (response.ok) {
                 p.status = 'online'
             } else {
                 p.status = 'offline'
             }
         }
-    
+
         server.CacheController.set('proxycheck', proxies, 60)
-    
+
         return proxies
     }
 
     return cachedData
-
 }

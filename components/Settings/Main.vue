@@ -25,7 +25,7 @@
                     v-for="l in locales"
                     @click="toggleDub(l)"
                     class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
-                    :class="dubLocales && dubLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
+                    :class="dubLocales && dubLocales.length !== 0 && dubLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
                 >
                     {{ l.name }}
                 </button>
@@ -38,7 +38,7 @@
                     v-for="l in locales"
                     @click="toggleSub(l)"
                     class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
-                    :class="subLocales && subLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
+                    :class="subLocales && subLocales.length !== 0 && subLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
                 >
                     {{ l.name }}
                 </button>
@@ -79,11 +79,20 @@ const toggleDub = (lang: { locale: string; name: string }) => {
 
     if (index !== -1) {
         dubLocales.value.splice(index, 1)
+        if (process.client) {
+            ;(window as any).myAPI.setArrayDub(JSON.stringify(dubLocales.value))
+        }
+
         return
     }
 
     if (index === -1) {
         dubLocales.value.push(lang)
+
+        if (process.client) {
+            ;(window as any).myAPI.setArrayDub(JSON.stringify(dubLocales.value))
+        }
+
         return
     }
 }
@@ -93,15 +102,18 @@ const toggleSub = (lang: { locale: string; name: string }) => {
 
     if (index !== -1) {
         subLocales.value.splice(index, 1)
+        ;(window as any).myAPI.setArraySub(JSON.stringify(subLocales.value))
+
         return
     }
 
     if (index === -1) {
         subLocales.value.push(lang)
+        ;(window as any).myAPI.setArraySub(JSON.stringify(subLocales.value))
+
         return
     }
 }
-
 
 const services = ref<{ name: string; service: string }[]>([
     {
@@ -148,14 +160,12 @@ const deleteAccount = async (id: number) => {
 
 onMounted(() => {
     ;(window as any).myAPI.getArray('defdubarray').then((result: any) => {
-        dubLocales.value = result
+        dubLocales.value = JSON.parse(result)
     })
-
-    ;(window as any).myAPI.getFile('defsubarray').then((result: any) => {
-        subLocales.value = result
+    ;(window as any).myAPI.getArray('defsubarray').then((result: any) => {
+        subLocales.value = JSON.parse(result)
     })
 })
-
 </script>
 
 <style></style>

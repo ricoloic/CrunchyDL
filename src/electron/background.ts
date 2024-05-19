@@ -211,6 +211,18 @@ ipcMain.handle('dialog:defaultArray', async (events, type: string) => {
     return savedPath
 })
 
+ipcMain.handle('dialog:defaultArraySetSub', async (events, va: Array<any>) => {
+    await settings.set('defsubarray', va)
+
+    return va
+})
+
+ipcMain.handle('dialog:defaultArraySetDub', async (events, va: Array<any>) => {
+    await settings.set('defdubarray', va)
+
+    return va
+})
+
 ipcMain.handle('dialog:proxyActive', async (events) => {
 
     const savedStat = await settings.get('proxyActive')
