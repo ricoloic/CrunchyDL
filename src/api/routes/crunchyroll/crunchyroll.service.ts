@@ -149,8 +149,6 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
         return { data: null, error: null }
     }
 
-    console.log(data.country)
-
     return { data: data, error: null }
 }
 
