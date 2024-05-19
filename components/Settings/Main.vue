@@ -25,7 +25,7 @@
                     v-for="l in locales"
                     @click="toggleDub(l)"
                     class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
-                    :class="dubLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
+                    :class="dubLocales && dubLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
                 >
                     {{ l.name }}
                 </button>
@@ -38,7 +38,7 @@
                     v-for="l in locales"
                     @click="toggleSub(l)"
                     class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
-                    :class="subLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
+                    :class="subLocales && subLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
                 >
                     {{ l.name }}
                 </button>

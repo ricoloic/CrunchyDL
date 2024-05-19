@@ -27,6 +27,7 @@ export interface CrunchyrollSearchResult {
             }>
         >
     }
+    Geo: string | undefined
 }
 
 export interface CrunchyrollSearchResults extends Array<CrunchyrollSearchResult> {}

@@ -53,6 +53,7 @@ export interface CrunchySearchFetch {
             }
             linked_resource_key: string
             type: string
+            geo: string | undefined
         }>
     }>
 }
@@ -107,6 +108,7 @@ export interface CrunchyAnimeFetch {
         }
         linked_resource_key: string
         type: string
+        geo: string | undefined
     }>
 }
 
@@ -236,3 +238,12 @@ export interface CrunchyEpisodesFetch {
         versions_considered: boolean
     }
 }
+
+export interface Proxy {
+    name: string
+    code: string
+    url: string
+    status: string
+}
+
+export interface Proxies extends Array<Proxy> {}

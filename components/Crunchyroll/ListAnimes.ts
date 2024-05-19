@@ -1,9 +1,13 @@
 import type { CrunchyrollSearchResults } from '../Search/Types'
 import { crunchyLogin } from './Account'
+import { getProxies } from './Proxy'
 import type { CrunchyAnimeFetch, CrunchySearchFetch } from './Types'
 
 export async function searchCrunchy(q: string) {
-    const { data: token, error: tokenerror } = await crunchyLogin()
+
+    const { data: proxies } = await getProxies()
+
+    const { data: token, error: tokenerror } = await crunchyLogin('LOCAL')
 
     if (!token.value) {
         return
@@ -27,6 +31,56 @@ export async function searchCrunchy(q: string) {
         throw new Error(JSON.stringify(error.value))
     }
 
+    if (proxies.value) {
+        for (const p of proxies.value) {
+            if (p.status !== 'offline') {
+                const { data: tokeng, error: tokenerrorg } = await crunchyLogin(p.code)
+
+                if (!tokeng.value) {
+                    return
+                }
+
+                const { data: fdata, error: ferror } = await useFetch<CrunchySearchFetch>(`https://beta-api.crunchyroll.com/content/v2/discover/search`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${tokeng.value.access_token}`
+                    },
+                    query: {
+                        q: q,
+                        n: 100,
+                        type: 'series',
+                        ratings: false
+                    }
+                })
+
+                if (ferror.value) {
+                    console.error(ferror.value)
+                    throw new Error(JSON.stringify(ferror.value))
+                }
+
+                if (fdata.value) {
+                    for (const r of fdata.value.data[0].items) {
+                        if (!data.value?.data[0].items.find((d) => d.id === r.id)) {
+                            r.geo = p.code
+                            data.value?.data[0].items.push(r)
+                        } else {
+                            for (const l of r.series_metadata.audio_locales) {
+                                if (!data.value.data[0].items.find(d => d.id === r.id)?.series_metadata.audio_locales.find(loc => loc === l)) {
+                                    data.value.data[0].items.find(d => d.id === r.id)?.series_metadata.audio_locales.push(l)
+                                }
+                            }
+                            for (const l of r.series_metadata.subtitle_locales) {
+                                if (!data.value.data[0].items.find(d => d.id === r.id)?.series_metadata.subtitle_locales.find(loc => loc === l)) {
+                                    data.value.data[0].items.find(d => d.id === r.id)?.series_metadata.subtitle_locales.push(l)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     if (!data.value) return
 
     var results: CrunchyrollSearchResults = []
@@ -43,7 +97,8 @@ export async function searchCrunchy(q: string) {
             Seasons: result.series_metadata.season_count,
             PEGI: result.series_metadata.maturity_ratings,
             Year: result.series_metadata.series_launch_year,
-            Images: result.images
+            Images: result.images,
+            Geo: result.geo
         })
     }
 
@@ -51,7 +106,9 @@ export async function searchCrunchy(q: string) {
 }
 
 export async function getCRSeries(q: string) {
-    const { data: token, error: tokenerror } = await crunchyLogin()
+    const { data: proxies } = await getProxies()
+
+    const { data: token, error: tokenerror } = await crunchyLogin('LOCAL')
 
     if (!token.value) {
         return
@@ -69,6 +126,36 @@ export async function getCRSeries(q: string) {
         throw new Error(JSON.stringify(error.value))
     }
 
+    if (!data.value && proxies.value) {
+        for (const p of proxies.value) {
+            if (p.status !== 'offline') {
+                const { data: tokeng, error: tokenerrorg } = await crunchyLogin(p.code)
+
+                if (!tokeng.value) {
+                    return
+                }
+
+                const { data: fdata, error: ferror } = await useFetch<CrunchyAnimeFetch>(`https://beta-api.crunchyroll.com/content/v2/cms/series/${q}`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${tokeng.value.access_token}`
+                    }
+                })
+
+                if (ferror.value) {
+                    console.error(ferror.value)
+                    throw new Error(JSON.stringify(ferror.value))
+                }
+
+                if (fdata.value) {
+                    fdata.value.data[0].geo = p.code
+                }
+
+                data.value = fdata.value
+            }
+        }
+    }
+
     if (!data.value) return
 
     const anime = data.value.data[0]
@@ -84,6 +171,7 @@ export async function getCRSeries(q: string) {
         Seasons: anime.season_count,
         PEGI: anime.maturity_ratings,
         Year: anime.series_launch_year,
-        Images: anime.images
+        Images: anime.images,
+        Geo: undefined
     }
 }

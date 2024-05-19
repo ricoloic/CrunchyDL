@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { addPlaylistController, checkLoginController, deleteAccountHandler, getAllAccountsHandler, getPlaylistController, loginController } from './service.controller'
+import { addPlaylistController, checkLoginController, checkProxiesController, deleteAccountHandler, getAllAccountsHandler, getPlaylistController, loginController } from './service.controller'
 
 async function serviceRoutes(server: FastifyInstance) {
     server.post(
@@ -73,6 +73,7 @@ async function serviceRoutes(server: FastifyInstance) {
         },
         getAllAccountsHandler
     )
+
     server.delete(
         '/account/:id',
         {
@@ -86,6 +87,21 @@ async function serviceRoutes(server: FastifyInstance) {
             }
         },
         deleteAccountHandler
+    )
+
+    server.get(
+        '/proxies',
+        {
+            schema: {
+                response: {
+                    '4xx': {
+                        error: { type: 'string' },
+                        message: { type: 'string' }
+                    }
+                }
+            }
+        },
+        checkProxiesController
     )
 }
 

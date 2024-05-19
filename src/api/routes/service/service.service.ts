@@ -81,8 +81,8 @@ async function deletePlaylistandTMP() {
 deletePlaylistandTMP()
 
 // Update Playlist Item
-export async function updatePlaylistByID(id: number, status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed') {
-    await Playlist.update({ status: status }, { where: { id: id } })
+export async function updatePlaylistByID(id: number, status?: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed', quality?: 1080 | 720 | 480 | 360 | 240) {
+    await Playlist.update({ status: status, quality: quality }, { where: { id: id } })
 }
 
 // Add Episode to Playlist
@@ -154,7 +154,8 @@ async function checkPlaylists() {
                     (e.dataValues.media as CrunchyEpisode).episode_number,
                     e.dataValues.quality,
                     e.dataValues.dir,
-                    e.dataValues.format
+                    e.dataValues.format,
+                    (e.dataValues.media as CrunchyEpisode).geo,
                 )
             }
             if (e.dataValues.service === 'ADN') {
@@ -314,7 +315,8 @@ export async function downloadCrunchyrollPlaylist(
     episode: number,
     quality: 1080 | 720 | 480 | 360 | 240,
     downloadPath: string,
-    format: 'mp4' | 'mkv'
+    format: 'mp4' | 'mkv',
+    geo: string | undefined
 ) {
     downloading.push({
         id: downloadID,
@@ -326,7 +328,7 @@ export async function downloadCrunchyrollPlaylist(
 
     await updatePlaylistByID(downloadID, 'downloading')
 
-    var playlist = await crunchyGetPlaylist(e)
+    var playlist = await crunchyGetPlaylist(e, geo)
 
     if (!playlist) {
         await updatePlaylistByID(downloadID, 'failed')
@@ -339,7 +341,7 @@ export async function downloadCrunchyrollPlaylist(
             const found = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (found) {
                 await deleteVideoToken(episodeID, playlist.data.token)
-                playlist = await crunchyGetPlaylist(found.guid)
+                playlist = await crunchyGetPlaylist(found.guid, found.geo)
             } else {
                 console.log('Exact Playlist not found, taking what crunchy gives.'),
                     messageBox(
@@ -381,6 +383,7 @@ export async function downloadCrunchyrollPlaylist(
         original: boolean
         season_guid: string
         variant: string
+        geo: string | undefined
     }> = []
 
     const subDownloadList: Array<{
@@ -396,7 +399,7 @@ export async function downloadCrunchyrollPlaylist(
         if (playlist.data.audioLocale !== 'ja-JP') {
             const foundStream = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (foundStream) {
-                subPlaylist = await crunchyGetPlaylist(foundStream.guid)
+                subPlaylist = await crunchyGetPlaylist(foundStream.guid, foundStream.geo)
             }
         } else {
             subPlaylist = playlist
@@ -426,7 +429,7 @@ export async function downloadCrunchyrollPlaylist(
         }
 
         if (found) {
-            const list = await crunchyGetPlaylist(found.guid)
+            const list = await crunchyGetPlaylist(found.guid, found.geo)
             if (list) {
                 const foundSub = list.data.subtitles.find((sub) => sub.language === d)
                 if (foundSub) {
@@ -453,7 +456,8 @@ export async function downloadCrunchyrollPlaylist(
                 media_guid: 'adas',
                 original: false,
                 season_guid: 'asdasd',
-                variant: 'asd'
+                variant: 'asd',
+                geo: undefined
             })
         } else {
             console.warn(`Audio ${d}.aac not found, skipping`)
@@ -481,11 +485,11 @@ export async function downloadCrunchyrollPlaylist(
     const audioDownload = async () => {
         const audios: Array<string> = []
         for (const v of dubDownloadList) {
-            const list = await crunchyGetPlaylist(v.guid)
+            const list = await crunchyGetPlaylist(v.guid, v.geo)
 
             if (!list) return
 
-            const playlist = await crunchyGetPlaylistMPD(list.data.url)
+            const playlist = await crunchyGetPlaylistMPD(list.data.url, list.data.geo)
 
             if (!playlist) return
 
@@ -572,7 +576,7 @@ export async function downloadCrunchyrollPlaylist(
             return
         }
 
-        const play = await crunchyGetPlaylist(code)
+        const play = await crunchyGetPlaylist(code, geo)
 
         if (!play) {
             await updatePlaylistByID(downloadID, 'failed')
@@ -582,22 +586,29 @@ export async function downloadCrunchyrollPlaylist(
 
         var downloadURL
 
+        var downloadGEO
+
         if (hardsub) {
             const hardsubURL = play.data.hardSubs.find((h) => h.hlang === subs[0])?.url
 
+            const hardsubGEO = play.data.hardSubs.find((h) => h.hlang === subs[0])?.geo
+
             if (hardsubURL) {
                 downloadURL = hardsubURL
+                downloadGEO = hardsubGEO
                 console.log('Hardsub Playlist found')
             } else {
                 downloadURL = play.data.url
+                downloadGEO = play.data.geo
                 console.log('Hardsub Playlist not found')
             }
         } else {
             downloadURL = play.data.url
+            downloadGEO = play.data.geo
             console.log('Hardsub disabled, skipping')
         }
 
-        var mdp = await crunchyGetPlaylistMPD(downloadURL)
+        var mdp = await crunchyGetPlaylistMPD(downloadURL, downloadGEO)
 
         if (!mdp) return
 
@@ -615,6 +626,9 @@ export async function downloadCrunchyrollPlaylist(
                 `Resolution ${quality}p not found`,
                 `Resolution ${quality}p not found, using resolution ${mdp.playlists[0].attributes.RESOLUTION?.height}p instead`
             )
+
+            await updatePlaylistByID(downloadID, undefined, mdp.playlists[0].attributes.RESOLUTION?.height as 1080 | 720 | 480 | 360 | 240)
+
             hq = mdp.playlists[0]
         }
 

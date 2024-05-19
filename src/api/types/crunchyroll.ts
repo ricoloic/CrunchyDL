@@ -102,11 +102,55 @@ export interface CrunchyEpisode {
     description: string
     episode_air_date: string
     eligible_region: string
+    geo: string | undefined
 }
 
 export interface CrunchyEpisodes extends Array<CrunchyEpisode> {}
 
 export interface VideoPlaylist {
+    assetId: number
+    audioLocale: string
+    bifs: string
+    burnedInLocale: string
+    captions: string
+    hardSubs: Array<{
+        hlang: string
+        url: string
+        quality: string,
+        geo: string | undefined
+    }>
+    playbackType: string
+    session: {
+        renewSeconds: number
+        noNetworkRetryIntervalSeconds: number
+        noNetworkTimeoutSeconds: number
+        maximumPauseSeconds: number
+        endOfVideoUnloadSeconds: number
+        sessionExpirationSeconds: number
+        usesStreamLimits: boolean
+    }
+    subtitles: Array<{
+        format: string
+        language: string
+        url: string,
+        geo: string | undefined
+    }>
+    token: string
+    url: string
+    versions: Array<{
+        audio_locale: string
+        guid: string
+        is_premium_only: boolean
+        media_guid: string
+        original: boolean
+        season_guid: string
+        variant: string,
+        geo: string | undefined
+    }>
+    geo: string | undefined
+}
+
+export interface VideoPlaylistNoGEO {
     assetId: number
     audioLocale: string
     bifs: string
@@ -143,4 +187,5 @@ export interface VideoPlaylist {
         season_guid: string
         variant: string
     }>
+    geo: string | undefined
 }

@@ -3,6 +3,7 @@ import { crunchyLogin } from '../crunchyroll/crunchyroll.service'
 import { addEpisodeToPlaylist, deleteAccountID, getAllAccounts, getDownloading, getPlaylist, loggedInCheck, safeLoginData } from './service.service'
 import { CrunchyEpisodes } from '../../types/crunchyroll'
 import { adnLogin } from '../adn/adn.service'
+import { server } from '../../api'
 
 export async function checkLoginController(
     request: FastifyRequest<{
@@ -46,7 +47,7 @@ export async function loginController(
     var responseError
 
     if (params.id === 'CR') {
-        const { data, error } = await crunchyLogin(body.user, body.password)
+        const { data, error } = await crunchyLogin(body.user, body.password, 'LOCAL')
         ;(responseError = error), (responseData = data)
     }
 
@@ -132,4 +133,39 @@ export async function getPlaylistController(request: FastifyRequest, reply: Fast
     }
 
     return reply.code(200).send(playlist.reverse())
+}
+
+export async function checkProxiesController(
+    request: FastifyRequest,
+    reply: FastifyReply
+) {
+
+    const cachedData = server.CacheController.get('proxycheck');
+
+    if (!cachedData) {
+        const proxies: { name: string, code: string, url: string, status: string | undefined }[] = [{
+            name: 'US Proxy', code: 'US', url: 'https://us-proxy.crd.cx/', status: undefined
+        }]
+    
+        for (const p of proxies) {
+            const response = await fetch(
+                p.url + 'health',
+                {
+                    method: 'GET',
+                }
+            )
+    
+            if (response.ok) {
+                p.status = 'online'
+            } else {
+                p.status = 'offline'
+            }
+        }
+    
+        server.CacheController.set('proxycheck', proxies, 60)
+    
+        return reply.code(200).send(proxies)
+    }
+
+    return reply.code(200).send(cachedData)
 }

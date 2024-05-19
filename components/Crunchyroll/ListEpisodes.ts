@@ -1,8 +1,8 @@
 import { crunchyLogin } from './Account'
 import type { CrunchyEpisodesFetch } from './Types'
 
-export async function listEpisodeCrunchy(q: string) {
-    const { data: token, error: tokenerror } = await crunchyLogin()
+export async function listEpisodeCrunchy(q: string, geo: string | undefined) {
+    const { data: token, error: tokenerror } = await crunchyLogin(geo ? geo : 'LOCAL')
 
     if (!token.value) {
         return

@@ -594,7 +594,9 @@ const refetchEpisodes = async () => {
         return
     }
 
-    episodes.value = await listEpisodeCrunchy(selectedSeason.value.id)
+    if (!CRselectedShow.value) return
+
+    episodes.value = await listEpisodeCrunchy(selectedSeason.value.id, CRselectedShow.value.Geo)
     if (episodes.value) {
         selectedStartEpisode.value = episodes.value[0]
         selectedEndEpisode.value = episodes.value[0]
@@ -623,13 +625,13 @@ const switchToSeason = async () => {
     }
 
     if (CRselectedShow.value) {
-        seasons.value = await listSeasonCrunchy(CRselectedShow.value.ID)
+        seasons.value = await listSeasonCrunchy(CRselectedShow.value.ID, CRselectedShow.value.Geo)
         if (!seasons.value) {
             isFetchingSeasons.value--
             return
         }
         selectedSeason.value = seasons.value[0]
-        episodes.value = await listEpisodeCrunchy(selectedSeason.value.id)
+        episodes.value = await listEpisodeCrunchy(selectedSeason.value.id, CRselectedShow.value.Geo)
         if (episodes.value) {
             selectedStartEpisode.value = episodes.value[0]
             selectedEndEpisode.value = episodes.value[0]
@@ -642,13 +644,14 @@ const switchToSeason = async () => {
     if (url.value && url.value.includes('crunchyroll') && !CRselectedShow.value) {
         const seriesID = url.value.split('/')
         CRselectedShow.value = await getCRSeries(seriesID[5])
-        seasons.value = await listSeasonCrunchy(seriesID[5])
+        if (!CRselectedShow.value) return
+        seasons.value = await listSeasonCrunchy(CRselectedShow.value.ID, CRselectedShow.value.Geo)
         if (!seasons.value) {
             isFetchingSeasons.value--
             return
         }
         selectedSeason.value = seasons.value[0]
-        episodes.value = await listEpisodeCrunchy(selectedSeason.value.id)
+        episodes.value = await listEpisodeCrunchy(selectedSeason.value.id, CRselectedShow.value.Geo)
         if (episodes.value) {
             selectedStartEpisode.value = episodes.value[0]
             selectedEndEpisode.value = episodes.value[0]

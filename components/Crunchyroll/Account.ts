@@ -1,8 +1,11 @@
 import type { CrunchyLogin } from './Types'
 
-export async function crunchyLogin() {
+export async function crunchyLogin(geo: string) {
     const { data, error } = await useFetch<CrunchyLogin>('http://localhost:9941/api/crunchyroll/login', {
-        method: 'POST'
+        method: 'POST',
+        query: {
+            geo: geo
+        }
     })
 
     return { data, error }
