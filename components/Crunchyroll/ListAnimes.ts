@@ -5,6 +5,12 @@ import type { CrunchyAnimeFetch, CrunchySearchFetch } from './Types'
 
 export async function searchCrunchy(q: string) {
 
+    var isProxyActive: boolean | undefined;
+
+    ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
+        isProxyActive = result
+    })
+
     const { data: proxies } = await getProxies()
 
     const { data: token, error: tokenerror } = await crunchyLogin('LOCAL')
@@ -31,7 +37,7 @@ export async function searchCrunchy(q: string) {
         throw new Error(JSON.stringify(error.value))
     }
 
-    if (proxies.value) {
+    if (proxies.value && isProxyActive) {
         for (const p of proxies.value) {
             if (p.status !== 'offline') {
                 const { data: tokeng, error: tokenerrorg } = await crunchyLogin(p.code)
@@ -106,6 +112,13 @@ export async function searchCrunchy(q: string) {
 }
 
 export async function getCRSeries(q: string) {
+
+    var isProxyActive: boolean | undefined;
+
+    ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
+        isProxyActive = result
+    })
+
     const { data: proxies } = await getProxies()
 
     const { data: token, error: tokenerror } = await crunchyLogin('LOCAL')
@@ -126,7 +139,7 @@ export async function getCRSeries(q: string) {
         throw new Error(JSON.stringify(error.value))
     }
 
-    if (!data.value && proxies.value) {
+    if (!data.value && proxies.value && isProxyActive) {
         for (const p of proxies.value) {
             if (p.status !== 'offline') {
                 const { data: tokeng, error: tokenerrorg } = await crunchyLogin(p.code)

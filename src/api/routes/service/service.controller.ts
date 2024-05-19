@@ -145,6 +145,12 @@ export async function checkProxiesController(
     if (!cachedData) {
         const proxies: { name: string, code: string, url: string, status: string | undefined }[] = [{
             name: 'US Proxy', code: 'US', url: 'https://us-proxy.crd.cx/', status: undefined
+        },
+        {
+            name: 'UK Proxy', code: 'GB', url: 'https://uk-proxy.crd.cx/', status: undefined
+        },
+        {
+            name: 'DE Proxy', code: 'DE', url: 'https://de-proxy.crd.cx/', status: undefined
         }]
     
         for (const p of proxies) {

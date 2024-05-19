@@ -20,6 +20,7 @@ const ffmpegP = getFFMPEGPath()
 const mp4e = getMP4DecryptPath()
 import util from 'util'
 import settings from 'electron-settings'
+import { server } from '../../api'
 const exec = util.promisify(require('child_process').exec)
 
 // Get All Accounts
@@ -938,4 +939,44 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
                 return resolve('combined')
             })
     })
+}
+
+
+export async function checkProxies() {
+
+    const cachedData = server.CacheController.get('proxycheck') as { name: string, code: string, url: string, status: string | undefined }[];
+
+    if (!cachedData) {
+        const proxies: { name: string, code: string, url: string, status: string | undefined }[] = [{
+            name: 'US Proxy', code: 'US', url: 'https://us-proxy.crd.cx/', status: undefined
+        },
+        {
+            name: 'UK Proxy', code: 'GB', url: 'https://uk-proxy.crd.cx/', status: undefined
+        },
+        {
+            name: 'DE Proxy', code: 'DE', url: 'https://de-proxy.crd.cx/', status: undefined
+        }]
+    
+        for (const p of proxies) {
+            const response = await fetch(
+                p.url + 'health',
+                {
+                    method: 'GET',
+                }
+            )
+    
+            if (response.ok) {
+                p.status = 'online'
+            } else {
+                p.status = 'offline'
+            }
+        }
+    
+        server.CacheController.set('proxycheck', proxies, 60)
+    
+        return proxies
+    }
+
+    return cachedData
+
 }

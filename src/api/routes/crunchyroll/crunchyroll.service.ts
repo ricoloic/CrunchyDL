@@ -3,7 +3,7 @@ import { server } from '../../api'
 import { VideoPlaylist, VideoPlaylistNoGEO } from '../../types/crunchyroll'
 import { useFetch } from '../useFetch'
 import { parse as mpdParse } from 'mpd-parser'
-import { loggedInCheck } from '../service/service.service'
+import { checkProxies, loggedInCheck } from '../service/service.service'
 import settings from 'electron-settings'
 
 // Crunchyroll Error message list
@@ -15,14 +15,20 @@ const crErrors = [
 ]
 
 // Login Proxies
-const proxies: { name: string; code: string; url: string; status: string | undefined }[] = [
-    {
-        name: 'US Proxy',
-        code: 'US',
-        url: 'https://us-proxy.crd.cx/',
-        status: undefined
-    }
-]
+// const proxies: { name: string; code: string; url: string; status: string | undefined }[] = [
+//     {
+//         name: 'US Proxy',
+//         code: 'US',
+//         url: 'https://us-proxy.crd.cx/',
+//         status: undefined
+//     },
+//     {
+//         name: 'UK Proxy',
+//         code: 'GB',
+//         url: 'https://uk-proxy.crd.cx/',
+//         status: undefined
+//     }
+// ]
 
 // Crunchyroll Login Handler
 export async function crunchyLogin(user: string, passw: string, geo: string) {
@@ -106,6 +112,9 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
 
 // Crunchyroll Login Fetch Proxy
 async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) {
+
+    const proxies = await checkProxies()
+
     var host: string | undefined
 
     host = proxies.find((p) => p.code === geo)?.url
@@ -197,6 +206,20 @@ async function crunchyLoginFetch(user: string, passw: string) {
 
 // Crunchyroll Playlist Fetch
 export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
+
+    const isProxyActive = await settings.get('proxyActive')
+
+    var proxies: {
+        name: string;
+        code: string;
+        url: string;
+        status: string | undefined;
+    }[] = [];
+
+    if (isProxyActive) {
+        proxies = await checkProxies()
+    }
+
     var endpoint = await settings.get('CREndpoint')
     const drmL3blob = await settings.get('l3blob')
     const drmL3key = await settings.get('l3key')
@@ -320,6 +343,8 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
         throw new Error(e as string)
     }
 
+    if (isProxyActive)
+
     for (const p of proxies) {
         if (p.code !== loginLocal.country) {
             const { data: login, error } = await crunchyLogin(account.username, account.password, p.code)
@@ -331,49 +356,40 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
                 'X-Cr-Disable-Drm': 'true'
             }
 
-            try {
-                const response = await fetch(
-                    `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
-                        endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
-                    }`,
-                    {
-                        method: 'GET',
-                        headers: headers
-                    }
-                )
-
-                if (response.ok) {
-                    const data: VideoPlaylistNoGEO = JSON.parse(await response.text())
-
-                    data.hardSubs = Object.values((data as any).hardSubs)
-
-                    data.subtitles = Object.values((data as any).subtitles)
-
-                    for (const v of data.versions) {
-                        if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
-                            playlist.versions.push({ ...v, geo: p.code })
-                        }
-                    }
-
-                    for (const v of data.subtitles) {
-                        if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
-                            playlist.subtitles.push({ ...v, geo: p.code })
-                        }
-                    }
-
-                    for (const v of data.hardSubs) {
-                        if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
-                            playlist.hardSubs.push({ ...v, geo: p.code })
-                        }
-                    }
-                } else {
-                    const error = await response.text()
-
-                    messageBox('error', ['Cancel'], 2, 'Failed to get MPD Playlist', 'Failed to get MPD Playlist', error)
-                    throw new Error(error)
+            const response = await fetch(
+                `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
+                    endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
+                }`,
+                {
+                    method: 'GET',
+                    headers: headers
                 }
-            } catch (e) {
-                throw new Error(e as string)
+            )
+
+            if (response.ok) {
+                const data: VideoPlaylistNoGEO = JSON.parse(await response.text())
+
+                data.hardSubs = Object.values((data as any).hardSubs)
+
+                data.subtitles = Object.values((data as any).subtitles)
+
+                for (const v of data.versions) {
+                    if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
+                        playlist.versions.push({ ...v, geo: p.code })
+                    }
+                }
+
+                for (const v of data.subtitles) {
+                    if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
+                        playlist.subtitles.push({ ...v, geo: p.code })
+                    }
+                }
+
+                for (const v of data.hardSubs) {
+                    if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
+                        playlist.hardSubs.push({ ...v, geo: p.code })
+                    }
+                }
             }
         }
     }

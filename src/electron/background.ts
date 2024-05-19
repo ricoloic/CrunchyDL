@@ -211,6 +211,24 @@ ipcMain.handle('dialog:defaultArray', async (events, type: string) => {
     return savedPath
 })
 
+ipcMain.handle('dialog:proxyActive', async (events) => {
+
+    const savedStat = await settings.get('proxyActive')
+
+    if (!savedStat) {
+        await settings.set('proxyActive', false)
+        return false
+    }
+
+    return savedStat
+})
+
+ipcMain.handle('dialog:proxyActiveSet', async (events, status: boolean) => {
+
+    await settings.set('proxyActive', status)
+
+    return status
+})
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
