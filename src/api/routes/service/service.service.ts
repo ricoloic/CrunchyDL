@@ -459,6 +459,20 @@ export async function downloadCrunchyrollPlaylist(
     if (!playlist) {
         await updatePlaylistByID(downloadID, 'failed')
         console.log('Playlist not found')
+        messageBox(
+            'error',
+            ['Cancel'],
+            2,
+            'Playlist not found',
+            'Playlist not found',
+            'Playlist not found'
+        )
+        server.logger.log({
+            level: 'error',
+            message: `Playlist not found for Download ${downloadID}`,
+            timestamp: new Date().toISOString(),
+            section: 'crunchyrollDownloadProcess'
+        })
         return
     }
 
@@ -469,15 +483,15 @@ export async function downloadCrunchyrollPlaylist(
                 await deleteVideoToken(episodeID, playlist.data.token)
                 playlist = await crunchyGetPlaylist(found.guid, found.geo)
             } else {
-                console.log('Exact Playlist not found, taking what crunchy gives.'),
-                    messageBox(
-                        'error',
-                        ['Cancel'],
-                        2,
-                        'Not found japanese stream',
-                        'Not found japanese stream',
-                        'This usually happens when Crunchyroll displays JP as dub on a language but its not available. The download will fail, just start a new download and remove JP from dubs'
-                    )
+                console.log('Exact Playlist not found, taking what crunchy gives.')
+                messageBox(
+                    'error',
+                    ['Cancel'],
+                    2,
+                    'Not found japanese stream',
+                    'Not found japanese stream',
+                    'This usually happens when Crunchyroll displays JP as dub on a language but its not available. The download will fail, just start a new download and remove JP from dubs'
+                )
                 server.logger.log({
                     level: 'error',
                     message: 'Not found japanese stream',
