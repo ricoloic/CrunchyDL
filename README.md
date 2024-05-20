@@ -14,7 +14,6 @@
 ## Supported Platforms
 - Windows
 - Linux (since v1.1.0)
-- Mac (since v1.1.3)
 
 ## Getting Started on Windows
 **Step 1:** Download the latest windows installer [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
