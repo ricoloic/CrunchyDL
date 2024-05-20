@@ -1,5 +1,13 @@
 import { FastifyInstance } from 'fastify'
-import { addPlaylistController, checkLoginController, checkProxiesController, deleteAccountHandler, getAllAccountsHandler, getPlaylistController, loginController } from './service.controller'
+import {
+    addPlaylistController,
+    checkLoginController,
+    checkProxiesController,
+    deleteAccountHandler,
+    getAllAccountsHandler,
+    getPlaylistController,
+    loginController
+} from './service.controller'
 
 async function serviceRoutes(server: FastifyInstance) {
     server.post(

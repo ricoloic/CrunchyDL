@@ -186,7 +186,6 @@ ipcMain.handle('dialog:getEndpoint', async (events, nr: number) => {
 })
 
 ipcMain.handle('dialog:defaultFile', async (events, type: string) => {
-
     if (!type) return
 
     const savedPath = await settings.get(type)
@@ -199,7 +198,6 @@ ipcMain.handle('dialog:defaultFile', async (events, type: string) => {
 })
 
 ipcMain.handle('dialog:defaultArray', async (events, type: string) => {
-
     if (!type) return
 
     const savedPath = await settings.get(type)
@@ -224,7 +222,6 @@ ipcMain.handle('dialog:defaultArraySetDub', async (events, va: Array<any>) => {
 })
 
 ipcMain.handle('dialog:proxyActive', async (events) => {
-
     const savedStat = await settings.get('proxyActive')
 
     if (!savedStat) {
@@ -236,7 +233,6 @@ ipcMain.handle('dialog:proxyActive', async (events) => {
 })
 
 ipcMain.handle('dialog:proxyActiveSet', async (events, status: boolean) => {
-
     await settings.set('proxyActive', status)
 
     return status

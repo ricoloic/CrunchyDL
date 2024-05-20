@@ -112,7 +112,6 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
 
 // Crunchyroll Login Fetch Proxy
 async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) {
-
     const proxies = await checkProxies()
 
     var host: string | undefined
@@ -206,15 +205,14 @@ async function crunchyLoginFetch(user: string, passw: string) {
 
 // Crunchyroll Playlist Fetch
 export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
-
     const isProxyActive = await settings.get('proxyActive')
 
     var proxies: {
-        name: string;
-        code: string;
-        url: string;
-        status: string | undefined;
-    }[] = [];
+        name: string
+        code: string
+        url: string
+        status: string | undefined
+    }[] = []
 
     if (isProxyActive) {
         proxies = await checkProxies()
@@ -344,55 +342,54 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
     }
 
     if (isProxyActive)
+        for (const p of proxies) {
+            if (p.code !== loginLocal.country) {
+                const { data: login, error } = await crunchyLogin(account.username, account.password, p.code)
 
-    for (const p of proxies) {
-        if (p.code !== loginLocal.country) {
-            const { data: login, error } = await crunchyLogin(account.username, account.password, p.code)
+                if (!login) return
 
-            if (!login) return
-
-            const headers = {
-                Authorization: `Bearer ${login.access_token}`,
-                'X-Cr-Disable-Drm': 'true'
-            }
-
-            const response = await fetch(
-                `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
-                    endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
-                }`,
-                {
-                    method: 'GET',
-                    headers: headers
+                const headers = {
+                    Authorization: `Bearer ${login.access_token}`,
+                    'X-Cr-Disable-Drm': 'true'
                 }
-            )
 
-            if (response.ok) {
-                const data: VideoPlaylistNoGEO = JSON.parse(await response.text())
-
-                data.hardSubs = Object.values((data as any).hardSubs)
-
-                data.subtitles = Object.values((data as any).subtitles)
-
-                for (const v of data.versions) {
-                    if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
-                        playlist.versions.push({ ...v, geo: p.code })
+                const response = await fetch(
+                    `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
+                        endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
+                    }`,
+                    {
+                        method: 'GET',
+                        headers: headers
                     }
-                }
+                )
 
-                for (const v of data.subtitles) {
-                    if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
-                        playlist.subtitles.push({ ...v, geo: p.code })
+                if (response.ok) {
+                    const data: VideoPlaylistNoGEO = JSON.parse(await response.text())
+
+                    data.hardSubs = Object.values((data as any).hardSubs)
+
+                    data.subtitles = Object.values((data as any).subtitles)
+
+                    for (const v of data.versions) {
+                        if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
+                            playlist.versions.push({ ...v, geo: p.code })
+                        }
                     }
-                }
 
-                for (const v of data.hardSubs) {
-                    if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
-                        playlist.hardSubs.push({ ...v, geo: p.code })
+                    for (const v of data.subtitles) {
+                        if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
+                            playlist.subtitles.push({ ...v, geo: p.code })
+                        }
+                    }
+
+                    for (const v of data.hardSubs) {
+                        if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
+                            playlist.hardSubs.push({ ...v, geo: p.code })
+                        }
                     }
                 }
             }
         }
-    }
 
     return { data: playlist, account_id: loginLocal.account_id }
 }

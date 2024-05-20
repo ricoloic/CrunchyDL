@@ -2,12 +2,14 @@ import type { FastifyReply, FastifyRequest } from 'fastify'
 import { crunchyLogin } from './crunchyroll.service'
 import { loggedInCheck } from '../service/service.service'
 
-export async function loginController(request: FastifyRequest<{
-    Querystring: {
-        geo: string
-    }
-}>, reply: FastifyReply) {
-
+export async function loginController(
+    request: FastifyRequest<{
+        Querystring: {
+            geo: string
+        }
+    }>,
+    reply: FastifyReply
+) {
     const query = request.query
 
     const account = await loggedInCheck('CR')

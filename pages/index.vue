@@ -68,7 +68,9 @@
                             <div class="text-xs">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
                             <div class="text-xs mr-14">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
                             <div class="absolute flex flex-col ml-auto gap-0.5 right-0 bottom-0">
-                                <div v-if="p.totaldownloaded && p.status === 'downloading'" class="text-xs ml-auto">{{ (p.totaldownloaded / Math.pow(1024, 2)).toFixed(2) }} MB</div>
+                                <div v-if="p.totaldownloaded && p.status === 'downloading'" class="text-xs ml-auto"
+                                    >{{ (p.totaldownloaded / Math.pow(1024, 2)).toFixed(2) }} MB</div
+                                >
                                 <div v-if="p.partsleft && p.status === 'downloading'" class="text-xs ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
                                 <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-xs ml-auto">{{ p.downloadspeed }} MB/s</div>
                             </div>

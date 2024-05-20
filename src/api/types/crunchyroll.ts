@@ -116,7 +116,7 @@ export interface VideoPlaylist {
     hardSubs: Array<{
         hlang: string
         url: string
-        quality: string,
+        quality: string
         geo: string | undefined
     }>
     playbackType: string
@@ -132,7 +132,7 @@ export interface VideoPlaylist {
     subtitles: Array<{
         format: string
         language: string
-        url: string,
+        url: string
         geo: string | undefined
     }>
     token: string
@@ -144,7 +144,7 @@ export interface VideoPlaylist {
         media_guid: string
         original: boolean
         season_guid: string
-        variant: string,
+        variant: string
         geo: string | undefined
     }>
     geo: string | undefined

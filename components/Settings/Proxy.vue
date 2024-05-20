@@ -3,14 +3,10 @@
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
             <div class="text-sm mb-2"> Proxy Settings </div>
             <div class="flex flex-row">
-                <input v-model="isProxyLogin" @change="setProxyActive(isProxyLogin)" type="checkbox" name="Login Proxy" class="cursor-pointer">
-                <div class="text-sm ml-1.5">
-                    Use Login Proxies
-                </div>
+                <input v-model="isProxyLogin" @change="setProxyActive(isProxyLogin)" type="checkbox" name="Login Proxy" class="cursor-pointer" />
+                <div class="text-sm ml-1.5"> Use Login Proxies </div>
             </div>
-            <div class="text-xs mt-2">
-                Used for bypassing geoblocking
-            </div>
+            <div class="text-xs mt-2"> Used for bypassing geoblocking </div>
         </div>
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none gap-1" :class="fetchingProxies ? 'h-44' : 'h-auto'">
             <div class="text-sm mb-2"> Global Proxies </div>
@@ -42,7 +38,7 @@
 </template>
 
 <script lang="ts" setup>
-const isProxyLogin = ref<boolean>();
+const isProxyLogin = ref<boolean>()
 const proxies = ref<{ name: string; url: string; status: string }[]>()
 const fetchingProxies = ref<0>(0)
 

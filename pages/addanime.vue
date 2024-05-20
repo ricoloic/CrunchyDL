@@ -651,7 +651,7 @@ const switchToSeason = async () => {
 
         if (dubLocales.value && dubLocales.value.length !== 0) {
             for (const a of dubLocales.value) {
-                if (CRselectedShow.value.Dubs.find(cr => cr === a.locale)) {
+                if (CRselectedShow.value.Dubs.find((cr) => cr === a.locale)) {
                     toggleDub(a)
                 }
             }
@@ -661,7 +661,7 @@ const switchToSeason = async () => {
 
         if (subLocales.value && subLocales.value.length !== 0) {
             for (const a of subLocales.value) {
-                if (CRselectedShow.value.Subs.find(cr => cr === a.locale)) {
+                if (CRselectedShow.value.Subs.find((cr) => cr === a.locale)) {
                     toggleSub(a)
                 }
             }
@@ -692,7 +692,7 @@ const switchToSeason = async () => {
 
         if (dubLocales.value && dubLocales.value.length !== 0) {
             for (const a of dubLocales.value) {
-                if (CRselectedShow.value.Dubs.find(cr => cr === a.locale)) {
+                if (CRselectedShow.value.Dubs.find((cr) => cr === a.locale)) {
                     toggleDub(a)
                 }
             }
@@ -702,7 +702,7 @@ const switchToSeason = async () => {
 
         if (subLocales.value && subLocales.value.length !== 0) {
             for (const a of subLocales.value) {
-                if (CRselectedShow.value.Subs.find(cr => cr === a.locale)) {
+                if (CRselectedShow.value.Subs.find((cr) => cr === a.locale)) {
                     toggleSub(a)
                 }
             }

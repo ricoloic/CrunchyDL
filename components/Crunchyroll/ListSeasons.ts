@@ -3,7 +3,6 @@ import { getProxies } from './Proxy'
 import type { CrunchySeasonsFetch } from './Types'
 
 export async function listSeasonCrunchy(q: string, geo: string | undefined) {
-
     const { data: token, error: tokenerror } = await crunchyLogin(geo ? geo : 'LOCAL')
 
     if (!token.value) {

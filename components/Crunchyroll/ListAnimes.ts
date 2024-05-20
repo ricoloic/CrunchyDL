@@ -4,8 +4,7 @@ import { getProxies } from './Proxy'
 import type { CrunchyAnimeFetch, CrunchySearchFetch } from './Types'
 
 export async function searchCrunchy(q: string) {
-
-    var isProxyActive: boolean | undefined;
+    var isProxyActive: boolean | undefined
 
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
@@ -71,13 +70,13 @@ export async function searchCrunchy(q: string) {
                             data.value?.data[0].items.push(r)
                         } else {
                             for (const l of r.series_metadata.audio_locales) {
-                                if (!data.value.data[0].items.find(d => d.id === r.id)?.series_metadata.audio_locales.find(loc => loc === l)) {
-                                    data.value.data[0].items.find(d => d.id === r.id)?.series_metadata.audio_locales.push(l)
+                                if (!data.value.data[0].items.find((d) => d.id === r.id)?.series_metadata.audio_locales.find((loc) => loc === l)) {
+                                    data.value.data[0].items.find((d) => d.id === r.id)?.series_metadata.audio_locales.push(l)
                                 }
                             }
                             for (const l of r.series_metadata.subtitle_locales) {
-                                if (!data.value.data[0].items.find(d => d.id === r.id)?.series_metadata.subtitle_locales.find(loc => loc === l)) {
-                                    data.value.data[0].items.find(d => d.id === r.id)?.series_metadata.subtitle_locales.push(l)
+                                if (!data.value.data[0].items.find((d) => d.id === r.id)?.series_metadata.subtitle_locales.find((loc) => loc === l)) {
+                                    data.value.data[0].items.find((d) => d.id === r.id)?.series_metadata.subtitle_locales.push(l)
                                 }
                             }
                         }
@@ -112,8 +111,7 @@ export async function searchCrunchy(q: string) {
 }
 
 export async function getCRSeries(q: string) {
-
-    var isProxyActive: boolean | undefined;
+    var isProxyActive: boolean | undefined
 
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result

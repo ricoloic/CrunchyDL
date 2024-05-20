@@ -17,9 +17,7 @@
                 <option :value="12">Android (DRM PROTECTED)</option>
                 <option :value="13">Samsung TV (DRM PROTECTED) (Fastest)</option>
             </select>
-            <div class="text-xs mt-2">
-                Fallback to non-drm stream if no widevine key provided
-            </div>
+            <div class="text-xs mt-2"> Fallback to non-drm stream if no widevine key provided </div>
         </div>
     </div>
 </template>
@@ -38,7 +36,6 @@ const selectEndpoint = () => {
         ;(window as any).myAPI.selectEndpoint(selectedEndpoint.value)
     }
 }
-
 </script>
 
 <style>

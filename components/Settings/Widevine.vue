@@ -46,11 +46,11 @@
 </template>
 
 <script lang="ts" setup>
-const pathL3Blob = ref<string>();
-const pathL3Key = ref<string>();
+const pathL3Blob = ref<string>()
+const pathL3Key = ref<string>()
 
-const pathL1Blob = ref<string>();
-const pathL1Key = ref<string>();
+const pathL1Blob = ref<string>()
+const pathL1Key = ref<string>()
 
 const getFilePathL3Blob = () => {
     if (process.client) {
@@ -88,21 +88,16 @@ onMounted(() => {
     ;(window as any).myAPI.getFile('l3blob').then((result: any) => {
         pathL3Blob.value = result
     })
-
     ;(window as any).myAPI.getFile('l3key').then((result: any) => {
         pathL3Key.value = result
     })
-
     ;(window as any).myAPI.getFile('l1blob').then((result: any) => {
         pathL1Blob.value = result
     })
-
     ;(window as any).myAPI.getFile('l1key').then((result: any) => {
         pathL1Key.value = result
     })
 })
-
-
 </script>
 
 <style></style>

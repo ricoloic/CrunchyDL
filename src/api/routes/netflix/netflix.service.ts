@@ -52,7 +52,7 @@ export async function getNetflixMetadata(id: string) {
         drmSystem: 'widevine',
         isWatchlistEnabled: 'false',
         isShortformEnabled: 'false',
-        isVolatileBillboardsEnabled: 'false',
+        isVolatileBillboardsEnabled: 'false'
     }
 
     const querystring = new URLSearchParams(params)

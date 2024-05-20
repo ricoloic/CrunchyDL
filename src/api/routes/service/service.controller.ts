@@ -135,41 +135,45 @@ export async function getPlaylistController(request: FastifyRequest, reply: Fast
     return reply.code(200).send(playlist.reverse())
 }
 
-export async function checkProxiesController(
-    request: FastifyRequest,
-    reply: FastifyReply
-) {
-
-    const cachedData = server.CacheController.get('proxycheck');
+export async function checkProxiesController(request: FastifyRequest, reply: FastifyReply) {
+    const cachedData = server.CacheController.get('proxycheck')
 
     if (!cachedData) {
-        const proxies: { name: string, code: string, url: string, status: string | undefined }[] = [{
-            name: 'US Proxy', code: 'US', url: 'https://us-proxy.crd.cx/', status: undefined
-        },
-        {
-            name: 'UK Proxy', code: 'GB', url: 'https://uk-proxy.crd.cx/', status: undefined
-        },
-        {
-            name: 'DE Proxy', code: 'DE', url: 'https://de-proxy.crd.cx/', status: undefined
-        }]
-    
+        const proxies: { name: string; code: string; url: string; status: string | undefined }[] = [
+            {
+                name: 'US Proxy',
+                code: 'US',
+                url: 'https://us-proxy.crd.cx/',
+                status: undefined
+            },
+            {
+                name: 'UK Proxy',
+                code: 'GB',
+                url: 'https://uk-proxy.crd.cx/',
+                status: undefined
+            },
+            {
+                name: 'DE Proxy',
+                code: 'DE',
+                url: 'https://de-proxy.crd.cx/',
+                status: undefined
+            }
+        ]
+
         for (const p of proxies) {
-            const response = await fetch(
-                p.url + 'health',
-                {
-                    method: 'GET',
-                }
-            )
-    
+            const response = await fetch(p.url + 'health', {
+                method: 'GET'
+            })
+
             if (response.ok) {
                 p.status = 'online'
             } else {
                 p.status = 'offline'
             }
         }
-    
+
         server.CacheController.set('proxycheck', proxies, 60)
-    
+
         return reply.code(200).send(proxies)
     }
 
