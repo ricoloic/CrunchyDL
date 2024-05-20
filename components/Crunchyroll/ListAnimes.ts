@@ -5,7 +5,6 @@ import type { CrunchyAnimeFetch, CrunchySearchFetch } from './Types'
 
 export async function searchCrunchy(q: string) {
     var isProxyActive: boolean | undefined
-
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
     })
@@ -112,7 +111,6 @@ export async function searchCrunchy(q: string) {
 
 export async function getCRSeries(q: string) {
     var isProxyActive: boolean | undefined
-
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
     })

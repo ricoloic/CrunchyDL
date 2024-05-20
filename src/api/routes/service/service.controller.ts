@@ -117,6 +117,8 @@ export async function addPlaylistController(
 export async function getPlaylistController(request: FastifyRequest, reply: FastifyReply) {
     const playlist = await getPlaylist()
 
+    if (!playlist) return
+
     for (const v of playlist) {
         if (v.dataValues.status === 'downloading') {
             const found = await getDownloading(v.dataValues.id)

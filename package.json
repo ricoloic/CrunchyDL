@@ -61,7 +61,8 @@
         "node-cron": "^3.0.3",
         "protobufjs": "^7.2.6",
         "sequelize": "^6.37.3",
-        "sqlite3": "5.1.6"
+        "sqlite3": "5.1.6",
+        "winston": "^3.13.0"
     },
     "build": {
         "files": [

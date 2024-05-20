@@ -5,7 +5,7 @@ import { ADNEpisode } from '../types/adn'
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: app.getPath('documents') + '/crd-dbv2.db'
+    storage: app.getPath('documents') + '/Crunchyroll Downloader/databases/v1/data.db'
 })
 
 interface AccountAttributes {

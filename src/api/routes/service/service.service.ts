@@ -25,61 +25,143 @@ const exec = util.promisify(require('child_process').exec)
 
 // Get All Accounts
 export async function getAllAccounts() {
-    const accounts = await Account.findAll({
-        attributes: { exclude: ['password'] }
-    })
+    try {
+        const accounts = await Account.findAll({
+            attributes: { exclude: ['password'] }
+        })
 
-    return accounts
+        return accounts
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to get all accounts', JSON.stringify(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to get all accounts',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'loginGetAccountsDatabase'
+        })
+    }
 }
 
 // Delete Account
 export async function deleteAccountID(id: number) {
-    const account = await Account.destroy({
-        where: {
-            id: id
-        }
-    })
+    try {
+        const account = await Account.destroy({
+            where: {
+                id: id
+            }
+        })
 
-    return account
+        return account
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to delete account', JSON.stringify(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to delete account',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'loginDeleteDatabase'
+        })
+    }
 }
 
 // DB Account existence check
 export async function loggedInCheck(service: string) {
-    const login = await Account.findOne({
-        where: {
-            service: service
-        }
-    })
+    try {
+        const login = await Account.findOne({
+            where: {
+                service: service
+            }
+        })
 
-    return login?.get()
+        return login?.get()
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to check if logged in', JSON.stringify(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to check if logged in',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'loginCheckDatabase'
+        })
+    }
 }
 
 // Save Login Data in DB
 export async function safeLoginData(user: string, password: string, service: string) {
-    const login = await Account.create({
-        username: user,
-        password: password,
-        service: service
-    })
+    try {
+        const login = await Account.create({
+            username: user,
+            password: password,
+            service: service
+        })
 
-    return login?.get()
+        return login?.get()
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to save login data', JSON.stringify(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to save login data',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'loginSaveDatabase'
+        })
+    }
 }
 
 // Get Playlist
 export async function getPlaylist() {
-    const episodes = await Playlist.findAll()
+    try {
+        const episodes = await Playlist.findAll()
 
-    return episodes
+        return episodes
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to get Playlist', JSON.stringify(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to get Playlist',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'playlistGetDatabase'
+        })
+    }
 }
 
 // Delete Playlist and TEMP folders After Start
 async function deletePlaylistandTMP() {
-    await Playlist.truncate()
+    try {
+        await deleteTemporaryFolders()
 
-    deleteTemporaryFolders()
+        console.log('All TMP Folders and Files deleted')
+        server.logger.log({
+            level: 'info',
+            message: 'All TMP Folders and Files deleted',
+            timestamp: new Date().toISOString(),
+            section: 'playlistClearDatabase'
+        })
+
+        await Playlist.truncate()
+
+        console.log('Playlist cleared')
+        server.logger.log({
+            level: 'info',
+            message: 'Playlist cleared',
+            timestamp: new Date().toISOString(),
+            section: 'playlistClearDatabase'
+        })
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to delete Playlist and tmp folders', JSON.stringify(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to delete Playlist and tmp folders',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'playlistClearDatabase'
+        })
+    }
 }
 
-deletePlaylistandTMP()
+setTimeout(deletePlaylistandTMP, 500)
 
 // Update Playlist Item
 export async function updatePlaylistByID(
@@ -87,7 +169,27 @@ export async function updatePlaylistByID(
     status?: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed',
     quality?: 1080 | 720 | 480 | 360 | 240
 ) {
-    await Playlist.update({ status: status, quality: quality }, { where: { id: id } })
+    try {
+        await Playlist.update({ status: status, quality: quality }, { where: { id: id } })
+
+        server.logger.log({
+            level: 'info',
+            message: `Updated Playlist Item ${id}`,
+            status: status || undefined,
+            quality: quality || undefined,
+            timestamp: new Date().toISOString(),
+            section: 'playlistItemUpdateDatabase'
+        })
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to update playlist item', JSON.stringify(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to update playlist item',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'playlistItemUpdateDatabase'
+        })
+    }
 }
 
 // Add Episode to Playlist
@@ -140,44 +242,61 @@ var isDownloading: number = 0
 
 // Check Playlist every 2 seconds for new items
 async function checkPlaylists() {
-    const eps = await Playlist.findAll({ where: { status: 'waiting' } })
+    try {
+        const eps = await Playlist.findAll({ where: { status: 'waiting' } })
 
-    for (const e of eps) {
-        if (isDownloading < 3 && e.dataValues.status === 'waiting') {
-            updatePlaylistByID(e.dataValues.id, 'preparing')
-            isDownloading++
-            if (e.dataValues.service === 'CR') {
-                downloadCrunchyrollPlaylist(
-                    (e.dataValues.media as CrunchyEpisode).id,
-                    (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
-                    (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
-                    e.dataValues.hardsub,
-                    (e.dataValues.media as CrunchyEpisode).id,
-                    e.dataValues.id,
-                    (e.dataValues.media as CrunchyEpisode).series_title,
-                    (e.dataValues.media as CrunchyEpisode).season_number,
-                    (e.dataValues.media as CrunchyEpisode).episode_number,
-                    e.dataValues.quality,
-                    e.dataValues.dir,
-                    e.dataValues.format,
-                    (e.dataValues.media as CrunchyEpisode).geo
-                )
-            }
-            if (e.dataValues.service === 'ADN') {
-                downloadADNPlaylist(
-                    (e.dataValues.media as ADNEpisode).id,
-                    (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
-                    (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
-                    e.dataValues.id,
-                    (e.dataValues.media as ADNEpisode).show.title,
-                    (e.dataValues.media as ADNEpisode).season,
-                    (e.dataValues.media as ADNEpisode).shortNumber,
-                    e.dataValues.quality,
-                    e.dataValues.dir,
-                    e.dataValues.format
-                )
+        for (const e of eps) {
+            if (isDownloading < 3 && e.dataValues.status === 'waiting') {
+                updatePlaylistByID(e.dataValues.id, 'preparing')
+                isDownloading++
+                if (e.dataValues.service === 'CR') {
+                    server.logger.log({
+                        level: 'info',
+                        message: `Added Playlist Item ${e.dataValues.id} to Download Process`,
+                        timestamp: new Date().toISOString(),
+                        section: 'playlistCheckCron'
+                    })
+                    downloadCrunchyrollPlaylist(
+                        (e.dataValues.media as CrunchyEpisode).id,
+                        (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
+                        (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
+                        e.dataValues.hardsub,
+                        (e.dataValues.media as CrunchyEpisode).id,
+                        e.dataValues.id,
+                        (e.dataValues.media as CrunchyEpisode).series_title,
+                        (e.dataValues.media as CrunchyEpisode).season_number,
+                        (e.dataValues.media as CrunchyEpisode).episode_number,
+                        e.dataValues.quality,
+                        e.dataValues.dir,
+                        e.dataValues.format,
+                        (e.dataValues.media as CrunchyEpisode).geo
+                    )
+                }
+                if (e.dataValues.service === 'ADN') {
+                    downloadADNPlaylist(
+                        (e.dataValues.media as ADNEpisode).id,
+                        (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
+                        (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
+                        e.dataValues.id,
+                        (e.dataValues.media as ADNEpisode).show.title,
+                        (e.dataValues.media as ADNEpisode).season,
+                        (e.dataValues.media as ADNEpisode).shortNumber,
+                        e.dataValues.quality,
+                        e.dataValues.dir,
+                        e.dataValues.format
+                    )
+                }
             }
         }
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed check Playlist', JSON.stringify(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed check Playlist',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'playlistCheckCron'
+        })
     }
 }
 
@@ -299,7 +418,7 @@ export async function downloadADNPlaylist(
         return
     }
 
-    await mergeVideoFile(file as string, [], subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format)
+    await mergeVideoFile(file as string, [], subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format, downloadID)
 
     await updatePlaylistByID(downloadID, 'completed')
 
@@ -357,6 +476,12 @@ export async function downloadCrunchyrollPlaylist(
                         'Not found japanese stream',
                         'This usually happens when Crunchyroll displays JP as dub on a language but its not available. The download will fail, just start a new download and remove JP from dubs'
                     )
+                server.logger.log({
+                    level: 'error',
+                    message: 'Not found japanese stream',
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcess'
+                })
             }
         }
     }
@@ -413,6 +538,13 @@ export async function downloadCrunchyrollPlaylist(
         if (!subPlaylist) {
             await updatePlaylistByID(downloadID, 'failed')
             console.log('Subtitle Playlist not found')
+            messageBox('error', ['Cancel'], 2, 'Subtitle Playlist not found', 'Subtitle Playlist not found', 'Subtitle Playlist not found')
+            server.logger.log({
+                level: 'error',
+                message: 'Subtitle Playlist not found',
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcess'
+            })
             return
         }
 
@@ -420,8 +552,20 @@ export async function downloadCrunchyrollPlaylist(
         if (found) {
             subDownloadList.push({ ...found, isDub: false })
             console.log(`Subtitle ${s}.ass found, adding to download`)
+            server.logger.log({
+                level: 'info',
+                message: `Subtitle ${s}.ass found in Download ${downloadID}, adding to download`,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessSubtitles'
+            })
         } else {
             console.warn(`Subtitle ${s}.ass not found, skipping`)
+            server.logger.log({
+                level: 'warn',
+                message: `Subtitle ${s}.ass not found in Download ${downloadID}, skipping`,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessSubtitles'
+            })
         }
 
         await deleteVideoToken(episodeID, playlist.data.token)
@@ -507,6 +651,13 @@ export async function downloadCrunchyrollPlaylist(
                 console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].uri)
                 console.log('No AssetID found, exiting.')
                 await updatePlaylistByID(downloadID, 'failed')
+                messageBox('error', ['Cancel'], 2, 'No AssetID found', 'No AssetID found', "No AssetID found, can't download MPD.")
+                server.logger.log({
+                    level: 'error',
+                    message: `No AssetID found, can't download MPD of Download ${downloadID}`,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessAudio'
+                })
                 return
             }
 
@@ -539,6 +690,13 @@ export async function downloadCrunchyrollPlaylist(
                     'Audio Widevine encrypted but no key provided',
                     'To download Widevine encrypted videos add the L3 Widevine keys in Settings > Widewine > L3 Keys'
                 )
+                server.logger.log({
+                    level: 'error',
+                    message: `Audio Widevine encrypted but no key provided in Download ${downloadID}`,
+                    error: 'To download Widevine encrypted videos add the L3 Widevine keys in Settings > Widewine > L3 Keys',
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessVideo'
+                })
                 return
             }
             p.push({
@@ -578,6 +736,14 @@ export async function downloadCrunchyrollPlaylist(
         if (!code) {
             await updatePlaylistByID(downloadID, 'failed')
             console.log('No Clean stream found')
+            messageBox('error', ['Cancel'], 2, 'No Clean video stream found', 'No Clean video stream found', 'No Clean video stream found')
+            server.logger.log({
+                level: 'error',
+                message: `No Clean video stream found in Download ${downloadID}`,
+                stream: code,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessVideo'
+            })
             return
         }
 
@@ -586,6 +752,13 @@ export async function downloadCrunchyrollPlaylist(
         if (!play) {
             await updatePlaylistByID(downloadID, 'failed')
             console.log('Failed to get Playlist in download Video')
+            messageBox('error', ['Cancel'], 2, 'Failed to get Playlist in download Video', 'Failed to get Playlist in download Video', 'Failed to get Playlist in download Video')
+            server.logger.log({
+                level: 'error',
+                message: `Failed to get Playlist in download Video in Download ${downloadID}`,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessVideo'
+            })
             return
         }
 
@@ -632,6 +805,13 @@ export async function downloadCrunchyrollPlaylist(
                 `Resolution ${quality}p not found, using resolution ${mdp.playlists[0].attributes.RESOLUTION?.height}p instead`
             )
 
+            server.logger.log({
+                level: 'warn',
+                message: `Resolution ${quality}p not found in Download ${downloadID}, using resolution ${mdp.playlists[0].attributes.RESOLUTION?.height}p instead`,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessVideo'
+            })
+
             await updatePlaylistByID(downloadID, undefined, mdp.playlists[0].attributes.RESOLUTION?.height as 1080 | 720 | 480 | 360 | 240)
 
             hq = mdp.playlists[0]
@@ -640,7 +820,15 @@ export async function downloadCrunchyrollPlaylist(
         const assetId = hq.segments[0].resolvedUri.match(/\/assets\/(?:p\/)?([^_,]+)/)
 
         if (!assetId) {
+            await updatePlaylistByID(downloadID, 'failed')
             console.log('No AssetID found, exiting.')
+            messageBox('error', ['Cancel'], 2, 'No AssetID found', 'No AssetID found', 'No AssetID found in Video Playlist')
+            server.logger.log({
+                level: 'error',
+                message: `No AssetID found in Video Playlist in Download ${downloadID}`,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessVideo'
+            })
             return
         }
 
@@ -649,7 +837,23 @@ export async function downloadCrunchyrollPlaylist(
 
         if (hq.contentProtection) {
             if (!hq.contentProtection['com.widevine.alpha'].pssh) {
+                await updatePlaylistByID(downloadID, 'failed')
                 console.log('No PSSH found, exiting.')
+                messageBox(
+                    'error',
+                    ['Cancel'],
+                    2,
+                    'Encryption Detect error',
+                    'Encryption Detect error',
+                    'Video file is decrypted, but it looks like not with widevine. Stopping Download. Contact Developer'
+                )
+                server.logger.log({
+                    level: 'error',
+                    message: `Video file is decrypted, but it looks like not with widevine in Download ${downloadID}`,
+                    error: 'No PSSH found',
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessVideoDecryption'
+                })
                 return
             }
             pssh = Uint8ArrayToBase64(hq.contentProtection['com.widevine.alpha'].pssh)
@@ -663,10 +867,16 @@ export async function downloadCrunchyrollPlaylist(
                 'error',
                 ['Cancel'],
                 2,
-                'Audio Widevine encrypted but no key provided',
-                'Audio Widevine encrypted but no key provided',
+                'Video Widevine encrypted but no key provided',
+                'Video Widevine encrypted but no key provided',
                 'To download Widevine encrypted videos add the L3 Widevine keys in Settings > Widewine > L3 Keys'
             )
+            server.logger.log({
+                level: 'error',
+                message: `Video Widevine encrypted but no key provided in Download ${downloadID}`,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessVideoDecryption'
+            })
             return
         }
 
@@ -699,7 +909,7 @@ export async function downloadCrunchyrollPlaylist(
 
     if (!audios) return
 
-    await mergeVideoFile(file as string, audios, subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format)
+    await mergeVideoFile(file as string, audios, subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format, downloadID)
 
     await updatePlaylistByID(downloadID, 'completed')
 
@@ -754,7 +964,20 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
                 success = true
             } catch (error) {
                 console.error(`Error occurred during download of fragment ${index + 1}:`, error)
+                server.logger.log({
+                    level: 'error',
+                    message: `Error occurred during download of fragment ${index + 1}`,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessVideoDownload'
+                })
                 console.log(`Retrying download of fragment ${index + 1}...`)
+                server.logger.log({
+                    level: 'warn',
+                    message: `Retrying download of fragment ${index + 1} because failed`,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessVideoDownload'
+                })
                 await new Promise((resolve) => setTimeout(resolve, 5000))
             }
         }
@@ -816,10 +1039,19 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
         })
     } catch (error) {
         console.error('Error merging parts:', error)
+        await updatePlaylistByID(downloadID, 'failed')
+        messageBox('error', ['Cancel'], 2, 'Error merging video parts', 'Error merging video parts', 'Error merging video parts')
+        server.logger.log({
+            level: 'error',
+            message: `Error merging video parts of Download ${downloadID}`,
+            error: error,
+            timestamp: new Date().toISOString(),
+            section: 'crunchyrollDownloadProcessVideoMerging'
+        })
     }
 }
 
-async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<string>, path: string, filename: string, format: 'mp4' | 'mkv') {
+async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<string>, path: string, filename: string, format: 'mp4' | 'mkv', downloadID: number) {
     const locales: Array<{
         locale: string
         name: string
@@ -932,6 +1164,15 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
             .saveToFile(path + `/${filename}.${format}`)
             .on('error', (error) => {
                 console.log(error)
+                updatePlaylistByID(downloadID, 'failed')
+                messageBox('error', ['Cancel'], 2, 'Error merging videos and audios', 'Error merging videos and audios', 'Error merging videos and audios')
+                server.logger.log({
+                    level: 'error',
+                    message: `Error merging videos and audios of Download ${downloadID}`,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessVideoMergingFFMPEG'
+                })
                 reject(error)
             })
             .on('end', async () => {

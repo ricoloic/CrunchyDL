@@ -58,16 +58,40 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
                     'Failed to login to Crunchyroll',
                     crErrors.find((r) => r.error === (error?.error as string)) ? crErrors.find((r) => r.error === (error?.error as string))?.response : (error.error as string)
                 )
+                server.logger.log({
+                    level: 'error',
+                    message: 'Failed to login to Crunchyroll',
+                    data: data,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'loginCrunchyrollFetch'
+                })
                 return { data: null, error: error.error }
             }
 
             if (!data) {
                 messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned null')
+                server.logger.log({
+                    level: 'error',
+                    message: 'Failed to login to Crunchyroll',
+                    data: data,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'loginCrunchyrollFetch'
+                })
                 return { data: null, error: 'Crunchyroll returned null' }
             }
 
             if (!data.access_token) {
                 messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned malformed data')
+                server.logger.log({
+                    level: 'error',
+                    message: 'Failed to login to Crunchyroll',
+                    data: data,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'loginCrunchyrollFetch'
+                })
                 return { data: null, error: 'Crunchyroll returned malformed data' }
             }
 
@@ -88,16 +112,40 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
                     'Failed to login to Crunchyroll',
                     crErrors.find((r) => r.error === (error?.error as string)) ? crErrors.find((r) => r.error === (error?.error as string))?.response : (error.error as string)
                 )
+                server.logger.log({
+                    level: 'error',
+                    message: 'Failed to login to Crunchyroll',
+                    data: data,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'loginCrunchyrollFetch'
+                })
                 return { data: null, error: error.error }
             }
 
             if (!data) {
                 messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned null')
+                server.logger.log({
+                    level: 'error',
+                    message: 'Failed to login to Crunchyroll',
+                    data: data,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'loginCrunchyrollFetch'
+                })
                 return { data: null, error: 'Crunchyroll returned null' }
             }
 
             if (!data.access_token) {
                 messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned malformed data')
+                server.logger.log({
+                    level: 'error',
+                    message: 'Failed to login to Crunchyroll',
+                    data: data,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'loginCrunchyrollFetch'
+                })
                 return { data: null, error: 'Crunchyroll returned malformed data' }
             }
 
