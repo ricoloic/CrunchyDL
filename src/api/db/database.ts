@@ -36,6 +36,7 @@ interface PlaylistAttributes {
     hardsub: boolean
     quality: 1080 | 720 | 480 | 360 | 240
     dir: string
+    installDir: string
     failedreason: string
     service: 'CR' | 'ADN'
     format: 'mp4' | 'mkv'
@@ -107,6 +108,10 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
     },
     dir: {
         allowNull: false,
+        type: DataTypes.STRING
+    },
+    installDir: {
+        allowNull: true,
         type: DataTypes.STRING
     },
     hardsub: {

@@ -6,6 +6,7 @@ contextBridge.exposeInMainWorld('myAPI', {
     selectEndpoint: (nr: number) => ipcRenderer.invoke('dialog:selectEndpoint', nr),
     getEndpoint: () => ipcRenderer.invoke('dialog:getEndpoint'),
     getFolder: () => ipcRenderer.invoke('dialog:defaultDirectory'),
+    openFolder: (dir: string) => ipcRenderer.invoke('dialog:openFolder', dir),
     getFile: (type: string) => ipcRenderer.invoke('dialog:defaultFile', type),
     getArray: (type: string) => ipcRenderer.invoke('dialog:defaultArray', type),
     setArraySub: (va: Array<any>) => ipcRenderer.invoke('dialog:defaultArraySetSub', va),

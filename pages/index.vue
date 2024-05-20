@@ -3,9 +3,6 @@
         <MainHeader />
         <Updater />
         <div class="flex flex-col text-white gap-5 mt-14 p-5 overflow-y-scroll h-[calc(100vh-3.5rem)]">
-            <!-- <button @click="deletePlaylist">
-        Delete Playlist
-      </button> -->
             <div v-for="p in playlist" class="relative flex flex-row gap-4 min-h-36 bg-[#63636383] rounded-xl font-dm overflow-hidden">
                 <div
                     class="absolute top-0 left-0 w-full h-full bg-[#a1a1a141] transition-all duration-300"
@@ -74,6 +71,9 @@
                                 <div v-if="p.partsleft && p.status === 'downloading'" class="text-xs ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
                                 <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-xs ml-auto">{{ p.downloadspeed }} MB/s</div>
                             </div>
+                            <button @click="openFolder(p.installDir)" v-if="p.status === 'completed'" class="ml-auto h-9 w-9 hover:bg-[#ffffff2c] rounded-xl transition-all">
+                                <Icon name="ph:folder-open" class="h-5 w-5 text-white" />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -95,6 +95,7 @@ const playlist = ref<
         dub: Array<{ locale: string; name: string }>
         sub: Array<{ locale: string; name: string }>
         dir: string
+        installDir: string
         partsleft: number
         partsdownloaded: number
         downloadspeed: number
@@ -114,6 +115,7 @@ const getPlaylist = async () => {
             dub: Array<{ locale: string; name: string }>
             sub: Array<{ locale: string; name: string }>
             dir: string
+            installDir: string
             partsleft: number
             partsdownloaded: number
             downloadspeed: number
@@ -136,26 +138,17 @@ const getPlaylist = async () => {
     playlist.value = data.value
 }
 
-const deletePlaylist = async () => {
-    const { data, error } = await useFetch('http://localhost:9941/api/service/playlist', {
-        method: 'delete'
-    })
-
-    if (error.value) {
-        alert(error.value)
-        return
-    }
-
-    if (!data.value) {
-        return
-    }
-}
-
 onMounted(() => {
     getPlaylist()
 
     setInterval(getPlaylist, 1000)
 })
+
+const openFolder = (dir: string) => {
+    if (process.client) {
+        ;(window as any).myAPI.openFolder(dir)
+    }
+}
 </script>
 
 <style>

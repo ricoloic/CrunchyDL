@@ -1,6 +1,6 @@
 import * as path from 'path'
 import * as os from 'os'
-import { app, BrowserWindow, dialog, ipcMain, session } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, session, shell } from 'electron'
 import singleInstance from './singleInstance'
 import dynamicRenderer from './dynamicRenderer'
 import titleBarActionsModule from './modules/titleBarActions'
@@ -114,6 +114,10 @@ export async function messageBox(
     const response = dialog.showMessageBox(options)
     console.log(response)
 }
+
+ipcMain.handle('dialog:openFolder', async (events, dir: string) => {
+    shell.showItemInFolder(dir)
+})
 
 ipcMain.handle('dialog:openDirectory', async () => {
     const window = BrowserWindow.getFocusedWindow()

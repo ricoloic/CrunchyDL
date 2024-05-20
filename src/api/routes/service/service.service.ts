@@ -167,16 +167,18 @@ setTimeout(deletePlaylistandTMP, 500)
 export async function updatePlaylistByID(
     id: number,
     status?: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed',
-    quality?: 1080 | 720 | 480 | 360 | 240
+    quality?: 1080 | 720 | 480 | 360 | 240,
+    installedDir?: string
 ) {
     try {
-        await Playlist.update({ status: status, quality: quality }, { where: { id: id } })
+        await Playlist.update({ status: status, quality: quality, installDir: installedDir }, { where: { id: id } })
 
         server.logger.log({
             level: 'info',
             message: `Updated Playlist Item ${id}`,
             status: status || undefined,
             quality: quality || undefined,
+            installedDir: installedDir || undefined,
             timestamp: new Date().toISOString(),
             section: 'playlistItemUpdateDatabase'
         })
@@ -249,13 +251,13 @@ async function checkPlaylists() {
             if (isDownloading < 3 && e.dataValues.status === 'waiting') {
                 updatePlaylistByID(e.dataValues.id, 'preparing')
                 isDownloading++
+                server.logger.log({
+                    level: 'info',
+                    message: `Added Playlist Item ${e.dataValues.id} to Download Process`,
+                    timestamp: new Date().toISOString(),
+                    section: 'playlistCheckCron'
+                })
                 if (e.dataValues.service === 'CR') {
-                    server.logger.log({
-                        level: 'info',
-                        message: `Added Playlist Item ${e.dataValues.id} to Download Process`,
-                        timestamp: new Date().toISOString(),
-                        section: 'playlistCheckCron'
-                    })
                     downloadCrunchyrollPlaylist(
                         (e.dataValues.media as CrunchyEpisode).id,
                         (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
@@ -501,6 +503,8 @@ export async function downloadCrunchyrollPlaylist(
     const videoFolder = await createFolder()
 
     const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`, downloadPath)
+
+    await updatePlaylistByID(downloadID, undefined, undefined, seasonFolder)
 
     const drmL3blob = await settings.get('l3blob')
     const drmL3key = await settings.get('l3key')
