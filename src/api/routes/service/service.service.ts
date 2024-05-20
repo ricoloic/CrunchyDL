@@ -459,14 +459,7 @@ export async function downloadCrunchyrollPlaylist(
     if (!playlist) {
         await updatePlaylistByID(downloadID, 'failed')
         console.log('Playlist not found')
-        messageBox(
-            'error',
-            ['Cancel'],
-            2,
-            'Playlist not found',
-            'Playlist not found',
-            'Playlist not found'
-        )
+        messageBox('error', ['Cancel'], 2, 'Playlist not found', 'Playlist not found', 'Playlist not found')
         server.logger.log({
             level: 'error',
             message: `Playlist not found for Download ${downloadID}`,

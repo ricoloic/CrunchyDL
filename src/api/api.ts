@@ -6,6 +6,7 @@ import { sequelize } from './db/database'
 import serviceRoutes from './routes/service/service.route'
 import { app } from 'electron'
 import winston from 'winston'
+import { messageBox } from '../electron/background'
 
 const logger = winston.createLogger({
     level: 'info',
@@ -58,9 +59,24 @@ async function startAPI() {
     server.listen({ port: 9941 }, (err, address) => {
         if (err) {
             console.error(err)
+            messageBox('error', ['Cancel'], 2, 'Unable to start backend server', 'Unable to connect to the database', JSON.stringify(err))
+            logger.log({
+                level: 'error',
+                message: 'Unable to start backend server',
+                error: err,
+                timestamp: new Date().toISOString(),
+                section: 'backendServer'
+            })
+            app.quit();
             return
         }
         console.log(`Server is listening on ${address}`)
+        logger.log({
+            level: 'info',
+            message: `Backend started on ${address}`,
+            timestamp: new Date().toISOString(),
+            section: 'backendServer'
+        })
     })
 }
 
@@ -76,6 +92,7 @@ async function startDB() {
         })
     } catch (error) {
         console.error('Unable to connect to the database:', error)
+        messageBox('error', ['Cancel'], 2, 'Unable to connect to the database', 'Unable to connect to the database', JSON.stringify(error))
         logger.log({
             level: 'error',
             message: 'Unable to connect to the database',
@@ -83,6 +100,7 @@ async function startDB() {
             timestamp: new Date().toISOString(),
             section: 'databaseConnection'
         })
+        app.quit();
     }
 
     try {
@@ -96,6 +114,7 @@ async function startDB() {
         })
     } catch (error) {
         console.log('Failed to synchronize Models')
+        messageBox('error', ['Cancel'], 2, 'Failed to synchronize database Models', 'Failed to synchronize database Models', JSON.stringify(error))
         logger.log({
             level: 'error',
             message: 'Failed to synchronize Models',
@@ -103,6 +122,7 @@ async function startDB() {
             timestamp: new Date().toISOString(),
             section: 'databaseSync'
         })
+        app.quit();
     }
 }
 
