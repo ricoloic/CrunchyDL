@@ -43,12 +43,13 @@ export async function loginController(
         return reply.code(404).send({ message: 'Already Logged In' })
     }
 
-    var responseData
+    var response
     var responseError
+    var responseData
 
     if (params.id === 'CR') {
-        const { data, error } = await crunchyLogin(body.user, body.password, 'LOCAL')
-        ;(responseError = error), (responseData = data)
+        const login = await crunchyLogin(body.user, body.password, 'LOCAL');
+        response = login
     }
 
     if (params.id === 'ADN') {
@@ -56,7 +57,7 @@ export async function loginController(
         ;(responseError = error), (responseData = data)
     }
 
-    if (responseError || !responseData) {
+    if (responseError && !responseData && !response) {
         return reply.code(404).send({
             message: 'Invalid Email or Password'
         })

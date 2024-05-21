@@ -14,22 +14,6 @@ const crErrors = [
     }
 ]
 
-// Login Proxies
-// const proxies: { name: string; code: string; url: string; status: string | undefined }[] = [
-//     {
-//         name: 'US Proxy',
-//         code: 'US',
-//         url: 'https://us-proxy.crd.cx/',
-//         status: undefined
-//     },
-//     {
-//         name: 'UK Proxy',
-//         code: 'GB',
-//         url: 'https://uk-proxy.crd.cx/',
-//         status: undefined
-//     }
-// ]
-
 // Crunchyroll Login Handler
 export async function crunchyLogin(user: string, passw: string, geo: string) {
     const cachedData:
@@ -47,208 +31,197 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
 
     if (!cachedData) {
         if (geo === 'LOCAL') {
-            const { data, error } = await crunchyLoginFetch(user, passw)
+            const data = await crunchyLoginFetch(user, passw);
 
-            if (error) {
-                messageBox(
-                    'error',
-                    ['Cancel'],
-                    2,
-                    'Failed to login',
-                    'Failed to login to Crunchyroll',
-                    crErrors.find((r) => r.error === (error?.error as string)) ? crErrors.find((r) => r.error === (error?.error as string))?.response : (error.error as string)
-                )
-                server.logger.log({
-                    level: 'error',
-                    message: 'Failed to login to Crunchyroll',
-                    data: data,
-                    error: error,
-                    timestamp: new Date().toISOString(),
-                    section: 'loginCrunchyrollFetch'
-                })
-                return { data: null, error: error.error }
-            }
-
-            if (!data) {
-                messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned null')
-                server.logger.log({
-                    level: 'error',
-                    message: 'Failed to login to Crunchyroll',
-                    data: data,
-                    error: error,
-                    timestamp: new Date().toISOString(),
-                    section: 'loginCrunchyrollFetch'
-                })
-                return { data: null, error: 'Crunchyroll returned null' }
-            }
-
-            if (!data.access_token) {
-                messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned malformed data')
-                server.logger.log({
-                    level: 'error',
-                    message: 'Failed to login to Crunchyroll',
-                    data: data,
-                    error: error,
-                    timestamp: new Date().toISOString(),
-                    section: 'loginCrunchyrollFetch'
-                })
-                return { data: null, error: 'Crunchyroll returned malformed data' }
-            }
+            if (!data) return
 
             server.CacheController.set(`crtoken-${geo}`, data, data.expires_in - 30)
 
-            return { data: data, error: null }
+            return data
         }
 
         if (geo !== 'LOCAL') {
-            const { data, error } = await crunchyLoginFetchProxy(user, passw, geo)
+            const data = await crunchyLoginFetchProxy(user, passw, geo)
 
-            if (error) {
-                messageBox(
-                    'error',
-                    ['Cancel'],
-                    2,
-                    'Failed to login',
-                    'Failed to login to Crunchyroll',
-                    crErrors.find((r) => r.error === (error?.error as string)) ? crErrors.find((r) => r.error === (error?.error as string))?.response : (error.error as string)
-                )
-                server.logger.log({
-                    level: 'error',
-                    message: 'Failed to login to Crunchyroll',
-                    data: data,
-                    error: error,
-                    timestamp: new Date().toISOString(),
-                    section: 'loginCrunchyrollFetch'
-                })
-                return { data: null, error: error.error }
-            }
-
-            if (!data) {
-                messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned null')
-                server.logger.log({
-                    level: 'error',
-                    message: 'Failed to login to Crunchyroll',
-                    data: data,
-                    error: error,
-                    timestamp: new Date().toISOString(),
-                    section: 'loginCrunchyrollFetch'
-                })
-                return { data: null, error: 'Crunchyroll returned null' }
-            }
-
-            if (!data.access_token) {
-                messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to Crunchyroll', 'Crunchyroll returned malformed data')
-                server.logger.log({
-                    level: 'error',
-                    message: 'Failed to login to Crunchyroll',
-                    data: data,
-                    error: error,
-                    timestamp: new Date().toISOString(),
-                    section: 'loginCrunchyrollFetch'
-                })
-                return { data: null, error: 'Crunchyroll returned malformed data' }
-            }
+            if (!data) return
 
             server.CacheController.set(`crtoken-${geo}`, data, data.expires_in - 30)
 
-            return { data: data, error: null }
+            return data
         }
     }
 
-    return { data: cachedData, error: null }
+    return cachedData
 }
 
 // Crunchyroll Login Fetch Proxy
 async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) {
     const proxies = await checkProxies()
 
-    var host: string | undefined
+    var headers
+    var body
 
-    host = proxies.find((p) => p.code === geo)?.url
+    var endpoint = await settings.get('CREndpoint')
+    const drmL3blob = await settings.get('l3blob')
+    const drmL3key = await settings.get('l3key')
+    var proxy: {
+        name: string;
+        code: string;
+        url: string;
+        status: string | undefined;
+    } | undefined;
 
-    const headers = {
-        Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
+    proxy = proxies.find((p) => p.code === geo);
+
+    if (!proxy) {
+        messageBox('error', ['Cancel'], 2, 'Login Proxy not found', 'Login Proxy not found', `Login Proxy ${geo} not found`)
+        server.logger.log({
+            level: 'error',
+            message: `Login Proxy ${geo} not found`,
+            timestamp: new Date().toISOString(),
+            section: 'loginCrunchyrollFetchProxy'
+        })
+        return
     }
 
-    const body: any = {
-        username: user,
-        password: passw,
-        grant_type: 'password',
-        scope: 'offline_access',
-        device_name: 'RMX2170',
-        device_type: 'realme RMX2170'
+    if (proxy.status === 'offline') {
+        messageBox('error', ['Cancel'], 2, 'Login Proxy is offline', 'Login Proxy is offline', `Login Proxy ${geo} is offline`)
+        server.logger.log({
+            level: 'error',
+            message: `Login Proxy ${geo} is offline`,
+            timestamp: new Date().toISOString(),
+            section: 'loginCrunchyrollFetchProxy'
+        })
+        return
     }
 
-    const { data, error } = await useFetch<{
-        access_token: string
-        refresh_token: string
-        expires_in: number
-        token_type: string
-        scope: string
-        country: string
-        account_id: string
-        profile_id: string
-    }>(host + 'auth/v1/token', {
-        type: 'POST',
-        body: JSON.stringify(body),
-        header: headers,
-        credentials: 'same-origin'
-    })
+    if (endpoint !== 1 && drmL3blob && drmL3key) {
+        headers = {
+            Authorization: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M=',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Crunchyroll/4.51.0 (bundle_identifier:com.crunchyroll.iphone; build_number:3634220.454824296) iOS/17.4.1 Gravity/4.51.0'
+        }
 
-    if (error) {
-        return { data: null, error: error }
+        body = {
+            username: user,
+            password: passw,
+            grant_type: 'password',
+            scope: 'offline_access',
+            device_name: 'iPhone',
+            device_type: 'iPhone 13'
+        }
     }
 
-    if (!data) {
-        return { data: null, error: null }
-    }
+    if (!headers || !body) return
 
-    return { data: data, error: null }
+    try {
+        const response = await fetch(proxy.url + 'auth/v1/token', {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: headers,
+            credentials: 'same-origin'
+        })
+
+        if (response.ok) {
+            const data: {
+                access_token: string
+                refresh_token: string
+                expires_in: number
+                token_type: string
+                scope: string
+                country: string
+                account_id: string
+                profile_id: string
+            } = JSON.parse(await response.text())
+
+            return data
+        } else {
+            throw new Error(JSON.stringify(response))
+        }
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Failed to Login to Crunchyroll', 'Failed to Login to Crunchyroll', String(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to Login to Crunchyroll',
+            error: String(e),
+            timestamp: new Date().toISOString(),
+            section: 'loginCrunchyrollFetchProxy'
+        })
+        throw new Error(e as string)
+    }
 }
 
 async function crunchyLoginFetch(user: string, passw: string) {
-    const headers = {
-        Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
+    var headers
+    var body
+
+    var endpoint = await settings.get('CREndpoint')
+    const drmL3blob = await settings.get('l3blob')
+    const drmL3key = await settings.get('l3key')
+
+    if (!drmL3blob || !drmL3key) {
+        await settings.set('CREndpoint', 1)
+        endpoint = 1
     }
 
-    const body: any = {
-        username: user,
-        password: passw,
-        grant_type: 'password',
-        scope: 'offline_access',
-        device_name: 'RMX2170',
-        device_type: 'realme RMX2170'
+    if (endpoint !== 1 && drmL3blob && drmL3key) {
+        headers = {
+            Authorization: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M=',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Crunchyroll/4.51.0 (bundle_identifier:com.crunchyroll.iphone; build_number:3634220.454824296) iOS/17.4.1 Gravity/4.51.0'
+        }
+
+        body = {
+            username: user,
+            password: passw,
+            grant_type: 'password',
+            scope: 'offline_access',
+            device_name: 'iPhone',
+            device_type: 'iPhone 13'
+        }
     }
 
-    const { data, error } = await useFetch<{
-        access_token: string
-        refresh_token: string
-        expires_in: number
-        token_type: string
-        scope: string
-        country: string
-        account_id: string
-        profile_id: string
-    }>('https://beta-api.crunchyroll.com/auth/v1/token', {
-        type: 'POST',
-        body: new URLSearchParams(body).toString(),
-        header: headers,
-        credentials: 'same-origin'
-    })
+    if (!headers || !body) return
 
-    if (error) {
-        return { data: null, error: error }
+    try {
+        const response = await fetch('https://beta-api.crunchyroll.com/auth/v1/token', {
+            method: 'POST',
+            body: new URLSearchParams(body).toString(),
+            headers: headers,
+            credentials: 'same-origin'
+        })
+
+        if (response.ok) {
+            const data: {
+                access_token: string
+                refresh_token: string
+                expires_in: number
+                token_type: string
+                scope: string
+                country: string
+                account_id: string
+                profile_id: string
+            } = JSON.parse(await response.text())
+
+            return data
+        } else {
+            const error = {
+                status: response.status,
+                message: await response.text()
+            }
+            throw new Error(JSON.stringify(error))
+        }
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Failed to Login to Crunchyroll', 'Failed to Login to Crunchyroll',  String(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to Login to Crunchyroll',
+            error: String(e),
+            timestamp: new Date().toISOString(),
+            section: 'loginCrunchyroll Fetch'
+        })
+        throw new Error(e as string)
     }
-
-    if (!data) {
-        return { data: null, error: null }
-    }
-
-    return { data: data, error: null }
 }
 
 // Crunchyroll Playlist Fetch
@@ -347,12 +320,12 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
     if (!account) return
 
-    const { data: loginLocal, error } = await crunchyLogin(account.username, account.password, geo ? geo : 'LOCAL')
+    const login = await crunchyLogin(account.username, account.password, geo ? geo : 'LOCAL')
 
-    if (!loginLocal) return
+    if (!login) return
 
     const headersLoc = {
-        Authorization: `Bearer ${loginLocal.access_token}`,
+        Authorization: `Bearer ${login.access_token}`,
         'X-Cr-Disable-Drm': 'true'
     }
 
@@ -391,13 +364,13 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
     if (isProxyActive)
         for (const p of proxies) {
-            if (p.code !== loginLocal.country) {
-                const { data: login, error } = await crunchyLogin(account.username, account.password, p.code)
+            if (p.code !== login.country) {
+                const logindata = await crunchyLogin(account.username, account.password, p.code)
 
-                if (!login) return
+                if (!logindata) return
 
                 const headers = {
-                    Authorization: `Bearer ${login.access_token}`,
+                    Authorization: `Bearer ${logindata.access_token}`,
                     'X-Cr-Disable-Drm': 'true'
                 }
 
@@ -439,7 +412,7 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             }
         }
 
-    return { data: playlist, account_id: loginLocal.account_id }
+    return { data: playlist, account_id: login.account_id }
 }
 
 // Crunchyroll Delete Video Token Fetch
@@ -448,7 +421,7 @@ export async function deleteVideoToken(content: string, token: string) {
 
     if (!account) return
 
-    const { data: login, error } = await crunchyLogin(account.username, account.password, 'LOCAL')
+    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
 
     if (!login) return
 
@@ -479,12 +452,12 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
 
     if (!account) return
 
-    const { data } = await crunchyLogin(account.username, account.password, geo ? geo : 'LOCAL')
+    const login = await crunchyLogin(account.username, account.password, geo ? geo : 'LOCAL')
 
-    if (!data) return
+    if (!login) return
 
     const headers = {
-        Authorization: `Bearer ${data.access_token}`
+        Authorization: `Bearer ${login.access_token}`
     }
 
     try {
