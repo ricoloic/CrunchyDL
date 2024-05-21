@@ -31,7 +31,7 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
 
     if (!cachedData) {
         if (geo === 'LOCAL') {
-            const data = await crunchyLoginFetch(user, passw);
+            const data = await crunchyLoginFetch(user, passw)
 
             if (!data) return
 
@@ -64,14 +64,16 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
     var endpoint = await settings.get('CREndpoint')
     const drmL3blob = await settings.get('l3blob')
     const drmL3key = await settings.get('l3key')
-    var proxy: {
-        name: string;
-        code: string;
-        url: string;
-        status: string | undefined;
-    } | undefined;
+    var proxy:
+        | {
+              name: string
+              code: string
+              url: string
+              status: string | undefined
+          }
+        | undefined
 
-    proxy = proxies.find((p) => p.code === geo);
+    proxy = proxies.find((p) => p.code === geo)
 
     if (!proxy) {
         messageBox('error', ['Cancel'], 2, 'Login Proxy not found', 'Login Proxy not found', `Login Proxy ${geo} not found`)
@@ -212,7 +214,7 @@ async function crunchyLoginFetch(user: string, passw: string) {
             throw new Error(JSON.stringify(error))
         }
     } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Failed to Login to Crunchyroll', 'Failed to Login to Crunchyroll',  String(e))
+        messageBox('error', ['Cancel'], 2, 'Failed to Login to Crunchyroll', 'Failed to Login to Crunchyroll', String(e))
         server.logger.log({
             level: 'error',
             message: 'Failed to Login to Crunchyroll',
@@ -354,8 +356,14 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             playlist = data
         } else {
             const error = await response.text()
-
-            messageBox('error', ['Cancel'], 2, 'Failed to get MPD Playlist', 'Failed to get MPD Playlist', error)
+            messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll Video Playlist', 'Failed to get Crunchyroll Video Playlist', error)
+            server.logger.log({
+                level: 'error',
+                message: 'Failed to get Crunchyroll Video Playlist',
+                error: error,
+                timestamp: new Date().toISOString(),
+                section: 'playlistCrunchyrollFetch'
+            })
             throw new Error(error)
         }
     } catch (e) {
@@ -438,10 +446,18 @@ export async function deleteVideoToken(content: string, token: string) {
         if (response.ok) {
             return 'ok'
         } else {
+            const error = await response.text()
+            messageBox('error', ['Cancel'], 2, 'Failed to delete Crunchyroll Video Token', 'Failed to delete Crunchyroll Video Token', error)
+            server.logger.log({
+                level: 'error',
+                message: 'Failed to delete Crunchyroll Video Token',
+                error: error,
+                timestamp: new Date().toISOString(),
+                section: 'tokenDeletionCrunchyrollFetch'
+            })
             throw new Error(await response.text())
         }
     } catch (e) {
-        console.log('Delete token failed')
         throw new Error(e as string)
     }
 }
@@ -473,6 +489,15 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
 
             return parsed
         } else {
+            const error = await response.text()
+            messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll MPD', 'Failed to get Crunchyroll MPD', error)
+            server.logger.log({
+                level: 'error',
+                message: 'Failed to get Crunchyroll MPD',
+                error: error,
+                timestamp: new Date().toISOString(),
+                section: 'mpdCrunchyrollFetch'
+            })
             throw new Error(await response.text())
         }
     } catch (e) {
