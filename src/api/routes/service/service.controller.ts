@@ -48,7 +48,7 @@ export async function loginController(
     var responseData
 
     if (params.id === 'CR') {
-        const login = await crunchyLogin(body.user, body.password, 'LOCAL');
+        const login = await crunchyLogin(body.user, body.password, 'LOCAL')
         response = login
     }
 

@@ -109,7 +109,7 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
     if (endpoint !== 1 && drmL3blob && drmL3key) {
         headers = {
             Authorization: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M=',
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/json',
             'User-Agent': 'Crunchyroll/4.51.0 (bundle_identifier:com.crunchyroll.iphone; build_number:3634220.454824296) iOS/17.4.1 Gravity/4.51.0'
         }
 
@@ -119,15 +119,17 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
             grant_type: 'password',
             scope: 'offline_access',
             device_name: 'iPhone',
-            device_type: 'iPhone 13'
+            device_type: 'iPhone 13',
+            ursa: 'Crunchyroll/4.51.0 (bundle_identifier:com.crunchyroll.iphone; build_number:3634220.454824296) iOS/17.4.1 Gravity/4.51.0',
+            token: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M='
         }
     }
 
     if (endpoint === 1) {
         headers = {
             Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
+            'Content-Type': 'application/json',
+            'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
         }
 
         body = {
@@ -136,7 +138,9 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
             grant_type: 'password',
             scope: 'offline_access',
             device_name: 'RMX2170',
-            device_type: 'realme RMX2170'
+            device_type: 'realme RMX2170',
+            ursa: 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
+            token: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4='
         }
     }
 
@@ -164,6 +168,7 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
 
             return data
         } else {
+            console.log(response)
             throw new Error(JSON.stringify(response))
         }
     } catch (e) {
@@ -192,19 +197,38 @@ async function crunchyLoginFetch(user: string, passw: string) {
         endpoint = 1
     }
 
-    headers = {
-        Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
+    if (endpoint !== 1 && drmL3blob && drmL3key) {
+        headers = {
+            Authorization: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M=',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Crunchyroll/4.51.0 (bundle_identifier:com.crunchyroll.iphone; build_number:3634220.454824296) iOS/17.4.1 Gravity/4.51.0'
+        }
+
+        body = {
+            username: user,
+            password: passw,
+            grant_type: 'password',
+            scope: 'offline_access',
+            device_name: 'iPhone',
+            device_type: 'iPhone 13'
+        }
     }
 
-    body = {
-        username: user,
-        password: passw,
-        grant_type: 'password',
-        scope: 'offline_access',
-        device_name: 'RMX2170',
-        device_type: 'realme RMX2170'
+    if (endpoint === 1) {
+        headers = {
+            Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
+        }
+
+        body = {
+            username: user,
+            password: passw,
+            grant_type: 'password',
+            scope: 'offline_access',
+            device_name: 'RMX2170',
+            device_type: 'realme RMX2170'
+        }
     }
 
     if (!headers || !body) return
@@ -384,17 +408,17 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             const error = await response.text()
             const errorJSON: {
                 activeStreams: {
-                    accountId: string,
-                    active: boolean,
-                    assetId: string,
-                    clientId: string,
-                    contentId: string,
-                    country: string,
-                    createdTimestamp: string,
-                    deviceSubtype: string,
-                    deviceType: string,
-                    episodeIdentity: string,
-                    id: string,
+                    accountId: string
+                    active: boolean
+                    assetId: string
+                    clientId: string
+                    contentId: string
+                    country: string
+                    createdTimestamp: string
+                    deviceSubtype: string
+                    deviceType: string
+                    episodeIdentity: string
+                    id: string
                     token: string
                 }[]
             } = await JSON.parse(error)

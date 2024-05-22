@@ -67,7 +67,7 @@ async function startAPI() {
                 timestamp: new Date().toISOString(),
                 section: 'backendServer'
             })
-            app.quit();
+            app.quit()
             return
         }
         console.log(`Server is listening on ${address}`)
@@ -100,7 +100,7 @@ async function startDB() {
             timestamp: new Date().toISOString(),
             section: 'databaseConnection'
         })
-        app.quit();
+        app.quit()
     }
 
     try {
@@ -122,7 +122,7 @@ async function startDB() {
             timestamp: new Date().toISOString(),
             section: 'databaseSync'
         })
-        app.quit();
+        app.quit()
     }
 }
 

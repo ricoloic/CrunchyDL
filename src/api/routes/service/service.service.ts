@@ -116,7 +116,6 @@ export async function getPlaylist() {
 
         return episodes
     } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to get Playlist', JSON.stringify(e))
         server.logger.log({
             level: 'error',
             message: 'Failed to get Playlist',
@@ -150,7 +149,6 @@ async function deletePlaylistandTMP() {
             section: 'playlistClearDatabase'
         })
     } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to delete Playlist and tmp folders', JSON.stringify(e))
         server.logger.log({
             level: 'error',
             message: 'Failed to delete Playlist and tmp folders',
@@ -291,7 +289,6 @@ async function checkPlaylists() {
             }
         }
     } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed check Playlist', JSON.stringify(e))
         server.logger.log({
             level: 'error',
             message: 'Failed check Playlist',
