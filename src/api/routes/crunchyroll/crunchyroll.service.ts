@@ -16,6 +16,17 @@ const crErrors = [
 
 // Crunchyroll Login Handler
 export async function crunchyLogin(user: string, passw: string, geo: string) {
+
+    var endpoint = await settings.get('CREndpoint')
+    const drmL3blob = await settings.get('l3blob')
+    const drmL3key = await settings.get('l3key')
+
+    if (!drmL3blob || !drmL3key) {
+        await settings.set('CREndpoint', 1)
+        endpoint = 1
+    }
+
+
     const cachedData:
         | {
               access_token: string
@@ -27,7 +38,7 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
               account_id: string
               profile_id: string
           }
-        | undefined = server.CacheController.get(`crtoken-${geo}`)
+        | undefined = server.CacheController.get(`crtoken-${geo}-${endpoint}`)
 
     if (!cachedData) {
         if (geo === 'LOCAL') {
@@ -35,7 +46,7 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
 
             if (!data) return
 
-            server.CacheController.set(`crtoken-${geo}`, data, data.expires_in - 30)
+            server.CacheController.set(`crtoken-${geo}-${endpoint}`, data, data.expires_in - 30)
 
             return data
         }
@@ -45,7 +56,7 @@ export async function crunchyLogin(user: string, passw: string, geo: string) {
 
             if (!data) return
 
-            server.CacheController.set(`crtoken-${geo}`, data, data.expires_in - 30)
+            server.CacheController.set(`crtoken-${geo}-${endpoint}`, data, data.expires_in - 30)
 
             return data
         }
@@ -111,6 +122,23 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
             scope: 'offline_access',
             device_name: 'iPhone',
             device_type: 'iPhone 13'
+        }
+    }
+
+    if (endpoint === 1) {
+        headers = {
+            Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
+        }
+
+        body = {
+            username: user,
+            password: passw,
+            grant_type: 'password',
+            scope: 'offline_access',
+            device_name: 'RMX2170',
+            device_type: 'realme RMX2170'
         }
     }
 
@@ -180,6 +208,23 @@ async function crunchyLoginFetch(user: string, passw: string) {
             scope: 'offline_access',
             device_name: 'iPhone',
             device_type: 'iPhone 13'
+        }
+    }
+
+    if (endpoint === 1) {
+        headers = {
+            Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
+        }
+
+        body = {
+            username: user,
+            password: passw,
+            grant_type: 'password',
+            scope: 'offline_access',
+            device_name: 'RMX2170',
+            device_type: 'realme RMX2170'
         }
     }
 
@@ -328,7 +373,8 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
     const headersLoc = {
         Authorization: `Bearer ${login.access_token}`,
-        'X-Cr-Disable-Drm': 'true'
+        'X-Cr-Disable-Drm': 'true',
+        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
     }
 
     var playlist: VideoPlaylist
@@ -379,7 +425,8 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
                 const headers = {
                     Authorization: `Bearer ${logindata.access_token}`,
-                    'X-Cr-Disable-Drm': 'true'
+                    'X-Cr-Disable-Drm': 'true',
+                    'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
                 }
 
                 const response = await fetch(
@@ -434,7 +481,8 @@ export async function deleteVideoToken(content: string, token: string) {
     if (!login) return
 
     const headers = {
-        Authorization: `Bearer ${login.access_token}`
+        Authorization: `Bearer ${login.access_token}`,
+        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
     }
 
     try {
@@ -473,7 +521,8 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
     if (!login) return
 
     const headers = {
-        Authorization: `Bearer ${login.access_token}`
+        Authorization: `Bearer ${login.access_token}`,
+        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
     }
 
     try {
