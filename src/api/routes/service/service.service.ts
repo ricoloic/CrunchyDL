@@ -500,8 +500,8 @@ export async function downloadCrunchyrollPlaylist(
             if (found) {
                 await deleteVideoToken(episodeID, playlist.data.token)
                 decrementPlaylistCounter();
-                playlist = await crunchyGetPlaylist(found.guid, found.geo)
                 await incrementPlaylistCounter();
+                playlist = await crunchyGetPlaylist(found.guid, found.geo)
             } else {
                 console.log('Exact Playlist not found, taking what crunchy gives.')
                 messageBox(
