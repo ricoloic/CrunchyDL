@@ -41,6 +41,8 @@ export async function searchCrunchy(q: string) {
                 const { data: tokeng, error: tokenerrorg } = await crunchyLogin(p.code)
 
                 if (!tokeng.value) {
+                    console.log(p.code)
+                    console.log(tokenerrorg)
                     return
                 }
 

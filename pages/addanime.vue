@@ -527,10 +527,14 @@ onMounted(() => {
     ;(window as any).myAPI.getFolder().then((result: any) => {
         path.value = result
     })
-    ;(window as any).myAPI.getArray('defdubarray').then((result: any) => {
+    ;(window as any).myAPI.getArray('defdubarray').then((result: string) => {
+        if (!result || result.length === 0) return
+
         dubLocales.value = JSON.parse(result)
     })
-    ;(window as any).myAPI.getArray('defsubarray').then((result: any) => {
+    ;(window as any).myAPI.getArray('defsubarray').then((result: string) => {
+        if (!result || result.length === 0) return
+
         subLocales.value = JSON.parse(result)
     })
 })

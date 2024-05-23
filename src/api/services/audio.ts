@@ -75,7 +75,6 @@ export async function downloadMPDAudio(
 
 async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number, downloadID: number, name: string) {
     try {
-
         const dn = downloading.find((i) => i.id === downloadID && i.audio === name)
 
         const response = await fetch(url)

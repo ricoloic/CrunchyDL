@@ -77,6 +77,16 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
     var endpoint = await settings.get('CREndpoint')
     const drmL3blob = await settings.has('l3blob')
     const drmL3key = await settings.has('l3key')
+
+    if (!drmL3blob || !drmL3key) {
+        endpoint = 1
+    }
+
+    if (!endpoint) {
+        await settings.set('CREndpoint', 1)
+        endpoint = 1
+    }
+
     var proxy:
         | {
               name: string
