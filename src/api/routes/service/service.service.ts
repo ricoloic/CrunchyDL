@@ -164,7 +164,7 @@ deletePlaylistandTMP();
 // Update Playlist Item
 export async function updatePlaylistByID(
     id: number,
-    status?: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed',
+    status?: 'waiting' | 'preparing' | 'waiting for playlist' | 'waiting for sub playlist' | 'waiting for dub playlist' | 'downloading' | 'merging video' | 'decrypting video' | 'awaiting all dubs downloaded' | 'merging video & audio' | 'completed' | 'failed',
     quality?: 1080 | 720 | 480 | 360 | 240,
     installedDir?: string
 ) {
@@ -199,7 +199,7 @@ export async function addEpisodeToPlaylist(
     d: Array<string>,
     dir: string,
     hardsub: boolean,
-    status: 'waiting' | 'preparing' | 'downloading' | 'merging' | 'decrypting' | 'completed' | 'failed',
+    status: 'waiting' | 'preparing' | 'waiting for playlist' | 'waiting for sub playlist' | 'waiting for dub playlist' | 'downloading' | 'merging video' | 'decrypting video' | 'awaiting all dubs downloaded' | 'merging video & audio' | 'completed' | 'failed',
     quality: 1080 | 720 | 480 | 360 | 240,
     service: 'CR' | 'ADN',
     format: 'mp4' | 'mkv'
@@ -222,6 +222,7 @@ export async function addEpisodeToPlaylist(
 // Define Downloading Array
 var downloading: Array<{
     id: number
+    status: string
     downloadedParts: number
     partsToDownload: number
     downloadSpeed: number
@@ -318,6 +319,7 @@ export async function downloadADNPlaylist(
 ) {
     downloading.push({
         id: downloadID,
+        status: 'downloading',
         downloadedParts: 0,
         partsToDownload: 0,
         downloadSpeed: 0,
@@ -462,13 +464,6 @@ export async function downloadCrunchyrollPlaylist(
     format: 'mp4' | 'mkv',
     geo: string | undefined
 ) {
-    downloading.push({
-        id: downloadID,
-        downloadedParts: 0,
-        partsToDownload: 0,
-        downloadSpeed: 0,
-        totalDownloaded: 0
-    })
 
     const accmaxstream = await checkAccountMaxStreams();
 
@@ -476,7 +471,7 @@ export async function downloadCrunchyrollPlaylist(
        maxLimit = accmaxstream
     }
 
-    await updatePlaylistByID(downloadID, 'downloading')
+    await updatePlaylistByID(downloadID, 'waiting for playlist')
 
     await incrementPlaylistCounter();
     var playlist = await crunchyGetPlaylist(e, geo)
@@ -562,6 +557,8 @@ export async function downloadCrunchyrollPlaylist(
         isDub: boolean
     }> = []
 
+    await updatePlaylistByID(downloadID, 'waiting for sub playlist')
+
     for (const s of subs) {
         var subPlaylist
 
@@ -611,6 +608,8 @@ export async function downloadCrunchyrollPlaylist(
         await deleteVideoToken(episodeID, subPlaylist.data.token)
         decrementPlaylistCounter()
     }
+
+    await updatePlaylistByID(downloadID, 'waiting for dub playlist')
 
     for (const d of dubs) {
         var found
@@ -664,6 +663,8 @@ export async function downloadCrunchyrollPlaylist(
             dubDownloadList.push(jpVersion)
         }
     }
+
+    await updatePlaylistByID(downloadID, 'downloading')
 
     const subDownload = async () => {
         const sbs: Array<string> = []
@@ -756,7 +757,7 @@ export async function downloadCrunchyrollPlaylist(
                 })
             }
 
-            const path = await downloadMPDAudio(p, audioFolder, list.data.audioLocale, keys ? keys : undefined)
+            const path = await downloadMPDAudio(p, audioFolder, list.data.audioLocale, downloadID, keys ? keys : undefined)
 
             audios.push(path as string)
         }
@@ -764,6 +765,16 @@ export async function downloadCrunchyrollPlaylist(
     }
 
     const downloadVideo = async () => {
+
+        downloading.push({
+            id: downloadID,
+            status: 'Waiting for Playlist',
+            downloadedParts: 0,
+            partsToDownload: 0,
+            downloadSpeed: 0,
+            totalDownloaded: 0
+        })
+
         var code
 
         if (!playlist) return
@@ -949,6 +960,8 @@ export async function downloadCrunchyrollPlaylist(
 
         const file = await downloadParts(p, downloadID, videoFolder, keys ? keys : undefined)
 
+        await updatePlaylistByID(downloadID, 'awaiting all dubs downloaded')
+
         return file
     }
 
@@ -956,6 +969,7 @@ export async function downloadCrunchyrollPlaylist(
 
     if (!audios) return
 
+    await updatePlaylistByID(downloadID, 'merging video & audio')
     await mergeVideoFile(file as string, audios, subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format, downloadID)
 
     await updatePlaylistByID(downloadID, 'completed')
@@ -1039,7 +1053,7 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
     try {
         const list: Array<string> = []
 
-        await updatePlaylistByID(downloadID, 'merging')
+        await updatePlaylistByID(downloadID, 'merging video')
         isDownloading--
 
         for (const [index, part] of parts.entries()) {
@@ -1057,7 +1071,7 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
         await concatenateTSFiles(list, concatenatedFile)
 
         if (drmkeys) {
-            await updatePlaylistByID(downloadID, 'decrypting')
+            await updatePlaylistByID(downloadID, 'decrypting video')
             console.log('Video Decryption started')
             const inputFilePath = `${tmp}/temp-main.m4s`
             const outputFilePath = `${tmp}/main.m4s`

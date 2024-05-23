@@ -8,10 +8,38 @@ import { getMP4DecryptPath } from '../services/mp4decrypt'
 const ffmpegP = getFFMPEGPath()
 const mp4e = getMP4DecryptPath()
 import util from 'util'
+import { server } from '../api'
 const exec = util.promisify(require('child_process').exec)
 
-export async function downloadMPDAudio(parts: { filename: string; url: string }[], dir: string, name: string, drmkeys?: { kid: string; key: string }[] | undefined) {
+// Define Downloading Array
+var downloading: Array<{
+    id: number
+    status: string
+    audio: string
+}> = []
+
+export async function getDownloadingAudio(id: number) {
+    const found = downloading.filter((i) => i.id === id)
+
+    if (found) return found
+
+    return null
+}
+
+export async function downloadMPDAudio(
+    parts: { filename: string; url: string }[],
+    dir: string,
+    name: string,
+    downloadID: number,
+    drmkeys?: { kid: string; key: string }[] | undefined
+) {
     const path = await createFolder()
+
+    downloading.push({
+        id: downloadID,
+        status: `downloading`,
+        audio: name
+    })
 
     const maxParallelDownloads = 5
     const downloadPromises = []
@@ -42,27 +70,89 @@ export async function downloadMPDAudio(parts: { filename: string; url: string }[
         }
     }
 
-    return await mergePartsAudio(parts, path, dir, name, drmkeys)
+    return await mergePartsAudio(parts, path, dir, name, downloadID, drmkeys)
 }
 
 async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number) {
-    const { body } = await fetch(url)
-    const readableStream = Readable.from(body as any)
+    try {
+        const response = await fetch(url)
 
-    return new Promise<void>((resolve, reject) => {
-        readableStream
-            .pipe(stream)
-            .on('finish', () => {
-                console.log(`Fragment ${index} downloaded`)
-                resolve()
+        // Check if fetch was successful
+        if (!response.ok) {
+            server.logger.log({
+                level: 'error',
+                message: 'Error while downloading an Audio Fragment',
+                fragment: index,
+                error: await response.text(),
+                timestamp: new Date().toISOString(),
+                section: 'audiofragmentCrunchyrollFetch'
             })
-            .on('error', (error) => {
-                reject(error)
+            throw new Error(`Failed to fetch URL: ${response.statusText}`)
+        }
+
+        const body = response.body
+
+        // Check if the body exists and is readable
+        if (!body) {
+            server.logger.log({
+                level: 'error',
+                message: 'Error while downloading an Audio Fragment',
+                fragment: index,
+                error: 'Response body is not a readable stream',
+                timestamp: new Date().toISOString(),
+                section: 'audiofragmentCrunchyrollFetch'
             })
-    })
+            throw new Error('Response body is not a readable stream')
+        }
+
+        const readableStream = Readable.from(body as any)
+
+        return new Promise<void>((resolve, reject) => {
+            readableStream
+                .pipe(stream)
+                .on('finish', () => {
+                    console.log(`Fragment ${index} downloaded`)
+                    resolve()
+                })
+                .on('error', (error) => {
+                    server.logger.log({
+                        level: 'error',
+                        message: 'Error while downloading an Audio Fragment',
+                        fragment: index,
+                        error: error,
+                        timestamp: new Date().toISOString(),
+                        section: 'audiofragmentCrunchyrollFetch'
+                    })
+                    reject(error)
+                })
+        })
+    } catch (error) {
+        server.logger.log({
+            level: 'error',
+            message: 'Error while downloading an Audio Fragment',
+            fragment: index,
+            error: error,
+            timestamp: new Date().toISOString(),
+            section: 'audiofragmentCrunchyrollFetch'
+        })
+        throw error
+    }
 }
 
-async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: string, dir: string, name: string, drmkeys?: { kid: string; key: string }[] | undefined) {
+async function mergePartsAudio(
+    parts: { filename: string; url: string }[],
+    tmp: string,
+    dir: string,
+    name: string,
+    downloadID: number,
+    drmkeys?: { kid: string; key: string }[] | undefined
+) {
+    const dn = downloading.find((i) => i.id === downloadID && i.audio === name)
+
+    if (dn) {
+        dn.status = 'merging'
+    }
+
     try {
         const list: Array<string> = []
 
@@ -81,6 +171,9 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
         await concatenateTSFiles(list, concatenatedFile)
 
         if (drmkeys) {
+            if (dn) {
+                dn.status = 'decrypting'
+            }
             console.log(`Audio Decryption started`)
             const inputFilePath = `${tmp}/temp-main.m4s`
             const outputFilePath = `${tmp}/main.m4s`
@@ -104,6 +197,10 @@ async function mergePartsAudio(parts: { filename: string; url: string }[], tmp: 
                 .on('end', async () => {
                     console.log('Merging finished')
                     await deleteFolder(tmp)
+
+                    if (dn) {
+                        dn.status = 'finished'
+                    }
 
                     return resolve(`${dir}/${name}.aac`)
                 })

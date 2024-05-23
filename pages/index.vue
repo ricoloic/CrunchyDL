@@ -18,33 +18,70 @@
                     <div class="flex flex-col w-full">
                         <div class="flex flex-row h-full">
                             <div class="flex flex-col">
-                                <div v-if="p.status === 'failed'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#863232] rounded-lg">
-                                    <Icon name="bitcoin-icons:cross-filled" class="h-3.5 w-3.5 text-white" />
-                                    {{ p.status }}
-                                </div>
-                                <div v-if="p.status === 'waiting'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
-                                    <Icon name="mdi:clock" class="h-3.5 w-3.5 text-white" />
-                                    {{ p.status }}
-                                </div>
-                                <div v-if="p.status === 'preparing'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
-                                    <Icon name="mdi:clock" class="h-3.5 w-3.5 text-white" />
-                                    {{ p.status }}
-                                </div>
-                                <div v-if="p.status === 'downloading'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#60501b] rounded-lg">
-                                    <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
-                                    {{ p.status }}
-                                </div>
-                                <div v-if="p.status === 'merging'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
-                                    <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
-                                    {{ p.status }}
-                                </div>
-                                <div v-if="p.status === 'decrypting'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
-                                    <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
-                                    {{ p.status }}
-                                </div>
-                                <div v-if="p.status === 'completed'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#266326] rounded-lg">
-                                    <Icon name="material-symbols:check" class="h-3.5 w-3.5 text-white" />
-                                    {{ p.status }}
+                                <div class="flex flex-row">
+                                    <div v-if="p.status === 'failed'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#863232] rounded-lg">
+                                        <Icon name="bitcoin-icons:cross-filled" class="h-3.5 w-3.5 text-white" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-if="p.status === 'waiting'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                        <Icon name="mdi:clock" class="h-3.5 w-3.5 text-white" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-if="p.status === 'preparing'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                        <Icon name="mdi:clock" class="h-3.5 w-3.5 text-white" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div
+                                        v-if="p.status === 'waiting for playlist'"
+                                        class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
+                                    >
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div
+                                        v-if="p.status === 'waiting for sub playlist'"
+                                        class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
+                                    >
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div
+                                        v-if="p.status === 'waiting for dub playlist'"
+                                        class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
+                                    >
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-if="p.status === 'downloading'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#60501b] rounded-lg">
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-if="p.status === 'merging video'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-if="p.status === 'decrypting video'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-if="p.status === 'awaiting all dubs downloaded'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-if="p.status === 'merging video & audio'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-if="p.status === 'completed'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#266326] rounded-lg">
+                                        <Icon name="material-symbols:check" class="h-3.5 w-3.5 text-white" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div v-for="a in p.audiosdownloading">
+                                        <div v-if="a.status && a.audio && a.status !== 'finished'" class="ml-2 flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ a.status }} Audio {{ a.audio }}
+                                    </div>
+                                    </div>
                                 </div>
                             </div>
                             <div class="text-xs capitalize ml-auto">
@@ -63,7 +100,7 @@
                             <div class="text-xs">{{ p.quality }}p</div>
                             <div class="text-xs uppercase">{{ p.format }}</div>
                             <div class="text-xs">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
-                            <div class="text-xs mr-14">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
+                            <div class="text-xs mr-20">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
                             <div class="absolute flex flex-col ml-auto gap-0.5 right-0 bottom-0">
                                 <div v-if="p.totaldownloaded && p.status === 'downloading'" class="text-xs ml-auto"
                                     >{{ (p.totaldownloaded / Math.pow(1024, 2)).toFixed(2) }} MB</div
@@ -103,6 +140,10 @@ const playlist = ref<
         quality: number
         service: string
         format: string
+        audiosdownloading: {
+                status: string,
+                audio: string
+            }[]
     }>
 >()
 
@@ -123,6 +164,10 @@ const getPlaylist = async () => {
             quality: number
             service: string
             format: string
+            audiosdownloading: {
+                status: string,
+                audio: string
+            }[]
         }>
     >('http://localhost:9941/api/service/playlist')
 

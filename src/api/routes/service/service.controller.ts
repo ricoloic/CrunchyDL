@@ -4,6 +4,7 @@ import { addEpisodeToPlaylist, deleteAccountID, getAllAccounts, getDownloading, 
 import { CrunchyEpisodes } from '../../types/crunchyroll'
 import { adnLogin } from '../adn/adn.service'
 import { server } from '../../api'
+import { getDownloadingAudio } from '../../services/audio'
 
 export async function checkLoginController(
     request: FastifyRequest<{
@@ -121,8 +122,9 @@ export async function getPlaylistController(request: FastifyRequest, reply: Fast
     if (!playlist) return
 
     for (const v of playlist) {
-        if (v.dataValues.status === 'downloading') {
+        if (v.dataValues.status !== 'completed') {
             const found = await getDownloading(v.dataValues.id)
+            const foundAudio = await getDownloadingAudio(v.dataValues.id)
             if (found) {
                 ;(v as any).dataValues = {
                     ...v.dataValues,
@@ -130,6 +132,12 @@ export async function getPlaylistController(request: FastifyRequest, reply: Fast
                     partsdownloaded: found.downloadedParts,
                     downloadspeed: found.downloadSpeed.toFixed(2),
                     totaldownloaded: found.totalDownloaded
+                }
+            }
+            if (foundAudio) {
+                ;(v as any).dataValues = {
+                    ...v.dataValues,
+                    audiosdownloading: foundAudio
                 }
             }
         }
