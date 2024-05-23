@@ -56,19 +56,35 @@
                                         <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                         {{ p.status }}
                                     </div>
-                                    <div v-if="p.status === 'merging video'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                    <div v-if="p.status === 'downloading video'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#60501b] rounded-lg">
                                         <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                         {{ p.status }}
                                     </div>
-                                    <div v-if="p.status === 'decrypting video'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                    <div
+                                        v-if="p.status === 'merging video'"
+                                        class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
+                                    >
                                         <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                         {{ p.status }}
                                     </div>
-                                    <div v-if="p.status === 'awaiting all dubs downloaded'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                    <div
+                                        v-if="p.status === 'decrypting video'"
+                                        class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
+                                    >
                                         <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                         {{ p.status }}
                                     </div>
-                                    <div v-if="p.status === 'merging video & audio'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
+                                    <div
+                                        v-if="p.status === 'awaiting all dubs downloaded'"
+                                        class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
+                                    >
+                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                        {{ p.status }}
+                                    </div>
+                                    <div
+                                        v-if="p.status === 'merging video & audio'"
+                                        class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
+                                    >
                                         <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                         {{ p.status }}
                                     </div>
@@ -77,10 +93,13 @@
                                         {{ p.status }}
                                     </div>
                                     <div v-for="a in p.audiosdownloading">
-                                        <div v-if="a.status && a.audio && a.status !== 'finished'" class="ml-2 flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg">
-                                        <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
-                                        {{ a.status }} Audio {{ a.audio }}
-                                    </div>
+                                        <div
+                                            v-if="a.status && a.audio && a.status !== 'finished'"
+                                            class="ml-2 flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
+                                        >
+                                            <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                            {{ a.status }} Audio {{ a.audio }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -141,9 +160,9 @@ const playlist = ref<
         service: string
         format: string
         audiosdownloading: {
-                status: string,
-                audio: string
-            }[]
+            status: string
+            audio: string
+        }[]
     }>
 >()
 
@@ -165,7 +184,7 @@ const getPlaylist = async () => {
             service: string
             format: string
             audiosdownloading: {
-                status: string,
+                status: string
                 audio: string
             }[]
         }>

@@ -29,7 +29,20 @@ interface AccountCreateAttributes {
 
 interface PlaylistAttributes {
     id: number
-    status: 'waiting' | 'preparing' | 'waiting for playlist' | 'waiting for sub playlist' | 'waiting for dub playlist' | 'downloading' | 'merging video' | 'decrypting video' | 'awaiting all dubs downloaded' | 'merging video & audio' | 'completed' | 'failed'
+    status:
+        | 'waiting'
+        | 'preparing'
+        | 'waiting for playlist'
+        | 'waiting for sub playlist'
+        | 'waiting for dub playlist'
+        | 'downloading'
+        | 'downloading video'
+        | 'merging video'
+        | 'decrypting video'
+        | 'awaiting all dubs downloaded'
+        | 'merging video & audio'
+        | 'completed'
+        | 'failed'
     media: CrunchyEpisode | ADNEpisode
     dub: Array<string>
     sub: Array<string>
@@ -49,7 +62,20 @@ interface PlaylistCreateAttributes {
     dir: string
     quality: 1080 | 720 | 480 | 360 | 240
     hardsub: boolean
-    status: 'waiting' | 'preparing' | 'waiting for playlist' | 'waiting for sub playlist' | 'waiting for dub playlist' | 'downloading' | 'merging video' | 'decrypting video' | 'awaiting all dubs downloaded' | 'merging video & audio' | 'completed' | 'failed'
+    status:
+        | 'waiting'
+        | 'preparing'
+        | 'waiting for playlist'
+        | 'waiting for sub playlist'
+        | 'waiting for dub playlist'
+        | 'downloading'
+        | 'downloading video'
+        | 'merging video'
+        | 'decrypting video'
+        | 'awaiting all dubs downloaded'
+        | 'merging video & audio'
+        | 'completed'
+        | 'failed'
     service: 'CR' | 'ADN'
     format: 'mp4' | 'mkv'
 }

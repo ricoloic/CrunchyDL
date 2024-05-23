@@ -17,10 +17,14 @@ const crErrors = [
 // Crunchyroll Login Handler
 export async function crunchyLogin(user: string, passw: string, geo: string) {
     var endpoint = await settings.get('CREndpoint')
-    const drmL3blob = await settings.get('l3blob')
-    const drmL3key = await settings.get('l3key')
+    const drmL3blob = await settings.has('l3blob')
+    const drmL3key = await settings.has('l3key')
 
     if (!drmL3blob || !drmL3key) {
+        endpoint = 1
+    }
+
+    if (!endpoint) {
         await settings.set('CREndpoint', 1)
         endpoint = 1
     }
@@ -71,8 +75,8 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
     var body
 
     var endpoint = await settings.get('CREndpoint')
-    const drmL3blob = await settings.get('l3blob')
-    const drmL3key = await settings.get('l3key')
+    const drmL3blob = await settings.has('l3blob')
+    const drmL3key = await settings.has('l3key')
     var proxy:
         | {
               name: string
@@ -189,10 +193,14 @@ async function crunchyLoginFetch(user: string, passw: string) {
     var body
 
     var endpoint = await settings.get('CREndpoint')
-    const drmL3blob = await settings.get('l3blob')
-    const drmL3key = await settings.get('l3key')
+    const drmL3blob = await settings.has('l3blob')
+    const drmL3key = await settings.has('l3key')
 
     if (!drmL3blob || !drmL3key) {
+        endpoint = 1
+    }
+
+    if (!endpoint) {
         await settings.set('CREndpoint', 1)
         endpoint = 1
     }
@@ -274,6 +282,27 @@ async function crunchyLoginFetch(user: string, passw: string) {
     }
 }
 
+let counter = 0
+var maxLimit = 0
+
+async function incrementPlaylistCounter() {
+    return new Promise<void>((resolve) => {
+        const interval = setInterval(() => {
+            if (counter < maxLimit) {
+                counter++
+                clearInterval(interval)
+                resolve()
+            }
+        }, 100)
+    })
+}
+
+function decrementPlaylistCounter() {
+    if (counter > 0) {
+        counter--
+    }
+}
+
 // Crunchyroll Playlist Fetch
 export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
     const isProxyActive = await settings.get('proxyActive')
@@ -290,10 +319,14 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
     }
 
     var endpoint = await settings.get('CREndpoint')
-    const drmL3blob = await settings.get('l3blob')
-    const drmL3key = await settings.get('l3key')
+    const drmL3blob = await settings.has('l3blob')
+    const drmL3key = await settings.has('l3key')
 
     if (!drmL3blob || !drmL3key) {
+        endpoint = 1
+    }
+
+    if (!endpoint) {
         await settings.set('CREndpoint', 1)
         endpoint = 1
     }
@@ -383,6 +416,12 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
     var playlist: VideoPlaylist
 
+    if (maxLimit === 0) {
+        maxLimit = await checkAccountMaxStreams()
+    }
+
+    await incrementPlaylistCounter()
+
     try {
         const response = await fetch(
             `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
@@ -406,44 +445,12 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             playlist = data
         } else {
             const error = await response.text()
-            const errorJSON: {
-                activeStreams: {
-                    accountId: string
-                    active: boolean
-                    assetId: string
-                    clientId: string
-                    contentId: string
-                    country: string
-                    createdTimestamp: string
-                    deviceSubtype: string
-                    deviceType: string
-                    episodeIdentity: string
-                    id: string
-                    token: string
-                }[]
-            } = await JSON.parse(error)
-
-            if (errorJSON && errorJSON.activeStreams && errorJSON.activeStreams.length !== 0) {
-                for (const e of errorJSON.activeStreams) {
-                    await deleteVideoToken(e.contentId, e.token)
-                }
-
-                server.logger.log({
-                    level: 'error',
-                    message: 'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
-                    error: errorJSON,
-                    timestamp: new Date().toISOString(),
-                    section: 'playlistCrunchyrollFetch'
-                })
-
-                return await crunchyGetPlaylist(q, geo)
-            }
 
             messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll Video Playlist', 'Failed to get Crunchyroll Video Playlist', error)
             server.logger.log({
                 level: 'error',
                 message: 'Failed to get Crunchyroll Video Playlist',
-                error: errorJSON,
+                error: error,
                 timestamp: new Date().toISOString(),
                 section: 'playlistCrunchyrollFetch'
             })
@@ -465,6 +472,8 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
                     'X-Cr-Disable-Drm': 'true',
                     'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
                 }
+
+                await incrementPlaylistCounter()
 
                 const responseProx = await fetch(
                     `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
@@ -502,6 +511,8 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
                     }
 
                     await deleteVideoToken(q, dataProx.token)
+                } else {
+                    decrementPlaylistCounter();
                 }
             }
         }
@@ -536,6 +547,9 @@ export async function deleteVideoToken(content: string, token: string) {
             timestamp: new Date().toISOString(),
             section: 'tokenDeletionCrunchyrollFetch'
         })
+
+        decrementPlaylistCounter()
+
         return 'ok'
     } else {
         const error = await response.text()
@@ -605,7 +619,7 @@ export async function getAccountInfo() {
     if (!login) return
 
     const headers = {
-        Authorization: `Bearer ${login.access_token}`,
+        Authorization: `Bearer ${login.access_token}`
     }
 
     try {
@@ -616,8 +630,8 @@ export async function getAccountInfo() {
 
         if (response.ok) {
             const data: {
-                account_id: string,
-                external_id: string,
+                account_id: string
+                external_id: string
             } = await JSON.parse(await response.text())
 
             return data
@@ -640,7 +654,6 @@ export async function getAccountInfo() {
 
 // Check Max account streams because of crunchyroll activestream limit
 export async function checkAccountMaxStreams() {
-
     const accountinfo = await getAccountInfo()
 
     if (!accountinfo) return 1
@@ -654,7 +667,7 @@ export async function checkAccountMaxStreams() {
     if (!login) return 1
 
     const headers = {
-        Authorization: `Bearer ${login.access_token}`,
+        Authorization: `Bearer ${login.access_token}`
     }
 
     try {
@@ -666,22 +679,22 @@ export async function checkAccountMaxStreams() {
         if (response.ok) {
             const data: {
                 items: {
-                    __class__: string,
-                    __href__: string,
-                    __links__: string,
-                    __actions__: string,
-                    benefit: string,
+                    __class__: string
+                    __href__: string
+                    __links__: string
+                    __actions__: string
+                    benefit: string
                     source: string
                 }[]
             } = await JSON.parse(await response.text())
 
             if (!data.items || data.items.length === 0) return 1
 
-            if (data.items.find(i => i.benefit === 'concurrent_streams.4')) return 2
+            if (data.items.find((i) => i.benefit === 'concurrent_streams.4')) return 2
 
-            if (data.items.find(i => i.benefit === 'concurrent_streams.1')) return 1
+            if (data.items.find((i) => i.benefit === 'concurrent_streams.1')) return 1
 
-            if (data.items.find(i => i.benefit === 'concurrent_streams.6')) return 3
+            if (data.items.find((i) => i.benefit === 'concurrent_streams.6')) return 3
 
             return 1
         } else {
@@ -699,4 +712,4 @@ export async function checkAccountMaxStreams() {
     } catch (e) {
         throw new Error(e as string)
     }
- }
+}

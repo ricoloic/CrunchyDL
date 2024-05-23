@@ -171,6 +171,7 @@ export async function updatePlaylistByID(
         | 'waiting for sub playlist'
         | 'waiting for dub playlist'
         | 'downloading'
+        | 'downloading video'
         | 'merging video'
         | 'decrypting video'
         | 'awaiting all dubs downloaded'
@@ -193,7 +194,7 @@ export async function updatePlaylistByID(
             section: 'playlistItemUpdateDatabase'
         })
     } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to update playlist item', JSON.stringify(e))
+        messageBox('error', ['Cancel'], 2, 'Database Error', 'Failed to update playlist item', 'Failed to update playlist item')
         server.logger.log({
             level: 'error',
             message: 'Failed to update playlist item',
@@ -218,6 +219,7 @@ export async function addEpisodeToPlaylist(
         | 'waiting for sub playlist'
         | 'waiting for dub playlist'
         | 'downloading'
+        | 'downloading video'
         | 'merging video'
         | 'decrypting video'
         | 'awaiting all dubs downloaded'
@@ -451,27 +453,6 @@ export async function downloadADNPlaylist(
     await deleteFolder(videoFolder)
 }
 
-var counter = 0
-var maxLimit = 1
-
-async function incrementPlaylistCounter() {
-    return new Promise<void>((resolve) => {
-        const interval = setInterval(() => {
-            if (counter < maxLimit) {
-                counter++
-                clearInterval(interval)
-                resolve()
-            }
-        }, 100)
-    })
-}
-
-function decrementPlaylistCounter() {
-    if (counter > 0) {
-        counter--
-    }
-}
-
 // Download Crunchyroll Playlist
 export async function downloadCrunchyrollPlaylist(
     e: string,
@@ -488,15 +469,8 @@ export async function downloadCrunchyrollPlaylist(
     format: 'mp4' | 'mkv',
     geo: string | undefined
 ) {
-    const accmaxstream = await checkAccountMaxStreams()
-
-    if (accmaxstream) {
-        maxLimit = accmaxstream
-    }
-
     await updatePlaylistByID(downloadID, 'waiting for playlist')
 
-    await incrementPlaylistCounter()
     var playlist = await crunchyGetPlaylist(e, geo)
 
     if (!playlist) {
@@ -517,8 +491,6 @@ export async function downloadCrunchyrollPlaylist(
             const found = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (found) {
                 await deleteVideoToken(episodeID, playlist.data.token)
-                decrementPlaylistCounter()
-                await incrementPlaylistCounter()
                 playlist = await crunchyGetPlaylist(found.guid, found.geo)
             } else {
                 console.log('Exact Playlist not found, taking what crunchy gives.')
@@ -547,7 +519,6 @@ export async function downloadCrunchyrollPlaylist(
     }
 
     await deleteVideoToken(episodeID, playlist.data.token)
-    decrementPlaylistCounter()
 
     const subFolder = await createFolder()
 
@@ -600,7 +571,6 @@ export async function downloadCrunchyrollPlaylist(
         if (playlist.data.audioLocale !== 'ja-JP') {
             const foundStream = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (foundStream) {
-                await incrementPlaylistCounter()
                 subPlaylist = await crunchyGetPlaylist(foundStream.guid, foundStream.geo)
             }
         } else {
@@ -641,7 +611,6 @@ export async function downloadCrunchyrollPlaylist(
         }
 
         await deleteVideoToken(episodeID, subPlaylist.data.token)
-        decrementPlaylistCounter()
     }
 
     await updatePlaylistByID(downloadID, 'waiting for dub playlist')
@@ -653,11 +622,9 @@ export async function downloadCrunchyrollPlaylist(
         }
 
         if (found) {
-            await incrementPlaylistCounter()
             const list = await crunchyGetPlaylist(found.guid, found.geo)
             if (list) {
                 await deleteVideoToken(episodeID, list.data.token)
-                decrementPlaylistCounter()
 
                 const foundSub = list.data.subtitles.find((sub) => sub.language === d)
                 if (foundSub) {
@@ -699,7 +666,7 @@ export async function downloadCrunchyrollPlaylist(
         }
     }
 
-    await updatePlaylistByID(downloadID, 'downloading')
+    await updatePlaylistByID(downloadID, 'downloading video')
 
     const subDownload = async () => {
         const sbs: Array<string> = []
@@ -713,7 +680,6 @@ export async function downloadCrunchyrollPlaylist(
     const audioDownload = async () => {
         const audios: Array<string> = []
         for (const v of dubDownloadList) {
-            await incrementPlaylistCounter()
             const list = await crunchyGetPlaylist(v.guid, v.geo)
 
             if (!list) return
@@ -723,7 +689,6 @@ export async function downloadCrunchyrollPlaylist(
             if (!playlist) return
 
             await deleteVideoToken(episodeID, list.data.token)
-            decrementPlaylistCounter()
 
             const assetId = playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].resolvedUri.match(/\/assets\/(?:p\/)?([^_,]+)/)
 
@@ -837,7 +802,6 @@ export async function downloadCrunchyrollPlaylist(
             return
         }
 
-        await incrementPlaylistCounter()
         const play = await crunchyGetPlaylist(code, geo)
 
         if (!play) {
@@ -882,7 +846,6 @@ export async function downloadCrunchyrollPlaylist(
         if (!mdp) return
 
         await deleteVideoToken(episodeID, play.data.token)
-        decrementPlaylistCounter()
 
         var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.height === quality)
 

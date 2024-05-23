@@ -22,5 +22,5 @@ contextBridge.exposeInMainWorld('myAPI', {
     setEpisodeTemplate: (name: string) => ipcRenderer.invoke('dialog:setEpisodeTemplate', name),
     getEpisodeTemplate: () => ipcRenderer.invoke('dialog:getEpisodeTemplate'),
     setSeasonTemplate: (name: string) => ipcRenderer.invoke('dialog:setSeasonTemplate', name),
-    getSeasonTemplate: () => ipcRenderer.invoke('dialog:getSeasonTemplate'),
+    getSeasonTemplate: () => ipcRenderer.invoke('dialog:getSeasonTemplate')
 })

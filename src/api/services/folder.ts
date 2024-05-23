@@ -4,8 +4,7 @@ import fs from 'fs'
 import settings from 'electron-settings'
 
 export async function createFolder() {
-
-    var tempPath = await settings.get('tempPath') as string
+    var tempPath = (await settings.get('tempPath')) as string
 
     if (!tempPath) {
         tempPath = app.getPath('temp')
@@ -33,8 +32,7 @@ export async function checkDirectoryExistence(dir: string) {
 }
 
 export async function createFolderName(name: string, dir: string) {
-
-    var tempPath = await settings.get('tempPath') as string
+    var tempPath = (await settings.get('tempPath')) as string
 
     if (!tempPath) {
         tempPath = app.getPath('temp')
@@ -69,8 +67,7 @@ export async function deleteFolder(folderPath: string) {
 }
 
 export async function deleteTemporaryFolders() {
-
-    var tempPath = await settings.get('tempPath') as string
+    var tempPath = (await settings.get('tempPath')) as string
 
     if (!tempPath) {
         tempPath = app.getPath('temp')
