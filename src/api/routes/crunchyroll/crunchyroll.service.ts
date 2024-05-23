@@ -503,8 +503,15 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
     }
 
     if (isProxyActive)
+
+        await deactivateVideoToken(q, playlist.token)
+        decrementPlaylistCounter()
+
         for (const p of proxies) {
             if (p.code !== login.country) {
+
+                await incrementPlaylistCounter()
+
                 const logindata = await crunchyLogin(account.username, account.password, p.code)
 
                 if (!logindata) return
@@ -514,8 +521,6 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
                     'X-Cr-Disable-Drm': 'true',
                     'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
                 }
-
-                await incrementPlaylistCounter()
 
                 const responseProx = await fetch(
                     `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
@@ -590,6 +595,9 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             }
         }
 
+        await incrementPlaylistCounter()
+        await activateVideoToken(q, playlist.token)
+
     return { data: playlist, account_id: login.account_id }
 }
 
@@ -634,6 +642,96 @@ export async function deleteVideoToken(content: string, token: string) {
             error: error,
             timestamp: new Date().toISOString(),
             section: 'tokenDeletionCrunchyrollFetch'
+        })
+    }
+}
+
+// Crunchyroll Deactivate Video Token Fetch
+export async function deactivateVideoToken(content: string, token: string) {
+    const account = await loggedInCheck('CR')
+
+    if (!account) return
+
+    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
+
+    if (!login) return
+
+    const headers = {
+        Authorization: `Bearer ${login.access_token}`
+    }
+
+    const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}/inactive`, {
+        method: 'PATCH',
+        headers: headers
+    })
+
+    if (response.ok) {
+        server.logger.log({
+            level: 'info',
+            message: 'Disabled Video Token',
+            token: token,
+            timestamp: new Date().toISOString(),
+            section: 'tokenDeletionCrunchyrollFetch'
+        })
+
+        decrementPlaylistCounter()
+
+        return 'ok'
+    } else {
+        const error = await response.text()
+        // messageBox('error', ['Cancel'], 2, 'Failed to delete Crunchyroll Video Token', 'Failed to delete Crunchyroll Video Token', error)
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to disable Crunchyroll Video Token',
+            token: token,
+            error: error,
+            timestamp: new Date().toISOString(),
+            section: 'tokenDisabelingCrunchyrollFetch'
+        })
+    }
+}
+
+// Crunchyroll Activate Video Token Fetch
+export async function activateVideoToken(content: string, token: string) {
+    const account = await loggedInCheck('CR')
+
+    if (!account) return
+
+    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
+
+    if (!login) return
+
+    const headers = {
+        Authorization: `Bearer ${login.access_token}`
+    }
+
+    const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}/keepAlive?playhead=1`, {
+        method: 'PATCH',
+        headers: headers
+    })
+
+    if (response.ok) {
+        server.logger.log({
+            level: 'info',
+            message: 'Activated Video Token',
+            token: token,
+            timestamp: new Date().toISOString(),
+            section: 'tokenDeletionCrunchyrollFetch'
+        })
+
+        decrementPlaylistCounter()
+
+        return 'ok'
+    } else {
+        const error = await response.text()
+        // messageBox('error', ['Cancel'], 2, 'Failed to delete Crunchyroll Video Token', 'Failed to delete Crunchyroll Video Token', error)
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to activate Crunchyroll Video Token',
+            token: token,
+            error: error,
+            timestamp: new Date().toISOString(),
+            section: 'tokenActivationCrunchyrollFetch'
         })
     }
 }

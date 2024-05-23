@@ -131,11 +131,11 @@
                             <div class="text-xs">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
                             <div class="text-xs mr-20">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
                             <div class="absolute flex flex-col ml-auto gap-0.5 right-0 bottom-0">
-                                <div v-if="p.totaldownloaded && p.status === 'downloading'" class="text-xs ml-auto"
+                                <div v-if="p.totaldownloaded && p.status === 'downloading' || p.totaldownloaded && p.status === 'downloading video'" class="text-xs ml-auto"
                                     >{{ (p.totaldownloaded / Math.pow(1024, 2)).toFixed(2) }} MB</div
                                 >
-                                <div v-if="p.partsleft && p.status === 'downloading'" class="text-xs ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
-                                <div v-if="p.downloadspeed && p.status === 'downloading'" class="text-xs ml-auto">{{ p.downloadspeed }} MB/s</div>
+                                <div v-if="p.partsleft && p.status === 'downloading' || p.totaldownloaded && p.status === 'downloading video'" class="text-xs ml-auto">{{ p.partsdownloaded }}/{{ p.partsleft }}</div>
+                                <div v-if="p.downloadspeed && p.status === 'downloading' || p.totaldownloaded && p.status === 'downloading video'" class="text-xs ml-auto">{{ p.downloadspeed }} MB/s</div>
                             </div>
                             <button @click="openFolder(p.installDir)" v-if="p.status === 'completed'" class="ml-auto h-9 w-9 hover:bg-[#ffffff2c] rounded-xl transition-all">
                                 <Icon name="ph:folder-open" class="h-5 w-5 text-white" />

@@ -79,7 +79,6 @@ async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number, 
 
         const response = await fetch(url)
 
-        // Check if fetch was successful
         if (!response.ok) {
             if (dn) {
                 dn.status = 'failed'
@@ -97,7 +96,6 @@ async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number, 
 
         const body = response.body
 
-        // Check if the body exists and is readable
         if (!body) {
             if (dn) {
                 dn.status = 'failed'
@@ -140,13 +138,14 @@ async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number, 
     } catch (error) {
         server.logger.log({
             level: 'error',
-            message: 'Error while downloading an Audio Fragment',
+            message: 'Error while downloading an Audio Fragment, retrying',
             fragment: index,
             error: error,
             timestamp: new Date().toISOString(),
             section: 'audiofragmentCrunchyrollFetch'
         })
-        throw error
+        console.error(`Retrying fragment ${index} due to error:`, error)
+        await new Promise(resolve => setTimeout(resolve, 1000))
     }
 }
 
