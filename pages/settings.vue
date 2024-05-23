@@ -14,15 +14,17 @@
             </button>
         </div>
         <SettingsMain v-if="activeIndex === 0" />
-        <SettingsCrunchyroll v-if="activeIndex === 1" />
-        <SettingsWidevine v-if="activeIndex === 2" />
-        <SettingsProxy v-if="activeIndex === 3" />
-        <SettingsAbout v-if="activeIndex === 4" />
+        <SettingsNaming v-if="activeIndex === 1" />
+        <SettingsCrunchyroll v-if="activeIndex === 2" />
+        <SettingsWidevine v-if="activeIndex === 3" />
+        <SettingsProxy v-if="activeIndex === 4" />
+        <SettingsSystem v-if="activeIndex === 5" />
+        <SettingsAbout v-if="activeIndex === 6" />
     </div>
 </template>
 
 <script lang="ts" setup>
-const options = ref<Array<string>>(['Main', 'Crunchyroll', 'Widevine', 'Proxy', 'About'])
+const options = ref<Array<string>>(['Main', 'Naming', 'Crunchy', 'Widevine', 'Proxy', 'System', 'About'])
 const activeIndex = ref(0)
 </script>
 

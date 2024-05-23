@@ -16,5 +16,11 @@ contextBridge.exposeInMainWorld('myAPI', {
     openWindow: (opt: { title: string; url: string; width: number; height: number; backgroundColor: string }) => ipcRenderer.invoke('window:openNewWindow', opt),
     getUpdateStatus: () => ipcRenderer.invoke('updater:getUpdateStatus'),
     startUpdateDownload: () => ipcRenderer.invoke('updater:download'),
-    startUpdateInstall: () => ipcRenderer.invoke('updater:quitAndInstall')
+    startUpdateInstall: () => ipcRenderer.invoke('updater:quitAndInstall'),
+    selectTEMPFolder: () => ipcRenderer.invoke('dialog:openDirectoryTEMP'),
+    getTEMPFolder: () => ipcRenderer.invoke('dialog:getDirectoryTEMP'),
+    setEpisodeTemplate: (name: string) => ipcRenderer.invoke('dialog:setEpisodeTemplate', name),
+    getEpisodeTemplate: () => ipcRenderer.invoke('dialog:getEpisodeTemplate'),
+    setSeasonTemplate: (name: string) => ipcRenderer.invoke('dialog:setSeasonTemplate', name),
+    getSeasonTemplate: () => ipcRenderer.invoke('dialog:getSeasonTemplate'),
 })

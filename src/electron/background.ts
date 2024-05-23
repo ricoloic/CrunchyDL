@@ -171,6 +171,38 @@ ipcMain.handle('dialog:defaultDirectory', async () => {
     return savedPath
 })
 
+ipcMain.handle('dialog:getDirectoryTEMP', async () => {
+    const savedPath = await settings.get('tempPath')
+
+    if (!savedPath) {
+        const path = app.getPath('temp')
+
+        await settings.set('tempPath', path)
+
+        return path
+    }
+
+    return savedPath
+})
+
+ipcMain.handle('dialog:openDirectoryTEMP', async () => {
+    const window = BrowserWindow.getFocusedWindow()
+
+    if (!window) {
+        return
+    }
+
+    const { canceled, filePaths } = await dialog.showOpenDialog(window, {
+        properties: ['openDirectory']
+    })
+    if (canceled) {
+        return await settings.get('tempPath')
+    } else {
+        await settings.set('tempPath', filePaths[0])
+        return filePaths[0]
+    }
+})
+
 ipcMain.handle('dialog:selectEndpoint', async (events, nr: number) => {
     await settings.set('CREndpoint', nr)
 
@@ -246,6 +278,42 @@ app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
     }
+})
+
+ipcMain.handle('dialog:setEpisodeTemplate', async (events, name: string) => {
+    await settings.set('EpisodeTemp', name)
+
+    return name
+})
+
+ipcMain.handle('dialog:getEpisodeTemplate', async (events) => {
+    const epTP = await settings.get('EpisodeTemp')
+
+    if (!epTP) {
+        await settings.set('EpisodeTemp', '{seriesName} Season {seasonNumber} Episode {episodeNumber}')
+
+        return '{seriesName} Season {seasonNumber} Episode {episodeNumber}'
+    }
+
+    return epTP
+})
+
+ipcMain.handle('dialog:setSeasonTemplate', async (events, name: string) => {
+    await settings.set('SeasonTemp', name)
+
+    return name
+})
+
+ipcMain.handle('dialog:getSeasonTemplate', async (events) => {
+    const seTP = await settings.get('SeasonTemp')
+
+    if (!seTP) {
+        await settings.set('SeasonTemp', '{seriesName} Season {seasonNumber}')
+
+        return '{seriesName} Season {seasonNumber}'
+    }
+
+    return seTP
 })
 
 const openWindows = new Map()

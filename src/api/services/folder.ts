@@ -1,9 +1,17 @@
 import path from 'path'
 import { app } from 'electron'
 import fs from 'fs'
+import settings from 'electron-settings'
 
 export async function createFolder() {
-    const tempFolderPath = path.join(app.getPath('documents'), `crd-tmp-${(Math.random() + 1).toString(36).substring(2)}`)
+
+    var tempPath = await settings.get('tempPath') as string
+
+    if (!tempPath) {
+        tempPath = app.getPath('temp')
+    }
+
+    const tempFolderPath = path.join(tempPath, `crd-tmp-${(Math.random() + 1).toString(36).substring(2)}`)
     try {
         await fs.promises.mkdir(tempFolderPath, { recursive: true })
         return tempFolderPath
@@ -25,6 +33,13 @@ export async function checkDirectoryExistence(dir: string) {
 }
 
 export async function createFolderName(name: string, dir: string) {
+
+    var tempPath = await settings.get('tempPath') as string
+
+    if (!tempPath) {
+        tempPath = app.getPath('temp')
+    }
+
     var folderPath
 
     const dirExists = await checkDirectoryExistence(dir)
@@ -32,7 +47,7 @@ export async function createFolderName(name: string, dir: string) {
     if (dirExists) {
         folderPath = path.join(dir, name)
     } else {
-        folderPath = path.join(app.getPath('documents'), name)
+        folderPath = path.join(tempPath, name)
     }
 
     try {
@@ -54,15 +69,21 @@ export async function deleteFolder(folderPath: string) {
 }
 
 export async function deleteTemporaryFolders() {
-    const documentsPath = app.getPath('documents')
+
+    var tempPath = await settings.get('tempPath') as string
+
+    if (!tempPath) {
+        tempPath = app.getPath('temp')
+    }
+
     const folderPrefix = 'crd-tmp-'
 
     try {
-        const files = await fs.promises.readdir(documentsPath)
+        const files = await fs.promises.readdir(tempPath)
         const tempFolders = files.filter((file) => file.startsWith(folderPrefix))
 
         for (const folder of tempFolders) {
-            const folderPath = path.join(documentsPath, folder)
+            const folderPath = path.join(tempPath, folder)
             await deleteFolder(folderPath)
             console.log(`Temporary folder ${folder} deleted.`)
         }
