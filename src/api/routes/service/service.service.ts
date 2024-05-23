@@ -159,12 +159,24 @@ async function deletePlaylistandTMP() {
     }
 }
 
-deletePlaylistandTMP();
+deletePlaylistandTMP()
 
 // Update Playlist Item
 export async function updatePlaylistByID(
     id: number,
-    status?: 'waiting' | 'preparing' | 'waiting for playlist' | 'waiting for sub playlist' | 'waiting for dub playlist' | 'downloading' | 'merging video' | 'decrypting video' | 'awaiting all dubs downloaded' | 'merging video & audio' | 'completed' | 'failed',
+    status?:
+        | 'waiting'
+        | 'preparing'
+        | 'waiting for playlist'
+        | 'waiting for sub playlist'
+        | 'waiting for dub playlist'
+        | 'downloading'
+        | 'merging video'
+        | 'decrypting video'
+        | 'awaiting all dubs downloaded'
+        | 'merging video & audio'
+        | 'completed'
+        | 'failed',
     quality?: 1080 | 720 | 480 | 360 | 240,
     installedDir?: string
 ) {
@@ -199,7 +211,19 @@ export async function addEpisodeToPlaylist(
     d: Array<string>,
     dir: string,
     hardsub: boolean,
-    status: 'waiting' | 'preparing' | 'waiting for playlist' | 'waiting for sub playlist' | 'waiting for dub playlist' | 'downloading' | 'merging video' | 'decrypting video' | 'awaiting all dubs downloaded' | 'merging video & audio' | 'completed' | 'failed',
+    status:
+        | 'waiting'
+        | 'preparing'
+        | 'waiting for playlist'
+        | 'waiting for sub playlist'
+        | 'waiting for dub playlist'
+        | 'downloading'
+        | 'merging video'
+        | 'decrypting video'
+        | 'awaiting all dubs downloaded'
+        | 'merging video & audio'
+        | 'completed'
+        | 'failed',
     quality: 1080 | 720 | 480 | 360 | 240,
     service: 'CR' | 'ADN',
     format: 'mp4' | 'mkv'
@@ -427,24 +451,24 @@ export async function downloadADNPlaylist(
     await deleteFolder(videoFolder)
 }
 
-var counter = 0;
-var maxLimit = 1;
+var counter = 0
+var maxLimit = 1
 
 async function incrementPlaylistCounter() {
     return new Promise<void>((resolve) => {
         const interval = setInterval(() => {
             if (counter < maxLimit) {
-                counter++;
-                clearInterval(interval);
-                resolve();
+                counter++
+                clearInterval(interval)
+                resolve()
             }
-        }, 100);
-    });
+        }, 100)
+    })
 }
 
 function decrementPlaylistCounter() {
     if (counter > 0) {
-        counter--;
+        counter--
     }
 }
 
@@ -464,16 +488,15 @@ export async function downloadCrunchyrollPlaylist(
     format: 'mp4' | 'mkv',
     geo: string | undefined
 ) {
-
-    const accmaxstream = await checkAccountMaxStreams();
+    const accmaxstream = await checkAccountMaxStreams()
 
     if (accmaxstream) {
-       maxLimit = accmaxstream
+        maxLimit = accmaxstream
     }
 
     await updatePlaylistByID(downloadID, 'waiting for playlist')
 
-    await incrementPlaylistCounter();
+    await incrementPlaylistCounter()
     var playlist = await crunchyGetPlaylist(e, geo)
 
     if (!playlist) {
@@ -494,8 +517,8 @@ export async function downloadCrunchyrollPlaylist(
             const found = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (found) {
                 await deleteVideoToken(episodeID, playlist.data.token)
-                decrementPlaylistCounter();
-                await incrementPlaylistCounter();
+                decrementPlaylistCounter()
+                await incrementPlaylistCounter()
                 playlist = await crunchyGetPlaylist(found.guid, found.geo)
             } else {
                 console.log('Exact Playlist not found, taking what crunchy gives.')
@@ -524,7 +547,7 @@ export async function downloadCrunchyrollPlaylist(
     }
 
     await deleteVideoToken(episodeID, playlist.data.token)
-    decrementPlaylistCounter();
+    decrementPlaylistCounter()
 
     const subFolder = await createFolder()
 
@@ -532,7 +555,19 @@ export async function downloadCrunchyrollPlaylist(
 
     const videoFolder = await createFolder()
 
-    const seasonFolder = await createFolderName(`${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season}`, downloadPath)
+    var seasonFolderNaming = (await settings.get('SeasonTemp')) as string
+
+    if (!seasonFolderNaming) {
+        seasonFolderNaming = '{seriesName} Season {seasonNumber}'
+    }
+
+    seasonFolderNaming = seasonFolderNaming
+        .replace('{seriesName}', name.replace(/[/\\?%*:|"<>]/g, ''))
+        .replace('{seasonNumber}', season.toString())
+        .replace('{seasonNumberDD}', season.toString().padStart(2, '0'))
+        .replace('{quality}', quality.toString() + 'p')
+
+    const seasonFolder = await createFolderName(seasonFolderNaming, downloadPath)
 
     await updatePlaylistByID(downloadID, undefined, undefined, seasonFolder)
 
@@ -565,7 +600,7 @@ export async function downloadCrunchyrollPlaylist(
         if (playlist.data.audioLocale !== 'ja-JP') {
             const foundStream = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
             if (foundStream) {
-                await incrementPlaylistCounter();
+                await incrementPlaylistCounter()
                 subPlaylist = await crunchyGetPlaylist(foundStream.guid, foundStream.geo)
             }
         } else {
@@ -618,11 +653,11 @@ export async function downloadCrunchyrollPlaylist(
         }
 
         if (found) {
-            await incrementPlaylistCounter();
+            await incrementPlaylistCounter()
             const list = await crunchyGetPlaylist(found.guid, found.geo)
             if (list) {
                 await deleteVideoToken(episodeID, list.data.token)
-                decrementPlaylistCounter();
+                decrementPlaylistCounter()
 
                 const foundSub = list.data.subtitles.find((sub) => sub.language === d)
                 if (foundSub) {
@@ -678,7 +713,7 @@ export async function downloadCrunchyrollPlaylist(
     const audioDownload = async () => {
         const audios: Array<string> = []
         for (const v of dubDownloadList) {
-            await incrementPlaylistCounter();
+            await incrementPlaylistCounter()
             const list = await crunchyGetPlaylist(v.guid, v.geo)
 
             if (!list) return
@@ -688,7 +723,7 @@ export async function downloadCrunchyrollPlaylist(
             if (!playlist) return
 
             await deleteVideoToken(episodeID, list.data.token)
-            decrementPlaylistCounter();
+            decrementPlaylistCounter()
 
             const assetId = playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].resolvedUri.match(/\/assets\/(?:p\/)?([^_,]+)/)
 
@@ -765,7 +800,6 @@ export async function downloadCrunchyrollPlaylist(
     }
 
     const downloadVideo = async () => {
-
         downloading.push({
             id: downloadID,
             status: 'Waiting for Playlist',
@@ -803,7 +837,7 @@ export async function downloadCrunchyrollPlaylist(
             return
         }
 
-        await incrementPlaylistCounter();
+        await incrementPlaylistCounter()
         const play = await crunchyGetPlaylist(code, geo)
 
         if (!play) {
@@ -848,7 +882,7 @@ export async function downloadCrunchyrollPlaylist(
         if (!mdp) return
 
         await deleteVideoToken(episodeID, play.data.token)
-        decrementPlaylistCounter();
+        decrementPlaylistCounter()
 
         var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.height === quality)
 
@@ -970,7 +1004,22 @@ export async function downloadCrunchyrollPlaylist(
     if (!audios) return
 
     await updatePlaylistByID(downloadID, 'merging video & audio')
-    await mergeVideoFile(file as string, audios, subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format, downloadID)
+
+    var episodeNaming = (await settings.get('EpisodeTemp')) as string
+
+    if (!episodeNaming) {
+        episodeNaming = '{seriesName} Season {seasonNumber} Episode {episodeNumber}'
+    }
+
+    episodeNaming = episodeNaming
+        .replace('{seriesName}', name.replace(/[/\\?%*:|"<>]/g, ''))
+        .replace('{seasonNumber}', season.toString())
+        .replace('{seasonNumberDD}', season.toString().padStart(2, '0'))
+        .replace('{episodeNumber}', episode.toString())
+        .replace('{episodeNumberDD}', episode.toString().padStart(2, '0'))
+        .replace('{quality}', quality.toString() + 'p')
+
+    await mergeVideoFile(file as string, audios, subss, seasonFolder, episodeNaming, format, downloadID)
 
     await updatePlaylistByID(downloadID, 'completed')
 

@@ -85,6 +85,33 @@ onMounted(() => {
         episodeNamingTemplate.value = result
     })
 })
+
+watch(episodeNamingTemplate, () => {
+    if (!episodeNamingTemplate.value) return
+    setEpisodeTemplate(episodeNamingTemplate.value)
+})
+
+watch(seasonNamingTemplate, () => {
+    if (!seasonNamingTemplate.value) return
+    setSeasonTemplate(seasonNamingTemplate.value)
+})
+
+const setEpisodeTemplate = (name: string) => {
+    if (process.client) {
+        ;(window as any).myAPI.setEpisodeTemplate(name).then((result: string) => {
+            episodeNamingTemplate.value = result
+        })
+    }
+}
+
+const setSeasonTemplate = (name: string) => {
+    if (process.client) {
+        ;(window as any).myAPI.setSeasonTemplate(name).then((result: string) => {
+            seasonNamingTemplate.value = result
+        })
+    }
+}
+
 </script>
 
 <style></style>
