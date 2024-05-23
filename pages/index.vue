@@ -56,7 +56,10 @@
                                         <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                         {{ p.status }}
                                     </div>
-                                    <div v-if="p.status === 'downloading video'" class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#60501b] rounded-lg">
+                                    <div
+                                        v-if="p.status === 'downloading video'"
+                                        class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#60501b] rounded-lg"
+                                    >
                                         <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
                                         {{ p.status }}
                                     </div>
@@ -94,10 +97,17 @@
                                     </div>
                                     <div v-for="a in p.audiosdownloading">
                                         <div
-                                            v-if="a.status && a.audio && a.status !== 'finished'"
+                                            v-if="a.status && a.audio && a.status !== 'finished' && a.status !== 'failed'"
                                             class="ml-2 flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#866332] rounded-lg"
                                         >
                                             <Icon name="mdi:loading" class="h-3.5 w-3.5 text-white animate-spin" />
+                                            {{ a.status }} Audio {{ a.audio }}
+                                        </div>
+                                        <div
+                                            v-if="a.status && a.audio && a.status === 'failed'"
+                                            class="flex flex-row items-center justify-center gap-1 text-xs capitalize p-1.5 bg-[#863232] rounded-lg"
+                                        >
+                                            <Icon name="bitcoin-icons:cross-filled" class="h-3.5 w-3.5 text-white" />
                                             {{ a.status }} Audio {{ a.audio }}
                                         </div>
                                     </div>

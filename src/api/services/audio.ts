@@ -52,7 +52,7 @@ export async function downloadMPDAudio(
             while (!downloadSuccess) {
                 try {
                     const stream = fs.createWriteStream(`${path}/${part.filename}`)
-                    await fetchAndPipe(part.url, stream, index + 1)
+                    await fetchAndPipe(part.url, stream, index + 1, downloadID, name)
                     downloadSuccess = true
                 } catch (error) {
                     retries++
@@ -73,12 +73,18 @@ export async function downloadMPDAudio(
     return await mergePartsAudio(parts, path, dir, name, downloadID, drmkeys)
 }
 
-async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number) {
+async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number, downloadID: number, name: string) {
     try {
+
+        const dn = downloading.find((i) => i.id === downloadID && i.audio === name)
+
         const response = await fetch(url)
 
         // Check if fetch was successful
         if (!response.ok) {
+            if (dn) {
+                dn.status = 'failed'
+            }
             server.logger.log({
                 level: 'error',
                 message: 'Error while downloading an Audio Fragment',
@@ -94,6 +100,9 @@ async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number) 
 
         // Check if the body exists and is readable
         if (!body) {
+            if (dn) {
+                dn.status = 'failed'
+            }
             server.logger.log({
                 level: 'error',
                 message: 'Error while downloading an Audio Fragment',
@@ -115,6 +124,9 @@ async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number) 
                     resolve()
                 })
                 .on('error', (error) => {
+                    if (dn) {
+                        dn.status = 'failed'
+                    }
                     server.logger.log({
                         level: 'error',
                         message: 'Error while downloading an Audio Fragment',

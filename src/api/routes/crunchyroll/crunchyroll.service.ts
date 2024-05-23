@@ -445,6 +445,38 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             playlist = data
         } else {
             const error = await response.text()
+            const errorJSON: {
+                activeStreams: {
+                    accountId: string
+                    active: boolean
+                    assetId: string
+                    clientId: string
+                    contentId: string
+                    country: string
+                    createdTimestamp: string
+                    deviceSubtype: string
+                    deviceType: string
+                    episodeIdentity: string
+                    id: string
+                    token: string
+                }[]
+            } = await JSON.parse(error)
+
+            if (errorJSON && errorJSON.activeStreams && errorJSON.activeStreams.length !== 0) {
+                for (const e of errorJSON.activeStreams) {
+                    await deleteVideoToken(e.contentId, e.token)
+                }
+
+                server.logger.log({
+                    level: 'error',
+                    message: 'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
+                    error: errorJSON,
+                    timestamp: new Date().toISOString(),
+                    section: 'playlistCrunchyrollFetch'
+                })
+
+                return await crunchyGetPlaylist(q, geo)
+            }
 
             messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll Video Playlist', 'Failed to get Crunchyroll Video Playlist', error)
             server.logger.log({
@@ -512,7 +544,38 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
                     await deleteVideoToken(q, dataProx.token)
                 } else {
-                    decrementPlaylistCounter();
+                    decrementPlaylistCounter()
+                    const error = await responseProx.text()
+                    const errorJSON: {
+                        activeStreams: {
+                            accountId: string
+                            active: boolean
+                            assetId: string
+                            clientId: string
+                            contentId: string
+                            country: string
+                            createdTimestamp: string
+                            deviceSubtype: string
+                            deviceType: string
+                            episodeIdentity: string
+                            id: string
+                            token: string
+                        }[]
+                    } = await JSON.parse(error)
+
+                    if (errorJSON && errorJSON.activeStreams && errorJSON.activeStreams.length !== 0) {
+                        for (const e of errorJSON.activeStreams) {
+                            await deleteVideoToken(e.contentId, e.token)
+                        }
+
+                        server.logger.log({
+                            level: 'error',
+                            message: 'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
+                            error: errorJSON,
+                            timestamp: new Date().toISOString(),
+                            section: 'playlistCrunchyrollFetch'
+                        })
+                    }
                 }
             }
         }
