@@ -145,7 +145,7 @@ async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number, 
             section: 'audiofragmentCrunchyrollFetch'
         })
         console.error(`Retrying fragment ${index} due to error:`, error)
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 1000))
     }
 }
 
