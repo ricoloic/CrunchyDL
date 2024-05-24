@@ -508,17 +508,17 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
         for (const p of proxies) {
             if (p.code !== login.country) {
                 await incrementPlaylistCounter()
-    
+
                 const logindata = await crunchyLogin(account.username, account.password, p.code)
-    
+
                 if (!logindata) return
-    
+
                 const headers = {
                     Authorization: `Bearer ${logindata.access_token}`,
                     'X-Cr-Disable-Drm': 'true',
                     'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
                 }
-    
+
                 const responseProx = await fetch(
                     `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
                         endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
@@ -528,32 +528,32 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
                         headers: headers
                     }
                 )
-    
+
                 if (responseProx.ok) {
                     const dataProx: VideoPlaylistNoGEO = JSON.parse(await responseProx.text())
-    
+
                     dataProx.hardSubs = Object.values((dataProx as any).hardSubs)
-    
+
                     dataProx.subtitles = Object.values((dataProx as any).subtitles)
-    
+
                     for (const v of dataProx.versions) {
                         if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
                             playlist.versions.push({ ...v, geo: p.code })
                         }
                     }
-    
+
                     for (const v of dataProx.subtitles) {
                         if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
                             playlist.subtitles.push({ ...v, geo: p.code })
                         }
                     }
-    
+
                     for (const v of dataProx.hardSubs) {
                         if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
                             playlist.hardSubs.push({ ...v, geo: p.code })
                         }
                     }
-    
+
                     deleteVideoToken(q, dataProx.token)
                 } else {
                     decrementPlaylistCounter()
@@ -574,12 +574,12 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
                             token: string
                         }[]
                     } = await JSON.parse(error)
-    
+
                     if (errorJSON && errorJSON.activeStreams && errorJSON.activeStreams.length !== 0) {
                         for (const e of errorJSON.activeStreams) {
                             deleteVideoToken(e.contentId, e.token)
                         }
-    
+
                         server.logger.log({
                             level: 'error',
                             message: 'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
