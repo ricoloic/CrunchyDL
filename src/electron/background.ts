@@ -74,11 +74,6 @@ function createWindow() {
 // App events
 // ==========
 app.whenReady().then(async () => {
-    settings.configure({
-        dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/',
-        atomicSave: process.platform !== 'win32'
-    })
-
     startAPI()
 
     const mainWindow = createWindow()
