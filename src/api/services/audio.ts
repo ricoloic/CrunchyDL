@@ -10,6 +10,7 @@ const mp4e = getMP4DecryptPath()
 import util from 'util'
 import { server } from '../api'
 const exec = util.promisify(require('child_process').exec)
+import { finished } from 'stream/promises'
 
 // Define Downloading Array
 var downloading: Array<{
@@ -41,112 +42,45 @@ export async function downloadMPDAudio(
         audio: name
     })
 
-    const maxParallelDownloads = 5
-    const downloadPromises = []
-
     for (const [index, part] of parts.entries()) {
-        let retries = 0
+        let success = false
+        while (!success) {
+            try {
+                var stream
 
-        const downloadPromise = async () => {
-            let downloadSuccess = false
-            while (!downloadSuccess) {
-                try {
-                    const stream = fs.createWriteStream(`${path}/${part.filename}`)
-                    await fetchAndPipe(part.url, stream, index + 1, downloadID, name)
-                    downloadSuccess = true
-                } catch (error) {
-                    retries++
-                    console.error(`Failed to download part ${part.filename}, retrying (${retries})...`)
-                    await new Promise((resolve) => setTimeout(resolve, 1000))
-                }
+                stream = fs.createWriteStream(`${path}/${part.filename}`)
+
+                const { body } = await fetch(part.url)
+
+                const readableStream = Readable.from(body as any)
+
+                await finished(readableStream.pipe(stream))
+
+                console.log(`Fragment ${index + 1} downloaded`)
+
+                success = true
+            } catch (error) {
+                console.error(`Error occurred during download of fragment ${index + 1}:`, error)
+                server.logger.log({
+                    level: 'error',
+                    message: `Error occurred during download of fragment ${index + 1}`,
+                    error: error,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessAudioDownload'
+                })
+                console.log(`Retrying download of fragment ${index + 1}...`)
+                server.logger.log({
+                    level: 'warn',
+                    message: `Retrying download of fragment ${index + 1} because failed`,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessAudioDownload'
+                })
+                await new Promise((resolve) => setTimeout(resolve, 5000))
             }
-        }
-
-        downloadPromises.push(downloadPromise())
-
-        if (downloadPromises.length === maxParallelDownloads || index === parts.length - 1) {
-            await Promise.all(downloadPromises)
-            downloadPromises.length = 0
         }
     }
 
     return await mergePartsAudio(parts, path, dir, name, downloadID, drmkeys)
-}
-
-async function fetchAndPipe(url: string, stream: fs.WriteStream, index: number, downloadID: number, name: string) {
-    try {
-        const dn = downloading.find((i) => i.id === downloadID && i.audio === name)
-
-        const response = await fetch(url)
-
-        if (!response.ok) {
-            if (dn) {
-                dn.status = 'failed'
-            }
-            server.logger.log({
-                level: 'error',
-                message: 'Error while downloading an Audio Fragment',
-                fragment: index,
-                error: await response.text(),
-                timestamp: new Date().toISOString(),
-                section: 'audiofragmentCrunchyrollFetch'
-            })
-            throw new Error(`Failed to fetch URL: ${response.statusText}`)
-        }
-
-        const body = response.body
-
-        if (!body) {
-            if (dn) {
-                dn.status = 'failed'
-            }
-            server.logger.log({
-                level: 'error',
-                message: 'Error while downloading an Audio Fragment',
-                fragment: index,
-                error: 'Response body is not a readable stream',
-                timestamp: new Date().toISOString(),
-                section: 'audiofragmentCrunchyrollFetch'
-            })
-            throw new Error('Response body is not a readable stream')
-        }
-
-        const readableStream = Readable.from(body as any)
-
-        return new Promise<void>((resolve, reject) => {
-            readableStream
-                .pipe(stream)
-                .on('finish', () => {
-                    console.log(`Fragment ${index} downloaded`)
-                    resolve()
-                })
-                .on('error', (error) => {
-                    if (dn) {
-                        dn.status = 'failed'
-                    }
-                    server.logger.log({
-                        level: 'error',
-                        message: 'Error while downloading an Audio Fragment',
-                        fragment: index,
-                        error: error,
-                        timestamp: new Date().toISOString(),
-                        section: 'audiofragmentCrunchyrollFetch'
-                    })
-                    reject(error)
-                })
-        })
-    } catch (error) {
-        server.logger.log({
-            level: 'error',
-            message: 'Error while downloading an Audio Fragment, retrying',
-            fragment: index,
-            error: error,
-            timestamp: new Date().toISOString(),
-            section: 'audiofragmentCrunchyrollFetch'
-        })
-        console.error(`Retrying fragment ${index} due to error:`, error)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-    }
 }
 
 async function mergePartsAudio(
@@ -217,5 +151,15 @@ async function mergePartsAudio(
         })
     } catch (error) {
         console.error('Error merging parts:', error)
+        if (dn) {
+            dn.status = 'failed'
+        }
+        server.logger.log({
+            level: 'error',
+            message: 'Error while merging Audio',
+            error: error,
+            timestamp: new Date().toISOString(),
+            section: 'audioCrunchyrollMerging'
+        })
     }
 }

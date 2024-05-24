@@ -679,7 +679,10 @@ export async function downloadCrunchyrollPlaylist(
 
     const audioDownload = async () => {
         const audios: Array<string> = []
-        for (const v of dubDownloadList) {
+        const concurrentDownloads = 2
+        const tasks: Array<Promise<void>> = []
+
+        const downloadTask = async (v: any) => {
             const list = await crunchyGetPlaylist(v.guid, v.geo)
 
             if (!list) return
@@ -707,10 +710,10 @@ export async function downloadCrunchyrollPlaylist(
                 return
             }
 
-            var pssh
-            var keys: { kid: string; key: string }[] | undefined
+            let pssh
+            let keys: { kid: string; key: string }[] | undefined
 
-            var p: { filename: string; url: string }[] = []
+            let p: { filename: string; url: string }[] = []
 
             if (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection) {
                 if (!playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh) {
@@ -745,6 +748,7 @@ export async function downloadCrunchyrollPlaylist(
                 })
                 return
             }
+
             p.push({
                 filename: (playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
                 url: playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.resolvedUri
@@ -759,8 +763,25 @@ export async function downloadCrunchyrollPlaylist(
 
             const path = await downloadMPDAudio(p, audioFolder, list.data.audioLocale, downloadID, keys ? keys : undefined)
 
-            audios.push(path as string)
+            if (path) {
+                audios.push(path as string)
+            }
         }
+
+        for (const v of dubDownloadList) {
+            const task = downloadTask(v).finally(() => {
+                tasks.splice(tasks.indexOf(task), 1)
+            })
+
+            tasks.push(task)
+
+            if (tasks.length >= concurrentDownloads) {
+                await Promise.race(tasks)
+            }
+        }
+
+        await Promise.all(tasks)
+
         return audios
     }
 
