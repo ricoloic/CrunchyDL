@@ -502,7 +502,7 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
         throw new Error(e as string)
     }
 
-    if (isProxyActive) await deactivateVideoToken(q, playlist.token)
+    if (isProxyActive) await deleteVideoToken(q, playlist.token)
     decrementPlaylistCounter()
 
     for (const p of proxies) {
@@ -599,7 +599,7 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 }
 
 // Crunchyroll Delete Video Token Fetch
-export async function deleteVideoToken(content: string, token: string) {
+export async function removeVideoToken(content: string, token: string) {
     const account = await loggedInCheck('CR')
 
     if (!account) return
@@ -644,7 +644,7 @@ export async function deleteVideoToken(content: string, token: string) {
 }
 
 // Crunchyroll Deactivate Video Token Fetch
-export async function deactivateVideoToken(content: string, token: string) {
+export async function deleteVideoToken(content: string, token: string) {
     const account = await loggedInCheck('CR')
 
     if (!account) return
@@ -748,6 +748,15 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
         'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
     }
 
+    const regex = /\/manifest\/([A-Z0-9]+)\/.*\?playbackGuid=([^&]+)/
+
+    const match = q.match(regex)
+
+    if (!match) return
+
+    const contentID = match[1]
+    const playlistID = match[2]
+
     try {
         const response = await fetch(q, {
             method: 'GET',
@@ -755,6 +764,7 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
         })
 
         if (response.ok) {
+            await deleteVideoToken(contentID, playlistID)
             const raw = await response.text()
 
             const parsed = mpdParse(raw)
@@ -762,6 +772,19 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
             return parsed
         } else {
             const error = await response.text()
+
+            const errorJSON: {
+                error: string
+            } = await JSON.parse(error)
+
+            if (errorJSON.error === 'Invalid streaming token') {
+                decrementPlaylistCounter()
+
+                await incrementPlaylistCounter()
+                await activateVideoToken(contentID, playlistID)
+                return await crunchyGetPlaylistMPD(q, geo)
+            }
+
             messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll MPD', 'Failed to get Crunchyroll MPD', error)
             server.logger.log({
                 level: 'error',
@@ -770,7 +793,7 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
                 timestamp: new Date().toISOString(),
                 section: 'mpdCrunchyrollFetch'
             })
-            throw new Error(await response.text())
+            throw new Error(error)
         }
     } catch (e) {
         throw new Error(e as string)

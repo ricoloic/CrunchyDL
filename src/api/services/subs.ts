@@ -3,6 +3,7 @@ import { parse, stringify } from 'ass-compiler'
 import { Readable } from 'stream'
 import { finished } from 'stream/promises'
 import CryptoJS from 'crypto-js'
+import { server } from '../api'
 
 export async function downloadCRSub(
     sub: {
@@ -14,61 +15,72 @@ export async function downloadCRSub(
     dir: string,
     qual: 1080 | 720 | 480 | 360 | 240
 ) {
-    const path = `${dir}/${sub.language}${sub.isDub ? `-FORCED` : ''}.${sub.format}`
-    var qualX
-    var qualY
+    try {
+        const path = `${dir}/${sub.language}${sub.isDub ? `-FORCED` : ''}.${sub.format}`
+        var qualX
+        var qualY
 
-    switch (qual) {
-        case 1080:
-            qualX = 1920
-            qualY = 1080
-            break
-        case 720:
-            qualX = 1280
-            qualY = 720
-            break
-        case 480:
-            qualX = 720
-            qualY = 480
-            break
-        case 360:
-            qualX = 640
-            qualY = 360
-            break
-        case 240:
-            qualX = 426
-            qualY = 240
-            break
+        switch (qual) {
+            case 1080:
+                qualX = 1920
+                qualY = 1080
+                break
+            case 720:
+                qualX = 1280
+                qualY = 720
+                break
+            case 480:
+                qualX = 720
+                qualY = 480
+                break
+            case 360:
+                qualX = 640
+                qualY = 360
+                break
+            case 240:
+                qualX = 426
+                qualY = 240
+                break
+        }
+
+        const stream = fs.createWriteStream(path)
+        const response = await fetch(sub.url)
+
+        var parsedASS = parse(await response.text())
+
+        parsedASS.info['Original Script'] = 'crd  [https://github.com/stratuma/]'
+
+        for (const s of parsedASS.styles.style) {
+            ;(s.Fontsize = String(Math.round((parseInt(s.Fontsize) / parseInt(parsedASS.info.PlayResY)) * qualY))),
+                (s.Outline = String(Math.round((parseInt(s.Outline) / parseInt(parsedASS.info.PlayResY)) * qualY))),
+                (s.MarginL = String(Math.round((parseInt(s.MarginL) / parseInt(parsedASS.info.PlayResY)) * qualY))),
+                (s.MarginR = String(Math.round((parseInt(s.MarginR) / parseInt(parsedASS.info.PlayResY)) * qualY))),
+                (s.MarginV = String(Math.round((parseInt(s.MarginV) / parseInt(parsedASS.info.PlayResY)) * qualY)))
+        }
+
+        parsedASS.info.PlayResX = String(qualX)
+        parsedASS.info.PlayResY = String(qualY)
+
+        const fixed = stringify(parsedASS)
+
+        const resampledSubs = resamplePOSSubtitle(fixed, 640, 360, qualX, qualY)
+
+        const readableStream = Readable.from([resampledSubs])
+
+        await finished(readableStream.pipe(stream))
+        console.log(`Sub ${sub.language}.${sub.format} downloaded`)
+
+        return path
+    } catch (e) {
+        console.log('Failed to download and parse subs')
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to download and parse subs',
+            error: e,
+            timestamp: new Date().toISOString(),
+            section: 'subDownloadProcess'
+        })
     }
-
-    const stream = fs.createWriteStream(path)
-    const response = await fetch(sub.url)
-
-    var parsedASS = parse(await response.text())
-
-    parsedASS.info['Original Script'] = 'crd  [https://github.com/stratuma/]'
-
-    for (const s of parsedASS.styles.style) {
-        ;(s.Fontsize = String(Math.round((parseInt(s.Fontsize) / parseInt(parsedASS.info.PlayResY)) * qualY))),
-            (s.Outline = String(Math.round((parseInt(s.Outline) / parseInt(parsedASS.info.PlayResY)) * qualY))),
-            (s.MarginL = String(Math.round((parseInt(s.MarginL) / parseInt(parsedASS.info.PlayResY)) * qualY))),
-            (s.MarginR = String(Math.round((parseInt(s.MarginR) / parseInt(parsedASS.info.PlayResY)) * qualY))),
-            (s.MarginV = String(Math.round((parseInt(s.MarginV) / parseInt(parsedASS.info.PlayResY)) * qualY)))
-    }
-
-    parsedASS.info.PlayResX = String(qualX)
-    parsedASS.info.PlayResY = String(qualY)
-
-    const fixed = stringify(parsedASS)
-
-    const resampledSubs = resamplePOSSubtitle(fixed, 640, 360, qualX, qualY)
-
-    const readableStream = Readable.from([resampledSubs])
-
-    await finished(readableStream.pipe(stream))
-    console.log(`Sub ${sub.language}.${sub.format} downloaded`)
-
-    return path
 }
 
 function resamplePOSSubtitle(subtitle: string, ox: number, oy: number, nx: number, ny: number) {

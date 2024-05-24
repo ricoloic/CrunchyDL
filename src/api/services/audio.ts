@@ -42,17 +42,23 @@ export async function downloadMPDAudio(
         audio: name
     })
 
+    const dn = downloading.find((i) => i.id === downloadID && i.audio === name)
+
     for (const [index, part] of parts.entries()) {
         let success = false
         while (!success) {
             try {
                 var stream
 
+                const response = await fetch(part.url)
+
+                if (!response.ok) {
+                    throw Error(await response.text())
+                }
+
                 stream = fs.createWriteStream(`${path}/${part.filename}`)
 
-                const { body } = await fetch(part.url)
-
-                const readableStream = Readable.from(body as any)
+                const readableStream = Readable.from(response.body as any)
 
                 await finished(readableStream.pipe(stream))
 
@@ -60,6 +66,9 @@ export async function downloadMPDAudio(
 
                 success = true
             } catch (error) {
+                if (dn) {
+                    dn.status = 'failed'
+                }
                 console.error(`Error occurred during download of fragment ${index + 1}:`, error)
                 server.logger.log({
                     level: 'error',
@@ -138,6 +147,17 @@ async function mergePartsAudio(
                 .input(concatenatedFile)
                 .outputOptions('-c copy')
                 .save(`${dir}/${name}.aac`)
+                .on('error', (error) => {
+                    console.log(error)
+                    server.logger.log({
+                        level: 'error',
+                        message: `Error merging audio fragments of Download ${downloadID} Audio ${name}`,
+                        error: error,
+                        timestamp: new Date().toISOString(),
+                        section: 'crunchyrollDownloadProcessAudioMergingFFMPEG'
+                    })
+                    reject(error)
+                })
                 .on('end', async () => {
                     console.log('Merging finished')
                     await deleteFolder(tmp)
