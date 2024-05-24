@@ -453,6 +453,8 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             data.geo = geo
 
             playlist = data
+
+            deleteVideoToken(q, playlist.token)
         } else {
             const error = await response.text()
             const errorJSON: {
@@ -502,99 +504,94 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
         throw new Error(e as string)
     }
 
-    if (isProxyActive) await deleteVideoToken(q, playlist.token)
-    decrementPlaylistCounter()
-
-    for (const p of proxies) {
-        if (p.code !== login.country) {
-            await incrementPlaylistCounter()
-
-            const logindata = await crunchyLogin(account.username, account.password, p.code)
-
-            if (!logindata) return
-
-            const headers = {
-                Authorization: `Bearer ${logindata.access_token}`,
-                'X-Cr-Disable-Drm': 'true',
-                'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
-            }
-
-            const responseProx = await fetch(
-                `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
-                    endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
-                }`,
-                {
-                    method: 'GET',
-                    headers: headers
+    if (isProxyActive) {
+        for (const p of proxies) {
+            if (p.code !== login.country) {
+                await incrementPlaylistCounter()
+    
+                const logindata = await crunchyLogin(account.username, account.password, p.code)
+    
+                if (!logindata) return
+    
+                const headers = {
+                    Authorization: `Bearer ${logindata.access_token}`,
+                    'X-Cr-Disable-Drm': 'true',
+                    'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
                 }
-            )
-
-            if (responseProx.ok) {
-                const dataProx: VideoPlaylistNoGEO = JSON.parse(await responseProx.text())
-
-                dataProx.hardSubs = Object.values((dataProx as any).hardSubs)
-
-                dataProx.subtitles = Object.values((dataProx as any).subtitles)
-
-                for (const v of dataProx.versions) {
-                    if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
-                        playlist.versions.push({ ...v, geo: p.code })
+    
+                const responseProx = await fetch(
+                    `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
+                        endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
+                    }`,
+                    {
+                        method: 'GET',
+                        headers: headers
                     }
-                }
-
-                for (const v of dataProx.subtitles) {
-                    if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
-                        playlist.subtitles.push({ ...v, geo: p.code })
+                )
+    
+                if (responseProx.ok) {
+                    const dataProx: VideoPlaylistNoGEO = JSON.parse(await responseProx.text())
+    
+                    dataProx.hardSubs = Object.values((dataProx as any).hardSubs)
+    
+                    dataProx.subtitles = Object.values((dataProx as any).subtitles)
+    
+                    for (const v of dataProx.versions) {
+                        if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
+                            playlist.versions.push({ ...v, geo: p.code })
+                        }
                     }
-                }
-
-                for (const v of dataProx.hardSubs) {
-                    if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
-                        playlist.hardSubs.push({ ...v, geo: p.code })
+    
+                    for (const v of dataProx.subtitles) {
+                        if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
+                            playlist.subtitles.push({ ...v, geo: p.code })
+                        }
                     }
-                }
-
-                await deleteVideoToken(q, dataProx.token)
-            } else {
-                decrementPlaylistCounter()
-                const error = await responseProx.text()
-                const errorJSON: {
-                    activeStreams: {
-                        accountId: string
-                        active: boolean
-                        assetId: string
-                        clientId: string
-                        contentId: string
-                        country: string
-                        createdTimestamp: string
-                        deviceSubtype: string
-                        deviceType: string
-                        episodeIdentity: string
-                        id: string
-                        token: string
-                    }[]
-                } = await JSON.parse(error)
-
-                if (errorJSON && errorJSON.activeStreams && errorJSON.activeStreams.length !== 0) {
-                    for (const e of errorJSON.activeStreams) {
-                        await deleteVideoToken(e.contentId, e.token)
+    
+                    for (const v of dataProx.hardSubs) {
+                        if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
+                            playlist.hardSubs.push({ ...v, geo: p.code })
+                        }
                     }
-
-                    server.logger.log({
-                        level: 'error',
-                        message: 'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
-                        error: errorJSON,
-                        timestamp: new Date().toISOString(),
-                        section: 'playlistCrunchyrollFetch'
-                    })
+    
+                    deleteVideoToken(q, dataProx.token)
+                } else {
+                    decrementPlaylistCounter()
+                    const error = await responseProx.text()
+                    const errorJSON: {
+                        activeStreams: {
+                            accountId: string
+                            active: boolean
+                            assetId: string
+                            clientId: string
+                            contentId: string
+                            country: string
+                            createdTimestamp: string
+                            deviceSubtype: string
+                            deviceType: string
+                            episodeIdentity: string
+                            id: string
+                            token: string
+                        }[]
+                    } = await JSON.parse(error)
+    
+                    if (errorJSON && errorJSON.activeStreams && errorJSON.activeStreams.length !== 0) {
+                        for (const e of errorJSON.activeStreams) {
+                            deleteVideoToken(e.contentId, e.token)
+                        }
+    
+                        server.logger.log({
+                            level: 'error',
+                            message: 'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
+                            error: errorJSON,
+                            timestamp: new Date().toISOString(),
+                            section: 'playlistCrunchyrollFetch'
+                        })
+                    }
                 }
             }
         }
     }
-
-    await incrementPlaylistCounter()
-    await activateVideoToken(q, playlist.token)
-
     return { data: playlist, account_id: login.account_id }
 }
 
@@ -630,6 +627,7 @@ export async function removeVideoToken(content: string, token: string) {
 
         return 'ok'
     } else {
+        decrementPlaylistCounter()
         const error = await response.text()
         // messageBox('error', ['Cancel'], 2, 'Failed to delete Crunchyroll Video Token', 'Failed to delete Crunchyroll Video Token', error)
         server.logger.log({
@@ -675,6 +673,7 @@ export async function deleteVideoToken(content: string, token: string) {
 
         return 'ok'
     } else {
+        decrementPlaylistCounter()
         const error = await response.text()
         // messageBox('error', ['Cancel'], 2, 'Failed to delete Crunchyroll Video Token', 'Failed to delete Crunchyroll Video Token', error)
         server.logger.log({
@@ -702,6 +701,7 @@ export async function activateVideoToken(content: string, token: string) {
         Authorization: `Bearer ${login.access_token}`
     }
 
+    await incrementPlaylistCounter()
     const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}/keepAlive?playhead=1`, {
         method: 'PATCH',
         headers: headers
@@ -715,8 +715,6 @@ export async function activateVideoToken(content: string, token: string) {
             timestamp: new Date().toISOString(),
             section: 'tokenDeletionCrunchyrollFetch'
         })
-
-        decrementPlaylistCounter()
 
         return 'ok'
     } else {
@@ -757,6 +755,8 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
     const contentID = match[1]
     const playlistID = match[2]
 
+    await activateVideoToken(contentID, playlistID)
+
     try {
         const response = await fetch(q, {
             method: 'GET',
@@ -764,7 +764,7 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
         })
 
         if (response.ok) {
-            await deleteVideoToken(contentID, playlistID)
+            deleteVideoToken(contentID, playlistID)
             const raw = await response.text()
 
             const parsed = mpdParse(raw)
@@ -780,7 +780,6 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
             if (errorJSON.error === 'Invalid streaming token') {
                 decrementPlaylistCounter()
 
-                await incrementPlaylistCounter()
                 await activateVideoToken(contentID, playlistID)
                 return await crunchyGetPlaylistMPD(q, geo)
             }
@@ -881,11 +880,11 @@ export async function checkAccountMaxStreams() {
 
             if (!data.items || data.items.length === 0) return 1
 
-            if (data.items.find((i) => i.benefit === 'concurrent_streams.4')) return 2
+            if (data.items.find((i) => i.benefit === 'concurrent_streams.4')) return 4
 
             if (data.items.find((i) => i.benefit === 'concurrent_streams.1')) return 1
 
-            if (data.items.find((i) => i.benefit === 'concurrent_streams.6')) return 3
+            if (data.items.find((i) => i.benefit === 'concurrent_streams.6')) return 6
 
             return 1
         } else {
