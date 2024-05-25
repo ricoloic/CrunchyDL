@@ -10,29 +10,15 @@ export default (mainWindow: BrowserWindow) => {
     const isDevelopment = process.env.NODE_ENV === 'development'
     if (process.platform === 'darwin') {
         // OS X
-        const name = 'electron-nuxt3'
+        const name = 'Crunchyroll Downloader'
         template.unshift({
             label: name,
             submenu: [
-                {
-                    label: 'About ' + name,
-                    role: 'about'
-                },
                 {
                     label: 'Quit',
                     accelerator: 'Command+Q',
                     click() {
                         app.quit()
-                    }
-                },
-                {
-                    label: 'Reload',
-                    accelerator: 'Command+R',
-                    click() {
-                        // Reload the current window
-                        if (mainWindow) {
-                            mainWindow.reload()
-                        }
                     }
                 },
                 ...(isDevelopment
