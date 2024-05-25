@@ -13,7 +13,8 @@
 
 ## Supported Platforms
 - Windows
-- Linux (since v1.1.0)
+- Linux
+- MacOS
 
 ## Getting Started on Windows
 **Step 1:** Download the latest windows installer [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
@@ -28,6 +29,15 @@
 **Step 2 for .AppImage:** Just run it, the downloader will appear!
 
 **Step 2 for .deb:** Run the .deb file with your package manager and install it!
+
+**Thats it!** Now you can start download!
+
+## Getting Started on MacOS
+**Step 1:** Download one of the latest macos builds [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
+
+**Step 2:** Run the installer (dmg).
+
+**Step 3:** Run the app.
 
 **Thats it!** Now you can start download!
 
