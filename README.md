@@ -3,7 +3,11 @@
 
 ![Downloads](https://img.shields.io/github/downloads/stratuma/Crunchyroll-Downloader-v4.0/total?style=for-the-badge&logo=&color=a1a1a1)
 ![GitHub Repo stars](https://img.shields.io/github/stars/stratuma/Crunchyroll-Downloader-v4.0?style=for-the-badge&logo=&color=a1a1a1)
-![Repo size](https://img.shields.io/github/repo-size/stratuma/Crunchyroll-Downloader-v4.0?label=total%20size&style=for-the-badge&logo=&color=a1a1a1&logoColor=a1a1a1)
+[![Discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/rtZn4zm7m5)
+
+![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![MacOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white)
 
 **A simple tool for downloading videos from Crunchyroll and ADN.**
 
@@ -13,7 +17,8 @@
 
 ## Supported Platforms
 - Windows
-- Linux (since v1.1.0)
+- Linux
+- MacOS
 
 ## Getting Started on Windows
 **Step 1:** Download the latest windows installer [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
@@ -28,6 +33,15 @@
 **Step 2 for .AppImage:** Just run it, the downloader will appear!
 
 **Step 2 for .deb:** Run the .deb file with your package manager and install it!
+
+**Thats it!** Now you can start download!
+
+## Getting Started on MacOS
+**Step 1:** Download one of the latest macos builds [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
+
+**Step 2:** Run the installer (dmg).
+
+**Step 3:** Run the app.
 
 **Thats it!** Now you can start download!
 
