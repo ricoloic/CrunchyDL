@@ -239,6 +239,18 @@ export interface CrunchyEpisodesFetch {
     }
 }
 
+export interface CrunchyEpisodeFetch {
+    total: number
+    data: Array<{
+        episode_metadata: {
+            series_id: string
+        }
+    }>
+    meta: {
+        versions_considered: boolean
+    }
+}
+
 export interface Proxy {
     name: string
     code: string

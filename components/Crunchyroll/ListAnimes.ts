@@ -1,7 +1,7 @@
 import type { CrunchyrollSearchResults } from '../Search/Types'
 import { crunchyLogin } from './Account'
 import { getProxies } from './Proxy'
-import type { CrunchyAnimeFetch, CrunchySearchFetch } from './Types'
+import type { CrunchyAnimeFetch, CrunchyEpisodeFetch, CrunchyEpisodesFetch, CrunchySearchFetch } from './Types'
 
 export async function searchCrunchy(q: string) {
     var isProxyActive: boolean | undefined
@@ -123,7 +123,13 @@ export async function getCRSeries(q: string) {
         isProxyActive = result
     })
 
-    const { data: proxies } = await getProxies()
+    var proxies
+
+    if (isProxyActive) {
+        const { data: prox } = await getProxies()
+
+        proxies = prox.value
+    }
 
     const { data: token, error: tokenerror } = await crunchyLogin('LOCAL')
 
@@ -143,8 +149,8 @@ export async function getCRSeries(q: string) {
         throw new Error(JSON.stringify(error.value))
     }
 
-    if (!data.value && proxies.value && isProxyActive) {
-        for (const p of proxies.value) {
+    if (!data.value && proxies && isProxyActive) {
+        for (const p of proxies) {
             if (p.status !== 'offline') {
                 const { data: tokeng, error: tokenerrorg } = await crunchyLogin(p.code)
 
@@ -191,4 +197,69 @@ export async function getCRSeries(q: string) {
         Images: anime.images,
         Geo: undefined
     }
+}
+
+export async function getCREpisodeSeriesID(q: string) {
+    var isProxyActive: boolean | undefined
+    ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
+        isProxyActive = result
+    })
+
+    var proxies
+
+    if (isProxyActive) {
+        const { data: prox } = await getProxies()
+
+        proxies = prox.value
+    }
+
+    const { data: token, error: tokenerror } = await crunchyLogin('LOCAL')
+
+    if (!token.value) {
+        return
+    }
+
+    const { data, error } = await useFetch<CrunchyEpisodeFetch>(`https://beta-api.crunchyroll.com/content/v2/cms/objects/${q}`, {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token.value.access_token}`
+        }
+    })
+
+    if (error.value) {
+        console.error(error.value)
+        throw new Error(JSON.stringify(error.value))
+    }
+
+    if (!data.value && proxies && isProxyActive) {
+        for (const p of proxies) {
+            if (p.status !== 'offline') {
+                const { data: tokeng, error: tokenerrorg } = await crunchyLogin(p.code)
+
+                if (!tokeng.value) {
+                    return
+                }
+
+                const { data: fdata, error: ferror } = await useFetch<CrunchyEpisodeFetch>(`https://beta-api.crunchyroll.com/content/v2/cms/series/${q}`, {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${tokeng.value.access_token}`
+                    }
+                })
+
+                if (ferror.value) {
+                    console.error(ferror.value)
+                    throw new Error(JSON.stringify(ferror.value))
+                }
+
+                data.value = fdata.value
+            }
+        }
+    }
+
+    if (!data.value) return
+
+    const episode = data.value.data[0]
+
+    return episode.episode_metadata.series_id
 }

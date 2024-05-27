@@ -347,7 +347,7 @@ import { searchADN } from '~/components/ADN/ListAnimes'
 import { getEpisodesWithShowIdADN } from '~/components/ADN/ListEpisodes'
 import type { ADNEpisode, ADNEpisodes } from '~/components/ADN/Types'
 import { checkAccount } from '~/components/Crunchyroll/Account'
-import { getCRSeries, searchCrunchy } from '~/components/Crunchyroll/ListAnimes'
+import { getCREpisodeSeriesID, getCRSeries, searchCrunchy } from '~/components/Crunchyroll/ListAnimes'
 import { listEpisodeCrunchy } from '~/components/Crunchyroll/ListEpisodes'
 import { listSeasonCrunchy } from '~/components/Crunchyroll/ListSeasons'
 import type { CrunchyEpisode, CrunchyEpisodes } from '~/components/Episode/Types'
@@ -674,9 +674,52 @@ const switchToSeason = async () => {
         }
     }
 
-    if (url.value && url.value.includes('crunchyroll') && !CRselectedShow.value) {
+    if (url.value && url.value.includes('crunchyroll') && url.value.includes('/series/') && !CRselectedShow.value) {
         const seriesID = url.value.split('/')
         CRselectedShow.value = await getCRSeries(seriesID[5])
+        if (!CRselectedShow.value) return
+        seasons.value = await listSeasonCrunchy(CRselectedShow.value.ID, CRselectedShow.value.Geo)
+        if (!seasons.value) {
+            isFetchingSeasons.value--
+            return
+        }
+        selectedSeason.value = seasons.value[0]
+        episodes.value = await listEpisodeCrunchy(selectedSeason.value.id, CRselectedShow.value.Geo)
+        if (episodes.value) {
+            selectedStartEpisode.value = episodes.value[0]
+            selectedEndEpisode.value = episodes.value[0]
+        }
+        tab.value = 2
+
+        selectedDubs.value = []
+        selectedSubs.value = []
+
+        if (dubLocales.value && dubLocales.value.length !== 0) {
+            for (const a of dubLocales.value) {
+                if (CRselectedShow.value.Dubs.find((cr) => cr === a.locale)) {
+                    toggleDub(a)
+                }
+            }
+        } else {
+            selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+        }
+
+        if (subLocales.value && subLocales.value.length !== 0) {
+            for (const a of subLocales.value) {
+                if (CRselectedShow.value.Subs.find((cr) => cr === a.locale)) {
+                    toggleSub(a)
+                }
+            }
+        } else {
+            selectedSubs.value = []
+        }
+    }
+
+    if (url.value && url.value.includes('crunchyroll') && url.value.includes('/watch/') && !CRselectedShow.value) {
+        const episodeID = url.value.split('/')
+        const seriesID = await getCREpisodeSeriesID(episodeID[5])
+        if (!seriesID) return
+        CRselectedShow.value = await getCRSeries(seriesID)
         if (!CRselectedShow.value) return
         seasons.value = await listSeasonCrunchy(CRselectedShow.value.ID, CRselectedShow.value.Geo)
         if (!seasons.value) {
