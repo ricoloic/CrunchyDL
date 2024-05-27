@@ -38,7 +38,7 @@ export async function searchCrunchy(q: string) {
 
     if (error.value) {
         console.error(error.value)
-        throw new Error(JSON.stringify(error.value))
+        return
     }
 
     if (proxies && isProxyActive) {
@@ -67,7 +67,7 @@ export async function searchCrunchy(q: string) {
 
                 if (ferror.value) {
                     console.error(ferror.value)
-                    throw new Error(JSON.stringify(ferror.value))
+                    return
                 }
 
                 if (fdata.value) {
@@ -146,7 +146,7 @@ export async function getCRSeries(q: string) {
 
     if (error.value) {
         console.error(error.value)
-        throw new Error(JSON.stringify(error.value))
+        return
     }
 
     if (!data.value && proxies && isProxyActive) {
@@ -167,7 +167,7 @@ export async function getCRSeries(q: string) {
 
                 if (ferror.value) {
                     console.error(ferror.value)
-                    throw new Error(JSON.stringify(ferror.value))
+                    return
                 }
 
                 if (fdata.value) {
@@ -228,7 +228,7 @@ export async function getCREpisodeSeriesID(q: string) {
 
     if (error.value) {
         console.error(error.value)
-        throw new Error(JSON.stringify(error.value))
+        return
     }
 
     if (!data.value && proxies && isProxyActive) {
@@ -249,7 +249,7 @@ export async function getCREpisodeSeriesID(q: string) {
 
                 if (ferror.value) {
                     console.error(ferror.value)
-                    throw new Error(JSON.stringify(ferror.value))
+                    return
                 }
 
                 data.value = fdata.value

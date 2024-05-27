@@ -677,7 +677,11 @@ const switchToSeason = async () => {
     if (url.value && url.value.includes('crunchyroll') && url.value.includes('/series/') && !CRselectedShow.value) {
         const seriesID = url.value.split('/')
         CRselectedShow.value = await getCRSeries(seriesID[5])
-        if (!CRselectedShow.value) return
+        if (!CRselectedShow.value) {
+            alert('Series not found')
+            isFetchingSeasons.value--
+            return
+        }
         seasons.value = await listSeasonCrunchy(CRselectedShow.value.ID, CRselectedShow.value.Geo)
         if (!seasons.value) {
             isFetchingSeasons.value--
@@ -718,8 +722,17 @@ const switchToSeason = async () => {
     if (url.value && url.value.includes('crunchyroll') && url.value.includes('/watch/') && !CRselectedShow.value) {
         const episodeID = url.value.split('/')
         const seriesID = await getCREpisodeSeriesID(episodeID[5])
-        if (!seriesID) return
+        if (!seriesID) {
+            alert('Episode not found')
+            isFetchingSeasons.value--
+            return
+        }
         CRselectedShow.value = await getCRSeries(seriesID)
+        if (!CRselectedShow.value) {
+            alert('Series not found')
+            isFetchingSeasons.value--
+            return
+        }
         if (!CRselectedShow.value) return
         seasons.value = await listSeasonCrunchy(CRselectedShow.value.ID, CRselectedShow.value.Geo)
         if (!seasons.value) {
