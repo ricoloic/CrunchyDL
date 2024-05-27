@@ -9,7 +9,7 @@ export async function searchCrunchy(q: string) {
         isProxyActive = result
     })
 
-    var proxies;
+    var proxies
 
     if (isProxyActive) {
         const { data: prox } = await getProxies()

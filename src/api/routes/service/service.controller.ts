@@ -176,15 +176,15 @@ export async function checkProxiesController(request: FastifyRequest, reply: Fas
                 const response: Response = await Promise.race([
                     fetch(p.url + 'health', { method: 'GET' }),
                     new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 500))
-                ]);
-        
+                ])
+
                 if (response.ok) {
-                    p.status = 'online';
+                    p.status = 'online'
                 } else {
-                    p.status = 'offline';
+                    p.status = 'offline'
                 }
             } catch (error) {
-                p.status = 'offline';
+                p.status = 'offline'
             }
         }
 
