@@ -15,10 +15,6 @@ export function getFFMPEGPath() {
 
         return { ffmpeg: ffmpeg, ffprobe: ffprobe }
     } else {
-        // Linux:
-        // const ffmpeg = path.join(ffmpegPath, 'ffmpeg')
-        // const ffprobe = path.join(ffmpegPath, 'ffprobe')
-
         const ffmpeg = path.join(ffmpegPath, 'ffmpeg.exe')
         const ffprobe = path.join(ffmpegPath, 'ffprobe.exe')
 
