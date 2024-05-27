@@ -1293,32 +1293,22 @@ export async function checkProxies() {
             }
         ]
 
+        console.log('ok')
+
         for (const p of proxies) {
-            const response = await fetch(p.url + 'health', {
-                method: 'GET'
-            })
+            try {
+                const response: Response = await Promise.race([
+                    fetch(p.url + 'health', { method: 'GET' }),
+                    new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 500))
+                ])
 
-            if (response.ok) {
-                p.status = 'online'
-                server.logger.log({
-                    level: 'info',
-                    message: 'Proxy fetch successful, marking as online',
-                    proxy: p.name,
-                    timestamp: new Date().toISOString(),
-                    section: 'checkProxyFetch'
-                })
-            } else {
-                const data = await response.text()
-
+                if (response.ok) {
+                    p.status = 'online'
+                } else {
+                    p.status = 'offline'
+                }
+            } catch (error) {
                 p.status = 'offline'
-                server.logger.log({
-                    level: 'error',
-                    message: 'Proxy fetch failed, marking as offline',
-                    proxy: p.name,
-                    error: data,
-                    timestamp: new Date().toISOString(),
-                    section: 'checkProxyFetch'
-                })
             }
         }
 

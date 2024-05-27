@@ -9,7 +9,13 @@ export async function searchCrunchy(q: string) {
         isProxyActive = result
     })
 
-    const { data: proxies } = await getProxies()
+    var proxies;
+
+    if (isProxyActive) {
+        const { data: prox } = await getProxies()
+
+        proxies = prox.value
+    }
 
     const { data: token, error: tokenerror } = await crunchyLogin('LOCAL')
 
@@ -35,8 +41,8 @@ export async function searchCrunchy(q: string) {
         throw new Error(JSON.stringify(error.value))
     }
 
-    if (proxies.value && isProxyActive) {
-        for (const p of proxies.value) {
+    if (proxies && isProxyActive) {
+        for (const p of proxies) {
             if (p.status !== 'offline') {
                 const { data: tokeng, error: tokenerrorg } = await crunchyLogin(p.code)
 
