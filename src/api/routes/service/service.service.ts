@@ -710,11 +710,38 @@ export async function downloadCrunchyrollPlaylist(
             if (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection) {
                 if (!playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh) {
                     console.log('No PSSH found, exiting.')
+                    messageBox(
+                        'error',
+                        ['Cancel'],
+                        2,
+                        'Encryption Detect error',
+                        'Encryption Detect error',
+                        'Audio file is decrypted, but it looks like not with widevine. Stopping Download. Contact Developer'
+                    )
+                    server.logger.log({
+                        level: 'error',
+                        message: `Audio file is decrypted, but it looks like not with widevine in Download ${downloadID}`,
+                        error: 'No PSSH found',
+                        timestamp: new Date().toISOString(),
+                        section: 'crunchyrollDownloadProcessAudioDecryption'
+                    })
                     return
                 }
                 pssh = Uint8ArrayToBase64(playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh)
 
                 keys = await getDRMKeys(pssh, assetId[1], list.account_id)
+
+                if (!keys) {
+                    await updatePlaylistByID(downloadID, 'failed')
+                    server.logger.log({
+                        level: 'error',
+                        message: `No decryption keys, failing Download ${downloadID}`,
+                        error: 'No decryption keys',
+                        timestamp: new Date().toISOString(),
+                        section: 'crunchyrollDownloadProcessAudioDecryption'
+                    })
+                    throw Error(`No decryption keys, failing Download ${downloadID}`)
+                }
             }
 
             if (
@@ -925,6 +952,18 @@ export async function downloadCrunchyrollPlaylist(
             pssh = Uint8ArrayToBase64(hq.contentProtection['com.widevine.alpha'].pssh)
 
             keys = await getDRMKeys(pssh, assetId[1], play.account_id)
+
+            if (!keys) {
+                await updatePlaylistByID(downloadID, 'failed')
+                server.logger.log({
+                    level: 'error',
+                    message: `No decryption keys, failing Download ${downloadID}`,
+                    error: 'No decryption keys',
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessVideoDecryption'
+                })
+                throw Error(`No decryption keys, failing Download ${downloadID}`)
+            }
         }
 
         if ((hq.contentProtection && !drmL3blob && !drmL3key) || (hq.contentProtection && !drmL3blob) || (hq.contentProtection && !drmL3key)) {
