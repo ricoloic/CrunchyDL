@@ -1018,11 +1018,9 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
         let success = false
         while (!success) {
             try {
-                var stream
-
-                stream = fs.createWriteStream(`${path}/${part.filename}`)
-
                 const { body } = await fetch(part.url)
+
+                var stream = fs.createWriteStream(`${path}/${part.filename}`)
 
                 const readableStream = Readable.from(body as any)
                 let partDownloadedBytes = 0
