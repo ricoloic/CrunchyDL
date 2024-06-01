@@ -119,7 +119,7 @@
                         </div>
                         <div v-if="p.service === 'CR'" class="text-base capitalize h-full flex items-center">
                             {{ (p.media as CrunchyEpisode).series_title }} Season {{ (p.media as CrunchyEpisode).season_number }} Episode
-                            {{ (p.media as CrunchyEpisode).episode_number }}
+                            {{ (p.media as CrunchyEpisode).episode_number ? (p.media as CrunchyEpisode).episode_number : (p.media as CrunchyEpisode).episode }}
                         </div>
                         <div v-if="p.service === 'ADN'" class="text-base capitalize h-full">
                             {{ (p.media as ADNEpisode).show.title }} Season {{ (p.media as ADNEpisode).season ? (p.media as ADNEpisode).season : 1 }} Episode

@@ -293,6 +293,7 @@ async function checkPlaylists() {
                         (e.dataValues.media as CrunchyEpisode).series_title,
                         (e.dataValues.media as CrunchyEpisode).season_number,
                         (e.dataValues.media as CrunchyEpisode).episode_number,
+                        (e.dataValues.media as CrunchyEpisode).episode,
                         e.dataValues.quality,
                         e.dataValues.dir,
                         e.dataValues.format,
@@ -464,6 +465,7 @@ export async function downloadCrunchyrollPlaylist(
     name: string,
     season: number,
     episode: number,
+    episode_string: string,
     quality: 1080 | 720 | 480 | 360 | 240,
     downloadPath: string,
     format: 'mp4' | 'mkv',
@@ -1030,8 +1032,8 @@ export async function downloadCrunchyrollPlaylist(
         .replace('{seriesName}', name.replace(/[/\\?%*:|"<>]/g, ''))
         .replace('{seasonNumber}', season.toString())
         .replace('{seasonNumberDD}', season.toString().padStart(2, '0'))
-        .replace('{episodeNumber}', episode.toString())
-        .replace('{episodeNumberDD}', episode.toString().padStart(2, '0'))
+        .replace('{episodeNumber}', episode ? episode.toString() : episode_string)
+        .replace('{episodeNumberDD}', episode ? episode.toString().padStart(2, '0') : episode_string)
         .replace('{quality}', quality.toString() + 'p')
 
     await mergeVideoFile(file as string, audios, subss, seasonFolder, episodeNaming, format, downloadID)

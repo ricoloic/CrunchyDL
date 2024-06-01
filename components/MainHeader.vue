@@ -18,12 +18,6 @@
             >
         </div>
         <div class="w-full flex gap-2 flex-row items-center justify-center">
-            <!-- <button  class="flex items-center justify-center px-2 py-2 gap-1 transition-all bg-[#ffffff16] hover:bg-[#ffffff25] rounded-lg select-none" style="-webkit-app-region: no-drag">
-        <Icon name="iconamoon:playlist" class="h-3.5 w-3.5 text-white" />
-        <div class="text-[11px] text-white font-dm">
-          PLAYLIST
-        </div>
-      </button> -->
             <button
                 @click="openSettings"
                 class="flex items-center justify-center px-2 py-2 gap-1 transition-all bg-[#ffffff16] hover:bg-[#ffffff25] rounded-lg select-none"
@@ -37,9 +31,6 @@
 </template>
 
 <script lang="ts" setup>
-import { checkAccount, crunchyLogin } from './Crunchyroll/Account'
-import { openNewWindow } from './Functions/WindowHandler'
-
 const isProduction = process.env.NODE_ENV !== 'development'
 
 async function openSettings() {
