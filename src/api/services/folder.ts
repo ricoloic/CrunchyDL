@@ -31,6 +31,17 @@ export async function checkDirectoryExistence(dir: string) {
     }
 }
 
+export async function checkFileExistence(file: string) {
+    try {
+        await fs.promises.access(file)
+        console.log(`File ${file} exists.`)
+        return true
+    } catch (error) {
+        console.log(`File ${file} does not exist.`)
+        return false
+    }
+}
+
 export async function createFolderName(name: string, dir: string) {
     var tempPath = (await settings.get('tempPath')) as string
 

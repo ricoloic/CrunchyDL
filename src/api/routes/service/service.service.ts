@@ -1,7 +1,7 @@
 import { Account, Playlist } from '../../db/database'
 import { downloadMPDAudio } from '../../services/audio'
 import { concatenateTSFiles } from '../../services/concatenate'
-import { createFolder, createFolderName, deleteFolder, deleteTemporaryFolders } from '../../services/folder'
+import { checkFileExistence, createFolder, createFolderName, deleteFolder, deleteTemporaryFolders } from '../../services/folder'
 import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
 import { checkAccountMaxStreams, crunchyGetPlaylist, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
@@ -541,8 +541,40 @@ export async function downloadCrunchyrollPlaylist(
 
     await updatePlaylistByID(downloadID, undefined, undefined, seasonFolder)
 
-    const drmL3blob = await settings.get('l3blob')
-    const drmL3key = await settings.get('l3key')
+    const drmL3blob = (await settings.get('l3blob')) as string
+    const drmL3key = (await settings.get('l3key')) as string
+
+    if (drmL3blob) {
+        const found = await checkFileExistence(drmL3blob)
+
+        if (!found) {
+            messageBox('error', ['Cancel'], 2, 'Widevine Key path is invalid', 'Widevine Key path is invalid', 'Widevine Key path is invalid, downloading without drm decryption')
+            server.logger.log({
+                level: 'error',
+                message: 'Widevine Key path is invalid, downloading without drm decryption',
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollCheckDRMPath'
+            })
+            await settings.set('CREndpoint', 1)
+            await settings.set('l3blob', null)
+        }
+    }
+
+    if (drmL3key) {
+        const found = await checkFileExistence(drmL3key)
+
+        if (!found) {
+            messageBox('error', ['Cancel'], 2, 'Widevine Key path is invalid', 'Widevine Key path is invalid', 'Widevine Key path is invalid, downloading without drm decryption')
+            server.logger.log({
+                level: 'error',
+                message: 'Widevine Key path is invalid, downloading without drm decryption',
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollCheckDRMPath'
+            })
+            await settings.set('CREndpoint', 1)
+            await settings.set('l3key', null)
+        }
+    }
 
     const dubDownloadList: Array<{
         audio_locale: string
