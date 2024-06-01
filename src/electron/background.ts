@@ -24,8 +24,7 @@ function createWindow() {
         icon: __dirname + '/icon/favicon.ico',
         width: 950,
         height: 700,
-        // Linux:
-        // backgroundColor: '#2222222',
+        backgroundColor: '#222222',
         webPreferences: {
             devTools: true,
             nodeIntegration: true,
@@ -43,7 +42,7 @@ function createWindow() {
         maximizable: false,
         vibrancy: 'fullscreen-ui',
         // Not working when unfocusing the window somehow?
-        backgroundMaterial: 'acrylic',
+        // backgroundMaterial: 'acrylic',
         show: false,
         // For Linux
         autoHideMenuBar: true
@@ -342,8 +341,7 @@ ipcMain.handle(
             icon: __dirname + '/icon/favicon.ico',
             width: opt.width,
             height: opt.height,
-            // Linux:
-            // backgroundColor: '#2222222',
+            backgroundColor: '#222222',
             webPreferences: {
                 devTools: true,
                 nodeIntegration: true,
@@ -360,7 +358,7 @@ ipcMain.handle(
             fullscreen: false,
             maximizable: false,
             vibrancy: 'fullscreen-ui',
-            backgroundMaterial: 'acrylic',
+            // backgroundMaterial: 'acrylic',
             show: false,
             // For Linux
             autoHideMenuBar: true

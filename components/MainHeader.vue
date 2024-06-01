@@ -1,5 +1,5 @@
 <template>
-    <div class="fixed w-full flex flex-row px-2 bg-[#11111189] h-14 z-10 gap-1" style="-webkit-app-region: drag">
+    <div class="fixed w-full flex flex-row px-2 bg-[#111111] h-14 z-10 gap-1" style="-webkit-app-region: drag">
         <div class="w-full flex gap-10 flex-row items-center justify-center px-5">
             <button
                 @click="openAddAnime"
