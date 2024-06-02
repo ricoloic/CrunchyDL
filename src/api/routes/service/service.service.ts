@@ -1080,6 +1080,8 @@ export async function downloadCrunchyrollPlaylist(
 }
 
 async function downloadParts(parts: { filename: string; url: string }[], downloadID: number, dir: string, drmkeys?: { kid: string; key: string }[] | undefined) {
+    const downloadedParts: { filename: string; url: string }[] = []
+
     const path = await createFolder()
     const dn = downloading.find((i) => i.id === downloadID)
 
@@ -1087,57 +1089,82 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
     let totalSizeBytes = 0
     let startTime = Date.now()
 
-    for (const [index, part] of parts.entries()) {
-        let success = false
-        while (!success) {
-            try {
-                const { body } = await fetch(part.url)
+    async function downloadPart(part: { filename: string; url: string }, ind: number) {
+        try {
+            var stream
 
-                var stream = fs.createWriteStream(`${path}/${part.filename}`)
+            console.log(`[Video DOWNLOAD] Fetching Part ${ind + 1}`)
 
-                const readableStream = Readable.from(body as any)
-                let partDownloadedBytes = 0
-                let partSizeBytes = 0
+            const response = await fetch(part.url)
 
-                readableStream.on('data', (chunk) => {
-                    partDownloadedBytes += chunk.length
-                    totalDownloadedBytes += chunk.length
-                    totalSizeBytes += chunk.length
-                })
-
-                await finished(readableStream.pipe(stream))
-
-                console.log(`Fragment ${index + 1} downloaded`)
-
-                if (dn) {
-                    const tot = totalSizeBytes
-                    dn.downloadedParts++
-                    const endTime = Date.now()
-                    const durationInSeconds = (endTime - startTime) / 1000
-                    dn.downloadSpeed = totalDownloadedBytes / 1024 / 1024 / durationInSeconds
-                    dn.totalDownloaded = tot
-                }
-
-                success = true
-            } catch (error) {
-                console.error(`Error occurred during download of fragment ${index + 1}:`, error)
-                server.logger.log({
-                    level: 'error',
-                    message: `Error occurred during download of fragment ${index + 1}`,
-                    error: error,
-                    timestamp: new Date().toISOString(),
-                    section: 'crunchyrollDownloadProcessVideoDownload'
-                })
-                console.log(`Retrying download of fragment ${index + 1}...`)
-                server.logger.log({
-                    level: 'warn',
-                    message: `Retrying download of fragment ${index + 1} because failed`,
-                    timestamp: new Date().toISOString(),
-                    section: 'crunchyrollDownloadProcessVideoDownload'
-                })
-                await new Promise((resolve) => setTimeout(resolve, 5000))
+            if (!response.ok) {
+                throw Error(await response.text())
             }
+
+            console.log(`[Video DOWNLOAD] Writing Part ${ind + 1}`)
+
+            stream = fs.createWriteStream(`${path}/${part.filename}`)
+
+            const readableStream = Readable.from(response.body as any)
+            let partDownloadedBytes = 0
+
+            readableStream.on('data', (chunk) => {
+                partDownloadedBytes += chunk.length
+                totalDownloadedBytes += chunk.length
+                totalSizeBytes += chunk.length
+            })
+
+            await finished(readableStream.pipe(stream))
+
+            console.log(`[Video DOWNLOAD] Part ${ind + 1} downloaded`)
+
+            downloadedParts.push(part)
+
+            if (dn) {
+                const tot = totalSizeBytes
+                dn.downloadedParts++
+                const endTime = Date.now()
+                const durationInSeconds = (endTime - startTime) / 1000
+                dn.downloadSpeed = totalDownloadedBytes / 1024 / 1024 / durationInSeconds
+                dn.totalDownloaded = tot
+            }
+        } catch (error) {
+            console.error(`Error occurred during download of fragment ${ind + 1}:`, error)
+            server.logger.log({
+                level: 'error',
+                message: `Error occurred during download of fragment ${ind + 1}`,
+                error: error,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessVideoDownload'
+            })
+            console.log(`Retrying download of fragment ${ind + 1}...`)
+            server.logger.log({
+                level: 'warn',
+                message: `Retrying download of fragment ${ind + 1} because failed`,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessVideoDownload'
+            })
+            await downloadPart(part, ind)
         }
+    }
+
+    for (const [index, part] of parts.entries()) {
+        await downloadPart(part, index)
+    }
+
+    if (parts[6] !== downloadedParts[6] && dn) {
+        messageBox('error', ['Cancel'], 2, 'Video Download failed', 'Video Download failed', 'Validation returned downloaded parts are invalid')
+        server.logger.log({
+            level: 'error',
+            message: 'Video Download failed',
+            error: 'Validation returned downloaded parts are invalid',
+            parts: parts,
+            partsdownloaded: downloadedParts,
+            timestamp: new Date().toISOString(),
+            section: 'VideoCrunchyrollValidation'
+        })
+        await updatePlaylistByID(downloadID, 'failed')
+        return
     }
 
     return await mergeParts(parts, downloadID, path, dir, drmkeys)
@@ -1167,6 +1194,17 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
         await concatenateTSFiles(list, concatenatedFile)
 
         if (drmkeys) {
+            const found = await checkFileExistence(`${tmp}/temp-main.m4s`)
+
+            if (!found) {
+                server.logger.log({
+                    level: 'error',
+                    message: `Temp Videofile not found ${downloadID}`,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessVideoMerging'
+                })
+            }
+
             await updatePlaylistByID(downloadID, 'decrypting video')
             console.log('Video Decryption started')
             const inputFilePath = `${tmp}/temp-main.m4s`
@@ -1178,6 +1216,17 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
             await exec(command)
             console.log('Video Decryption finished')
             concatenatedFile = `${tmp}/main.m4s`
+        }
+
+        const found = await checkFileExistence(`${tmp}/main.m4s`)
+
+        if (!found) {
+            server.logger.log({
+                level: 'error',
+                message: `Temp Videofile not found ${downloadID}`,
+                timestamp: new Date().toISOString(),
+                section: 'crunchyrollDownloadProcessVideoMerging'
+            })
         }
 
         return new Promise((resolve, reject) => {
