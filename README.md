@@ -9,6 +9,13 @@
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 ![MacOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white)
 
+### Important: At the moment its only possible to download with L3 Widevine keys since Crunchyroll added drm to the switch endpoint
+**Guide to get L3 Widevine keys: https://simpcity.su/threads/guide-for-getting-drm-content-wip.181199/**
+
+**Add the keys you get here:**
+
+![Screenshot 2024-06-19 131046](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/7e6f51b9-54e3-4de3-b3be-752cbdc756ae)
+
 **A simple tool for downloading videos from Crunchyroll and ADN.**
 
 ![animation_gif](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/907e23d0-00ed-4fd0-b279-b44450d6f9df)
@@ -51,6 +58,3 @@ Since v1.1.3 the downloader uses proxies to log in to crunchyroll, the reason fo
 The servers are secure and hosted by big hosters like hetzner and ovh, also no login data is logged.
 
 To deactivate it you just have to go to settings -> proxy and uncheck login proxy.
-
-## DRM Protected Streams
-If Crunchyroll disables access to the last DRM free accesspoint I will post a guide on [Discord](https://discord.gg/grGkK4bH95) explaining the widevine stuff and how to bypass it with the downloader.
