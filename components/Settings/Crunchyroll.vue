@@ -3,7 +3,7 @@
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
             <div class="text-sm mb-2">Stream Endpoint</div>
             <select v-model="selectedEndpoint" @change="selectEndpoint()" class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-                <option :value="1">Switch</option>
+                <option :value="1">Switch (DRM PROTECTED)</option>
                 <option :value="2">PS4 (DRM PROTECTED)</option>
                 <option :value="3">PS5 (DRM PROTECTED)</option>
                 <option :value="4">XBOX One (DRM PROTECTED)</option>
