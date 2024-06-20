@@ -331,10 +331,11 @@
                         <div class="text-xl">Back</div>
                     </div>
                 </button>
-                <button class="relative py-3 border-2 border-green-400 rounded-xl flex flex-row items-center justify-center cursor-default w-full">
+                <button @click="added = false" class="relative py-3 border-2 border-green-400 rounded-xl flex flex-row items-center justify-center cursor-default w-full">
                     <div class="flex gap-1 flex-row items-center justify-center transition-all">
-                        <Icon name="material-symbols:check" class="h-6 w-6 text-green-200" />
+                        <!-- <Icon name="material-symbols:check" class="h-6 w-6 text-green-200" /> -->
                         <div class="text-xl text-green-200">Added</div>
+                        <div class="text-xs text-green-200">(Click to Reactivate Add)</div>
                     </div>
                 </button>
             </div>
