@@ -447,7 +447,7 @@ export async function downloadADNPlaylist(
         return
     }
 
-    await mergeVideoFile(file as string, null, [], subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format, downloadID)
+    await mergeVideoFile(file as string, undefined, [], subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format, downloadID)
 
     await updatePlaylistByID(downloadID, 'completed')
 
@@ -1275,7 +1275,7 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
 
 async function mergeVideoFile(
     video: string,
-    chapter: string | null,
+    chapter: string | null | undefined,
     audios: Array<string>,
     subs: Array<string>,
     path: string,
@@ -1319,7 +1319,7 @@ async function mergeVideoFile(
             output.addInput(chapter)
             ffindex++
         }
-        var options = ['-map_metadata 1', '-metadata:s:v:0 VENDOR_ID=', '-metadata:s:v:0 language=', '-c copy', '-map 0']
+        var options = [ chapter ? '-map_metadata 1' : '-map_metadata -1', '-metadata:s:v:0 VENDOR_ID=', '-metadata:s:v:0 language=', '-c copy', '-map 0']
         if (format === 'mp4') {
             options.push('-c:s mov_text')
         }
