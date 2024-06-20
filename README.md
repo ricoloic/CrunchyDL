@@ -7,7 +7,7 @@
 
 ![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
-![MacOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white)
+<!---![MacOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white)-->
 
 ### Important: At the moment its only possible to download with L3 Widevine keys since Crunchyroll added drm to the switch endpoint
 **Guide to get L3 Widevine keys: https://forum.videohelp.com/threads/408031-Dumping-Your-own-L3-CDM-with-Android-Studio**
@@ -25,7 +25,7 @@
 ## Supported Platforms
 - Windows
 - Linux
-- MacOS
+<!---- MacOS-->
 
 ## Getting Started on Windows
 **Step 1:** Download the latest windows installer [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
@@ -43,14 +43,14 @@
 
 **Thats it!** Now you can start download!
 
-## Getting Started on MacOS
+<!---## Getting Started on MacOS
 **Step 1:** Download one of the latest macos builds [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/releases).
 
 **Step 2:** Run the installer (dmg).
 
 **Step 3:** Run the app.
 
-**Thats it!** Now you can start download!
+**Thats it!** Now you can start download!-->
 
 ## Login Proxies
 Since v1.1.3 the downloader uses proxies to log in to crunchyroll, the reason for this is that a lot of content is now geoblocked.
