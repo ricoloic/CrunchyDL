@@ -56,9 +56,53 @@ https://simpcity.su/threads/guide-for-getting-drm-content-wip.181199/
 
 **Thats it!** Now you can start download!-->
 
-## Login Proxies
-Since v1.1.3 the downloader uses proxies to log in to crunchyroll, the reason for this is that a lot of content is now geoblocked.
+## Build instructions
 
-The servers are secure and hosted by big hosters like hetzner and ovh, also no login data is logged.
+Requires:
+```
+1. NodeJS v19 or newer
+2. FFMPEG Binaries (for your os)
+3. MP4Decrypt Binaries (for your os)
+```
 
-To deactivate it you just have to go to settings -> proxy and uncheck login proxy.
+1. Clone the repo: `git clone https://github.com/stratuma/Crunchyroll-Downloader-v4.0.git`
+
+2. Use PNPM to install the packages `pnpm i`
+
+3. Go to node_modules and search for the folder jsencrypt, open the jsencrypt.js file located in bin and replace this:
+```
+(function webpackUniversalModuleDefinition(root, factory) {
+    if(typeof exports === 'object' && typeof module === 'object')
+        module.exports = factory();
+    else if(typeof define === 'function' && define.amd)
+        define([], factory);
+    else if(typeof exports === 'object')
+        exports["JSEncrypt"] = factory();
+    else
+        root["JSEncrypt"] = factory();
+})(window, () => {
+
+```
+
+with this:
+```
+(function (root, factory) {
+  if (typeof exports === 'object' && typeof module === 'object')
+      module.exports = factory();
+  else if (typeof define === 'function' && define.amd)
+      define([], factory);
+  else if (typeof exports === 'object')
+      exports["JSEncrypt"] = factory();
+  else
+      root["JSEncrypt"] = factory();
+})(typeof self !== 'undefined' ? self : this, () => {
+```
+
+4. Put the ffmpeg binaries in the ffmpeg folder and the mp4decrypt binaries in the mp4decrypt folder.
+
+5. To run dev run `pnpm dev:electron`  when on linux or mac, for windows use `pnpm dev:electron:win`
+
+6. To build use the command `pnpm build:electron`
+
+Note:
+To change the platform you want to build (Windows, Linux, MacOS) you have to change the const in build.js `const platform = 'WINDOWS'` on line 70
