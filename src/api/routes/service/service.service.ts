@@ -703,6 +703,8 @@ export async function downloadCrunchyrollPlaylist(
     const chapterDownload = async () => {
         const metadata = await crunchyGetMetadata(e)
 
+        if (!metadata) return null
+
         if (!metadata.intro && !metadata.credits && !metadata.preview && !metadata.recap) {
             return null
         }

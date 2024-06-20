@@ -805,29 +805,15 @@ export async function crunchyGetMetadata(q: string) {
         'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
     }
 
-    try {
-        const response = await fetch(`https://static.crunchyroll.com/skip-events/production/${q}.json`, {
-            method: 'GET',
-            headers: headers
-        })
+    const response = await fetch(`https://static.crunchyroll.com/skip-events/production/${q}.json`, {
+        method: 'GET',
+        headers: headers
+    })
 
-        if (response.ok) {
-            return (await JSON.parse(await response.text())) as VideoMetadata
-        } else {
-            const error = await response.text()
-
-            messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll Metadata', 'Failed to get Crunchyroll Metadata', error)
-            server.logger.log({
-                level: 'error',
-                message: 'Failed to get Crunchyroll Metadata',
-                error: error,
-                timestamp: new Date().toISOString(),
-                section: 'metadataCrunchyrollFetch'
-            })
-            throw new Error(error)
-        }
-    } catch (e) {
-        throw new Error(e as string)
+    if (response.ok) {
+        return (await JSON.parse(await response.text())) as VideoMetadata
+    } else {
+        return null
     }
 }
 

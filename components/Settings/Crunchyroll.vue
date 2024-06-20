@@ -15,7 +15,7 @@
                 <option :value="10">Iphone (DRM PROTECTED)</option>
                 <option :value="11">Ipad (DRM PROTECTED)</option>
                 <option :value="12">Android (DRM PROTECTED)</option>
-                <option :value="13">Samsung TV (DRM PROTECTED) (Fastest)</option>
+                <option :value="13">Samsung TV (DRM PROTECTED)</option>
             </select>
             <div class="text-xs mt-2"> Fallback to non-drm stream if no widevine key provided </div>
         </div>
