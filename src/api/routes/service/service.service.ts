@@ -530,21 +530,27 @@ export async function downloadCrunchyrollPlaylist(
 
     const chapterFolder = await createFolder()
 
-    var seasonFolderNaming = (await settings.get('SeasonTemp')) as string
+    var downloadDir: string = downloadPath;
 
-    if (!seasonFolderNaming) {
-        seasonFolderNaming = '{seriesName} Season {seasonNumber}'
+    var isSeasonFolderActive = (await settings.get('seasonFolderActive')) as string
+
+    if (isSeasonFolderActive) {
+        var seasonFolderNaming = (await settings.get('SeasonTemp')) as string
+
+        if (!seasonFolderNaming) {
+            seasonFolderNaming = '{seriesName} Season {seasonNumber}'
+        }
+    
+        seasonFolderNaming = seasonFolderNaming
+            .replace('{seriesName}', name.replace(/[/\\?%*:|"<>]/g, ''))
+            .replace('{seasonNumber}', season.toString())
+            .replace('{seasonNumberDD}', season.toString().padStart(2, '0'))
+            .replace('{quality}', quality.toString() + 'p')
+    
+            downloadDir = await createFolderName(seasonFolderNaming, downloadPath) 
     }
 
-    seasonFolderNaming = seasonFolderNaming
-        .replace('{seriesName}', name.replace(/[/\\?%*:|"<>]/g, ''))
-        .replace('{seasonNumber}', season.toString())
-        .replace('{seasonNumberDD}', season.toString().padStart(2, '0'))
-        .replace('{quality}', quality.toString() + 'p')
-
-    const seasonFolder = await createFolderName(seasonFolderNaming, downloadPath)
-
-    await updatePlaylistByID(downloadID, undefined, undefined, seasonFolder)
+    await updatePlaylistByID(downloadID, undefined, undefined, downloadDir)
 
     const drmL3blob = (await settings.get('l3blob')) as string
     const drmL3key = (await settings.get('l3key')) as string
@@ -1088,7 +1094,7 @@ export async function downloadCrunchyrollPlaylist(
         .replace('{episodeNumberDD}', episode ? episode.toString().padStart(2, '0') : episode_string)
         .replace('{quality}', quality.toString() + 'p')
 
-    await mergeVideoFile(file as string, chapter, audios, subss, seasonFolder, episodeNaming, format, downloadID)
+    await mergeVideoFile(file as string, chapter, audios, subss, downloadDir, episodeNaming, format, downloadID)
 
     await updatePlaylistByID(downloadID, 'completed')
 

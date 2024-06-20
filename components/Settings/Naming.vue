@@ -33,6 +33,10 @@
 
             <div class="text-sm mt-2"> Variables: </div>
             <div class="text-sm text-center"> {seriesName}, {seasonNumber}, {seasonNumberDD}, {quality} </div>
+            <div class="flex flex-row mt-3">
+                <input v-model="isSeasonActive" @change="setSeasonFolder(isSeasonActive)" type="checkbox" name="Season Folder" class="cursor-pointer" />
+                <div class="text-sm ml-1.5"> Create Season Folder </div>
+            </div>
         </div>
     </div>
 </template>
@@ -45,6 +49,7 @@ const seriesName = ref<string>('Frieren')
 const episodeName = ref<string>("The Journey's End")
 const episodeNamingTemplate = ref<string>()
 const seasonNamingTemplate = ref<string>()
+const isSeasonActive = ref<boolean>()
 
 const episodeNaming = computed(() => {
     if (!episodeNamingTemplate.value) return
@@ -74,6 +79,9 @@ onMounted(() => {
     ;(window as any).myAPI.getEpisodeTemplate().then((result: string) => {
         episodeNamingTemplate.value = result
     })
+    ;(window as any).myAPI.getSeasonEnabled().then((result: boolean) => {
+        isSeasonActive.value = result
+    })
 })
 
 watch(episodeNamingTemplate, () => {
@@ -98,6 +106,14 @@ const setSeasonTemplate = (name: string) => {
     if (process.client) {
         ;(window as any).myAPI.setSeasonTemplate(name).then((result: string) => {
             seasonNamingTemplate.value = result
+        })
+    }
+}
+
+const setSeasonFolder = (status: boolean | undefined) => {
+    if (process.client) {
+        ;(window as any).myAPI.setSeasonEnabled(status).then((result: boolean) => {
+            isSeasonActive.value = result
         })
     }
 }

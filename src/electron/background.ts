@@ -274,6 +274,23 @@ ipcMain.handle('dialog:proxyActiveSet', async (events, status: boolean) => {
     return status
 })
 
+ipcMain.handle('dialog:getSeasonEnabledTemplate', async (events) => {
+    const savedStat = await settings.get('seasonFolderActive')
+
+    if (!savedStat) {
+        await settings.set('seasonFolderActive', true)
+        return true
+    }
+
+    return savedStat
+})
+
+ipcMain.handle('dialog:setSeasonEnabledTemplate', async (events, active: boolean) => {
+    await settings.set('seasonFolderActive', active)
+
+    return active
+})
+
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
         app.quit()
