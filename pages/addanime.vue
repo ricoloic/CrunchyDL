@@ -680,7 +680,11 @@ const switchToSeason = async () => {
 
     if (url.value && url.value.includes('crunchyroll') && url.value.includes('/series/') && !CRselectedShow.value) {
         const seriesID = url.value.split('/')
-        CRselectedShow.value = await getCRSeries(seriesID[5])
+        if (seriesID.length === 7) {
+            CRselectedShow.value = await getCRSeries(seriesID[5])
+        } else {
+            CRselectedShow.value = await getCRSeries(seriesID[4])
+        }
         if (!CRselectedShow.value) {
             alert('Series not found')
             isFetchingSeasons.value--
