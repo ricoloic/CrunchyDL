@@ -10,7 +10,11 @@
 <!---![MacOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white)-->
 
 ### Important: At the moment its only possible to download with L3 Widevine keys since Crunchyroll added drm to the switch endpoint
-**Guides to get L3 Widevine keys: https://forum.videohelp.com/threads/408031-Dumping-Your-own-L3-CDM-with-Android-Studio https://simpcity.su/threads/guide-for-getting-drm-content-wip.181199/**
+**Guides to get L3 Widevine keys:**
+
+https://forum.videohelp.com/threads/408031-Dumping-Your-own-L3-CDM-with-Android-Studio 
+
+https://simpcity.su/threads/guide-for-getting-drm-content-wip.181199/
 
 **Add the keys you get here:**
 
