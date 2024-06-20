@@ -14,7 +14,7 @@ export function getMP4DecryptPath() {
 
         return mp4Decrypt
     } else {
-        const mp4Decrypt = path.join(decryptPath, 'mp4decrypt.exe').replace(/\\/g, '\\\\').replace(/ /g, '\\ ')
+        const mp4Decrypt = `"${path.join(decryptPath, 'mp4decrypt.exe')}"`
 
         return mp4Decrypt
     }

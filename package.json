@@ -2,7 +2,7 @@
     "name": "crunchyroll-downloader",
     "author": "Stratum",
     "description": "Crunchyroll Downloader",
-    "version": "1.1.9",
+    "version": "1.2.0",
     "private": true,
     "main": ".output/src/electron/background.js",
     "repository": "https://github.com/stratuma/Crunchyroll-Downloader-v4.0",
