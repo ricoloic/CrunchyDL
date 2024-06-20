@@ -4,7 +4,7 @@ import { concatenateTSFiles } from '../../services/concatenate'
 import { checkFileExistence, createFolder, createFolderName, deleteFolder, deleteTemporaryFolders } from '../../services/folder'
 import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
-import { checkAccountMaxStreams, crunchyGetPlaylist, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
+import { checkAccountMaxStreams, crunchyGetMetadata, crunchyGetPlaylist, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
 import fs from 'fs'
 var cron = require('node-cron')
 import { Readable } from 'stream'
@@ -21,6 +21,7 @@ const mp4e = getMP4DecryptPath()
 import util from 'util'
 import settings from 'electron-settings'
 import { server } from '../../api'
+import { createChapterFile } from '../../services/chapter'
 const exec = util.promisify(require('child_process').exec)
 
 // Get All Accounts
@@ -446,7 +447,7 @@ export async function downloadADNPlaylist(
         return
     }
 
-    await mergeVideoFile(file as string, [], subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format, downloadID)
+    await mergeVideoFile(file as string, null, [], subss, seasonFolder, `${name.replace(/[/\\?%*:|"<>]/g, '')} Season ${season} Episode ${episode}`, format, downloadID)
 
     await updatePlaylistByID(downloadID, 'completed')
 
@@ -524,6 +525,8 @@ export async function downloadCrunchyrollPlaylist(
     const audioFolder = await createFolder()
 
     const videoFolder = await createFolder()
+
+    const chapterFolder = await createFolder()
 
     var seasonFolderNaming = (await settings.get('SeasonTemp')) as string
 
@@ -694,6 +697,18 @@ export async function downloadCrunchyrollPlaylist(
     }
 
     await updatePlaylistByID(downloadID, 'downloading video')
+
+    const chapterDownload = async () => {
+        const metadata = await crunchyGetMetadata(e)
+
+        if (!metadata.intro && !metadata.credits && !metadata.preview && !metadata.recap) {
+            return null
+        }
+
+        const chapterPath = await createChapterFile(metadata, chapterFolder)
+
+        return chapterPath
+    }
 
     const subDownload = async () => {
         const sbs: Array<string> = []
@@ -1046,7 +1061,7 @@ export async function downloadCrunchyrollPlaylist(
         return file
     }
 
-    const [subss, audios, file] = await Promise.all([subDownload(), audioDownload(), downloadVideo()])
+    const [chapter, subss, audios, file] = await Promise.all([chapterDownload(), subDownload(), audioDownload(), downloadVideo()])
 
     if (!audios) return
 
@@ -1068,13 +1083,14 @@ export async function downloadCrunchyrollPlaylist(
         .replace('{episodeNumberDD}', episode ? episode.toString().padStart(2, '0') : episode_string)
         .replace('{quality}', quality.toString() + 'p')
 
-    await mergeVideoFile(file as string, audios, subss, seasonFolder, episodeNaming, format, downloadID)
+    await mergeVideoFile(file as string, chapter, audios, subss, seasonFolder, episodeNaming, format, downloadID)
 
     await updatePlaylistByID(downloadID, 'completed')
 
     await deleteFolder(videoFolder)
     await deleteFolder(subFolder)
     await deleteFolder(audioFolder)
+    await deleteFolder(chapterFolder)
 
     return playlist
 }
@@ -1257,7 +1273,7 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
     }
 }
 
-async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<string>, path: string, filename: string, format: 'mp4' | 'mkv', downloadID: number) {
+async function mergeVideoFile(video: string, chapter: string | null, audios: Array<string>, subs: Array<string>, path: string, filename: string, format: 'mp4' | 'mkv', downloadID: number) {
     const locales: Array<{
         locale: string
         name: string
@@ -1290,7 +1306,11 @@ async function mergeVideoFile(video: string, audios: Array<string>, subs: Array<
         var output = Ffmpeg().setFfmpegPath(ffmpegP.ffmpeg).setFfprobePath(ffmpegP.ffprobe)
         var ffindex = 1
         output.addInput(video)
-        var options = ['-map_metadata -1', '-metadata:s:v:0 VENDOR_ID=', '-metadata:s:v:0 language=', '-c copy', '-map 0']
+        if (chapter) {
+            output.addInput(chapter)
+            ffindex++
+        }
+        var options = ['-map_metadata 1', '-metadata:s:v:0 VENDOR_ID=', '-metadata:s:v:0 language=', '-c copy', '-map 0']
         if (format === 'mp4') {
             options.push('-c:s mov_text')
         }

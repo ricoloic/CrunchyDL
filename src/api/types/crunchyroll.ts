@@ -189,3 +189,45 @@ export interface VideoPlaylistNoGEO {
     }>
     geo: string | undefined
 }
+
+
+export interface VideoMetadata {
+    intro: {
+        approverId: string,
+        distributionNumber: string,
+        end: number,
+        seriesId: string,
+        start: number,
+        title: string,
+        type: string
+    }
+    credits: {
+        approverId: string,
+        distributionNumber: string,
+        end: number,
+        seriesId: string,
+        start: number,
+        title: string,
+        type: string
+    }
+    preview: {
+        approverId: string,
+        distributionNumber: string,
+        end: number,
+        seriesId: string,
+        start: number,
+        title: string,
+        type: string
+    }
+    recap: {
+        approverId: string,
+        distributionNumber: string,
+        end: number,
+        seriesId: string,
+        start: number,
+        title: string,
+        type: string
+    }
+    lastUpdated: Date,
+    mediaId: string
+}
