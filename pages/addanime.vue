@@ -71,6 +71,9 @@
                     readonly
                 />
             </div>
+            <div v-if="(service === 'crunchyroll')" class="relative flex flex-col text-sm text-center">
+                Crunchyroll Download needs L3 Widevine keys that can be added in settings -> widevine
+            </div>
             <div v-if="!isLoggedInCR && service === 'crunchyroll'" class="relative flex flex-col">
                 <button @click="openCRLogin" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer">Click to Login</button>
             </div>
