@@ -530,7 +530,7 @@ export async function downloadCrunchyrollPlaylist(
 
     const chapterFolder = await createFolder()
 
-    var downloadDir: string = downloadPath;
+    var downloadDir: string = downloadPath
 
     var isSeasonFolderActive = (await settings.get('seasonFolderActive')) as string
 
@@ -540,14 +540,14 @@ export async function downloadCrunchyrollPlaylist(
         if (!seasonFolderNaming) {
             seasonFolderNaming = '{seriesName} Season {seasonNumber}'
         }
-    
+
         seasonFolderNaming = seasonFolderNaming
             .replace('{seriesName}', name.replace(/[/\\?%*:|"<>]/g, ''))
             .replace('{seasonNumber}', season.toString())
             .replace('{seasonNumberDD}', season.toString().padStart(2, '0'))
             .replace('{quality}', quality.toString() + 'p')
-    
-            downloadDir = await createFolderName(seasonFolderNaming, downloadPath) 
+
+        downloadDir = await createFolderName(seasonFolderNaming, downloadPath)
     }
 
     await updatePlaylistByID(downloadID, undefined, undefined, downloadDir)
