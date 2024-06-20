@@ -292,6 +292,7 @@ async function checkPlaylists() {
                         (e.dataValues.media as CrunchyEpisode).id,
                         e.dataValues.id,
                         (e.dataValues.media as CrunchyEpisode).series_title,
+                        (e.dataValues.media as CrunchyEpisode).title,
                         (e.dataValues.media as CrunchyEpisode).season_number,
                         (e.dataValues.media as CrunchyEpisode).episode_number,
                         (e.dataValues.media as CrunchyEpisode).episode,
@@ -464,6 +465,7 @@ export async function downloadCrunchyrollPlaylist(
     episodeID: string,
     downloadID: number,
     name: string,
+    name_episode: string,
     season: number,
     episode: number,
     episode_string: string,
@@ -1077,6 +1079,7 @@ export async function downloadCrunchyrollPlaylist(
 
     episodeNaming = episodeNaming
         .replace('{seriesName}', name.replace(/[/\\?%*:|"<>]/g, ''))
+        .replace('{episodeName}', name_episode ? name_episode.replace(/[/\\?%*:|"<>]/g, '') : 'no title')
         .replace('{seasonNumber}', season.toString())
         .replace('{seasonNumberDD}', season.toString().padStart(2, '0'))
         .replace('{episodeNumber}', episode ? episode.toString() : episode_string)

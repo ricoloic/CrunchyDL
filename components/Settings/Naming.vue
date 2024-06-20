@@ -15,7 +15,7 @@
             </div>
 
             <div class="text-sm mt-2"> Variables: </div>
-            <div class="text-sm text-center"> {seriesName}, {seasonNumber}, {seasonNumberDD}, {episodeNumber}, {episodeNumberDD}, {quality} </div>
+            <div class="text-sm text-center"> {seriesName}, {episodeName}, {seasonNumber}, {seasonNumberDD}, {episodeNumber}, {episodeNumberDD}, {quality} </div>
         </div>
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
             <div class="text-sm mb-2">Season Folder Naming</div>
@@ -42,6 +42,7 @@ const episodeNumber = ref<number>(1)
 const seasonNumber = ref<number>(1)
 const quality = ref<number>(1080)
 const seriesName = ref<string>('Frieren')
+const episodeName = ref<string>("The Journey's End")
 const episodeNamingTemplate = ref<string>()
 const seasonNamingTemplate = ref<string>()
 
@@ -49,6 +50,7 @@ const episodeNaming = computed(() => {
     if (!episodeNamingTemplate.value) return
     return episodeNamingTemplate.value
         .replace('{seriesName}', seriesName.value)
+        .replace('{episodeName}', episodeName.value)
         .replace('{seasonNumber}', seasonNumber.value.toString())
         .replace('{seasonNumberDD}', seasonNumber.value.toString().padStart(2, '0'))
         .replace('{episodeNumber}', episodeNumber.value.toString())
