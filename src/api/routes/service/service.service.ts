@@ -1273,7 +1273,16 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
     }
 }
 
-async function mergeVideoFile(video: string, chapter: string | null, audios: Array<string>, subs: Array<string>, path: string, filename: string, format: 'mp4' | 'mkv', downloadID: number) {
+async function mergeVideoFile(
+    video: string,
+    chapter: string | null,
+    audios: Array<string>,
+    subs: Array<string>,
+    path: string,
+    filename: string,
+    format: 'mp4' | 'mkv',
+    downloadID: number
+) {
     const locales: Array<{
         locale: string
         name: string

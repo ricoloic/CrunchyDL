@@ -812,7 +812,7 @@ export async function crunchyGetMetadata(q: string) {
         })
 
         if (response.ok) {
-            return await JSON.parse(await response.text()) as VideoMetadata
+            return (await JSON.parse(await response.text())) as VideoMetadata
         } else {
             const error = await response.text()
 
