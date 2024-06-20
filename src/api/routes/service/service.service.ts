@@ -1442,8 +1442,6 @@ export async function checkProxies() {
             }
         ]
 
-        console.log('ok')
-
         for (const p of proxies) {
             try {
                 const response: Response = await Promise.race([
