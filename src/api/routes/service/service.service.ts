@@ -276,7 +276,7 @@ async function checkPlaylists() {
     try {
         const eps = await Playlist.findAll({ where: { status: 'waiting' } })
 
-        const maxd = await settings.get('DefaultMaxDownloads') as number
+        const maxd = (await settings.get('DefaultMaxDownloads')) as number
 
         if (maxd !== undefined && maxd !== null) {
             maxDownloading = maxd
@@ -306,7 +306,7 @@ async function checkPlaylists() {
                         (e.dataValues.media as CrunchyEpisode).episode_number,
                         (e.dataValues.media as CrunchyEpisode).episode,
                         e.dataValues.quality,
-                        e.dataValues.qualityaudio ? e.dataValues.qualityaudio-1 : 0,
+                        e.dataValues.qualityaudio ? e.dataValues.qualityaudio - 1 : 0,
                         e.dataValues.dir,
                         e.dataValues.format,
                         (e.dataValues.media as CrunchyEpisode).geo

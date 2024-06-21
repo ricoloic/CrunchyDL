@@ -3,9 +3,7 @@ import { getProxies } from './Proxy'
 import type { CrunchySeasonsFetch } from './Types'
 
 export async function listSeasonCrunchy(q: string, geo: string | undefined) {
-
     var selectedLanguage: string | undefined
-
     ;(window as any).myAPI.getDefaultCrunchyrollLanguage().then((result: string) => {
         selectedLanguage = result
     })

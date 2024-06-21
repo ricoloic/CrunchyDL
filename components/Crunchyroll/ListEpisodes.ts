@@ -2,9 +2,7 @@ import { crunchyLogin } from './Account'
 import type { CrunchyEpisodesFetch } from './Types'
 
 export async function listEpisodeCrunchy(q: string, geo: string | undefined) {
-
     var selectedLanguage: string | undefined
-
     ;(window as any).myAPI.getDefaultCrunchyrollLanguage().then((result: string) => {
         selectedLanguage = result
     })

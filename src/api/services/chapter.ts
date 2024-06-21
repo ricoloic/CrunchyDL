@@ -45,19 +45,19 @@ export async function createChapterFile(rawchapters: VideoMetadata, dir: string,
     chapters.push(``)
 
     if (rawchapters.intro && rawchapters.intro.type && rawchapters.intro.start && rawchapters.intro.end) {
-        chapters.push(...await createChapter(rawchapters.intro, format, 'Intro'));
+        chapters.push(...(await createChapter(rawchapters.intro, format, 'Intro')))
     }
 
     if (rawchapters.credits && rawchapters.credits.type && rawchapters.credits.start && rawchapters.credits.end) {
-        chapters.push(...await createChapter(rawchapters.credits, format, 'Credits'));
+        chapters.push(...(await createChapter(rawchapters.credits, format, 'Credits')))
     }
 
     if (rawchapters.preview && rawchapters.preview.type && rawchapters.preview.start && rawchapters.preview.end) {
-        chapters.push(...await createChapter(rawchapters.preview, format, 'Preview'));
+        chapters.push(...(await createChapter(rawchapters.preview, format, 'Preview')))
     }
 
     if (rawchapters.recap && rawchapters.recap.type && rawchapters.recap.start && rawchapters.recap.end) {
-        chapters.push(...await createChapter(rawchapters.recap, format, 'Recap'));
+        chapters.push(...(await createChapter(rawchapters.recap, format, 'Recap')))
     }
 
     try {

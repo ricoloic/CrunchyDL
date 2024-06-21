@@ -6,7 +6,6 @@ import type { CrunchyAnimeFetch, CrunchyEpisodeFetch, CrunchyEpisodesFetch, Crun
 export async function searchCrunchy(q: string) {
     var isProxyActive: boolean | undefined
     var selectedLanguage: string | undefined
-
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
     })
@@ -129,7 +128,6 @@ export async function searchCrunchy(q: string) {
 export async function getCRSeries(q: string) {
     var isProxyActive: boolean | undefined
     var selectedLanguage: string | undefined
-
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
     })
@@ -224,7 +222,6 @@ export async function getCRSeries(q: string) {
 export async function getCREpisodeSeriesID(q: string) {
     var isProxyActive: boolean | undefined
     var selectedLanguage: string | undefined
-
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
     })
