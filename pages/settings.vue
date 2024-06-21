@@ -1,5 +1,5 @@
 <template>
-    <div class="h-screen bg-[#11111189] flex flex-col p-5 text-white font-dm" style="-webkit-app-region: drag">
+    <div class="h-screen bg-[#11111189] flex flex-col p-5 text-white font-dm overflow-hidden" style="-webkit-app-region: drag">
         <div class="flex flex-row items-center justify-center">
             <div class="text-2xl">Settings</div>
         </div>
@@ -56,5 +56,23 @@ body {
     font-family: 'DM Sans', sans-serif;
     font-weight: 1000;
     font-style: normal;
+}
+
+::-webkit-scrollbar-track {
+    background: #383838;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #cac9c9;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
 }
 </style>

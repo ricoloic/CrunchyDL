@@ -42,12 +42,13 @@
 <script lang="ts" setup>
 const selectedLanguage = ref<string>()
 const selectedEndpoint = ref<number>()
+const selectedVideoQuality = ref<number>()
+const selectedAudioQuality = ref<number>()
 
 onMounted(() => {
     ;(window as any).myAPI.getEndpoint().then((result: any) => {
         selectedEndpoint.value = result
     })
-
     ;(window as any).myAPI.getDefaultCrunchyrollLanguage().then((result: any) => {
         selectedLanguage.value = result
     })

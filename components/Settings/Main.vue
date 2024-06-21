@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col mt-3 gap-3 font-dm" style="-webkit-app-region: no-drag">
+    <div class="flex flex-col mt-3 gap-3 font-dm overflow-y-scroll h-[calc(100%)]" style="-webkit-app-region: no-drag">
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
             <div class="text-sm mb-2"> Account Management </div>
             <div v-for="account in accounts" class="flex flex-row items-center h-12 p-3 w-full bg-[#4b4b4b89] rounded-xl">
@@ -44,6 +44,44 @@
                 </button>
             </div>
         </div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
+            <div class="text-sm mb-2">Default Video Quality</div>
+            <select
+                v-model="selectedVideoQuality"
+                @change="selectVideoQuality()"
+                class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+            >
+                <option :value="1080">1080p</option>
+                <option :value="720">720p</option>
+                <option :value="480">480p</option>
+                <option :value="360">360p</option>
+                <option :value="240">240p</option>
+            </select>
+        </div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
+            <div class="text-sm mb-2">Default Audio Quality</div>
+            <select
+                v-model="selectedAudioQuality"
+                @change="selectAudioQuality()"
+                class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+            >
+                <option :value="1">44.10 kHz</option>
+                <option :value="2">44.10 kHz (2)</option>
+                <option :value="3">22.05 kHz</option>
+            </select>
+        </div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
+            <div class="text-sm mb-2">Default Output Format</div>
+            <select
+                v-model="selectedVideoFormat"
+                @change="selectOutputFormat()"
+                class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+            >
+                <option value="mkv">MKV</option>
+                <option value="mp4">MP4</option>
+                <option value="untouched" disabled>Untouched</option>
+            </select>
+        </div>
     </div>
 </template>
 
@@ -73,6 +111,10 @@ const locales = ref<Array<{ locale: string; name: string }>>([
     { locale: 'id-ID', name: 'ID' },
     { locale: 'ko-KR', name: 'KO' }
 ])
+
+const selectedVideoQuality = ref<number>()
+const selectedAudioQuality = ref<number>()
+const selectedVideoFormat = ref<number>()
 
 const toggleDub = (lang: { locale: string; name: string }) => {
     const index = dubLocales.value.findIndex((i) => i.locale === lang.locale)
@@ -158,12 +200,39 @@ const deleteAccount = async (id: number) => {
     getAccounts()
 }
 
+const selectVideoQuality = () => {
+    if (process.client) {
+        ;(window as any).myAPI.setDefaultVideoQuality(selectedVideoQuality.value)
+    }
+}
+
+const selectAudioQuality = () => {
+    if (process.client) {
+        ;(window as any).myAPI.setDefaultAudioQuality(selectedAudioQuality.value)
+    }
+}
+
+const selectOutputFormat = () => {
+    if (process.client) {
+        ;(window as any).myAPI.setDefaultOutputFormat(selectedVideoFormat.value)
+    }
+}
+
 onMounted(() => {
     ;(window as any).myAPI.getArray('defdubarray').then((result: any) => {
         dubLocales.value = JSON.parse(result)
     })
     ;(window as any).myAPI.getArray('defsubarray').then((result: any) => {
         subLocales.value = JSON.parse(result)
+    })
+    ;(window as any).myAPI.getDefaultVideoQuality().then((result: any) => {
+        selectedVideoQuality.value = result
+    })
+    ;(window as any).myAPI.getDefaultAudioQuality().then((result: any) => {
+        selectedAudioQuality.value = result
+    })
+    ;(window as any).myAPI.getDefaultOutputFormat().then((result: any) => {
+        selectedVideoFormat.value = result
     })
 })
 </script>
