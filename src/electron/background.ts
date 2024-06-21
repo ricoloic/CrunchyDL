@@ -8,7 +8,7 @@ import updaterModule from './modules/updater'
 import macMenuModule from './modules/macMenu'
 import startAPI from '../api/api'
 import settings from 'electron-settings'
-import contextMenu from 'electron-context-menu';
+import contextMenu from 'electron-context-menu'
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const isProduction = process.env.NODE_ENV !== 'development'
@@ -356,7 +356,7 @@ ipcMain.handle(
 
         contextMenu({
             showInspectElement: false
-        });
+        })
 
         const newWindow = new BrowserWindow({
             title: opt.title,
@@ -385,7 +385,7 @@ ipcMain.handle(
             // For Linux
             autoHideMenuBar: true
         })
-        
+
         newWindow.once('ready-to-show', () => {
             newWindow.show()
         })
