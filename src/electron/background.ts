@@ -277,7 +277,7 @@ ipcMain.handle('dialog:proxyActiveSet', async (events, status: boolean) => {
 ipcMain.handle('dialog:getSeasonEnabledTemplate', async (events) => {
     const savedStat = await settings.get('seasonFolderActive')
 
-    if (!savedStat) {
+    if (savedStat === undefined || savedStat === null) {
         await settings.set('seasonFolderActive', true)
         return true
     }
