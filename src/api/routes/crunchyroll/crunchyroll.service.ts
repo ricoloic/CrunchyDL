@@ -419,8 +419,6 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
     const headersLoc = {
         Authorization: `Bearer ${login.access_token}`,
-        'X-Cr-Disable-Drm': 'true',
-        'x-cr-stream-limits': 'false',
         'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
     }
 
@@ -515,7 +513,6 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
                 const headers = {
                     Authorization: `Bearer ${logindata.access_token}`,
-                    'X-Cr-Disable-Drm': 'true',
                     'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
                 }
 
