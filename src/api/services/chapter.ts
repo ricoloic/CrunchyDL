@@ -20,7 +20,7 @@ async function createChapter(chapter: VideoMetadataSingle, format: string, name:
         chapters.push('TIMEBASE=1/1000')
         chapters.push(`START=${formatTimeFFMPEG(chapter.end)}`)
         chapters.push(`END=${formatTimeFFMPEG(chapter.end)}`)
-        chapters.push(`title=${name} End`)
+        chapters.push(`title=Chapter`)
         chapters.push(``)
     } else {
         chapters.push('[CHAPTER]')
@@ -46,22 +46,18 @@ export async function createChapterFile(rawchapters: VideoMetadata, dir: string,
 
     if (rawchapters.intro && rawchapters.intro.type && rawchapters.intro.start && rawchapters.intro.end) {
         chapters.push(...await createChapter(rawchapters.intro, format, 'Intro'));
-        console.log(chapters)
     }
 
     if (rawchapters.credits && rawchapters.credits.type && rawchapters.credits.start && rawchapters.credits.end) {
         chapters.push(...await createChapter(rawchapters.credits, format, 'Credits'));
-        console.log(chapters)
     }
 
     if (rawchapters.preview && rawchapters.preview.type && rawchapters.preview.start && rawchapters.preview.end) {
         chapters.push(...await createChapter(rawchapters.preview, format, 'Preview'));
-        console.log(chapters)
     }
 
     if (rawchapters.recap && rawchapters.recap.type && rawchapters.recap.start && rawchapters.recap.end) {
         chapters.push(...await createChapter(rawchapters.recap, format, 'Recap'));
-        console.log(chapters)
     }
 
     try {

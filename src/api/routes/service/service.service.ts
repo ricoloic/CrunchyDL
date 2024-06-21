@@ -1101,7 +1101,7 @@ export async function downloadCrunchyrollPlaylist(
     await deleteFolder(videoFolder)
     await deleteFolder(subFolder)
     await deleteFolder(audioFolder)
-    // await deleteFolder(chapterFolder)
+    await deleteFolder(chapterFolder)
 
     return playlist
 }
