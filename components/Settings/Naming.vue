@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col gap-3 mt-3 font-dm" style="-webkit-app-region: no-drag">
-        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
-            <div class="text-sm mb-2">Episode File Naming</div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl">
+            <div class="text-sm mb-2 select-none">Episode File Naming</div>
             <input
                 v-model="episodeNamingTemplate"
                 type="text"
@@ -14,11 +14,11 @@
                 {{ `${episodeNaming}` }}
             </div>
 
-            <div class="text-sm mt-2"> Variables: </div>
+            <div class="text-sm mt-2 select-none"> Variables: </div>
             <div class="text-sm text-center"> {seriesName}, {episodeName}, {seasonNumber}, {seasonNumberDD}, {episodeNumber}, {episodeNumberDD}, {quality} </div>
         </div>
-        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
-            <div class="text-sm mb-2">Season Folder Naming</div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl">
+            <div class="text-sm mb-2 select-none">Season Folder Naming</div>
             <input
                 v-model="seasonNamingTemplate"
                 type="text"
@@ -31,9 +31,9 @@
                 {{ `${seasonNaming}` }}
             </div>
 
-            <div class="text-sm mt-2"> Variables: </div>
+            <div class="text-sm mt-2 select-none"> Variables: </div>
             <div class="text-sm text-center"> {seriesName}, {seasonNumber}, {seasonNumberDD}, {quality} </div>
-            <div class="flex flex-row mt-3">
+            <div class="flex flex-row mt-3 select-none">
                 <input v-model="isSeasonActive" @change="setSeasonFolder(isSeasonActive)" type="checkbox" name="Season Folder" class="cursor-pointer" />
                 <div class="text-sm ml-1.5"> Create Season Folder </div>
             </div>
