@@ -58,6 +58,12 @@ export async function downloadCRSub(
                 (s.MarginV = String(Math.round((parseInt(s.MarginV) / parseInt(parsedASS.info.PlayResY)) * qualY)))
         }
 
+        for (const s of parsedASS.events.dialogue) {
+            ;(s.MarginL = Math.round((s.MarginL / parseInt(parsedASS.info.PlayResY)) * qualY)),
+                (s.MarginR = Math.round((s.MarginR / parseInt(parsedASS.info.PlayResY)) * qualY)),
+                (s.MarginV = Math.round((s.MarginV / parseInt(parsedASS.info.PlayResY)) * qualY))
+        }
+
         parsedASS.info.PlayResX = String(qualX)
         parsedASS.info.PlayResY = String(qualY)
 
