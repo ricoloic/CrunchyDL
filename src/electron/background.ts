@@ -406,6 +406,24 @@ ipcMain.handle('dialog:getDefaultOutputFormatTemplate', async (events) => {
     return seTP
 })
 
+ipcMain.handle('dialog:setDefaultMaxDownloadsTemplate', async (events, max: number) => {
+    await settings.set('DefaultMaxDownloads', max)
+
+    return max
+})
+
+ipcMain.handle('dialog:getDefaultMaxDownloadsTemplate', async (events) => {
+    const seTP = await settings.get('DefaultMaxDownloads')
+
+    if (!seTP) {
+        await settings.set('DefaultMaxDownloads', 3)
+
+        return 3
+    }
+
+    return seTP
+})
+
 const openWindows = new Map()
 
 // Open New Window

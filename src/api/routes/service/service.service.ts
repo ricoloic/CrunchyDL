@@ -269,14 +269,21 @@ export async function getDownloading(id: number) {
 
 // Define IsDownloading Count
 var isDownloading: number = 0
+var maxDownloading: number = 3
 
 // Check Playlist every 2 seconds for new items
 async function checkPlaylists() {
     try {
         const eps = await Playlist.findAll({ where: { status: 'waiting' } })
 
+        const maxd = await settings.get('DefaultMaxDownloads') as number
+
+        if (maxd !== undefined && maxd !== null) {
+            maxDownloading = maxd
+        }
+
         for (const e of eps) {
-            if (isDownloading < 3 && e.dataValues.status === 'waiting') {
+            if (isDownloading < maxDownloading && e.dataValues.status === 'waiting') {
                 updatePlaylistByID(e.dataValues.id, 'preparing')
                 isDownloading++
                 server.logger.log({
@@ -536,7 +543,12 @@ export async function downloadCrunchyrollPlaylist(
 
     var downloadDir: string = downloadPath
 
-    var isSeasonFolderActive = (await settings.get('seasonFolderActive')) as string
+    var isSeasonFolderActive = (await settings.get('seasonFolderActive')) as boolean
+
+    if (isSeasonFolderActive === undefined || isSeasonFolderActive === null) {
+        await settings.set('seasonFolderActive', true)
+        isSeasonFolderActive = true
+    }
 
     if (isSeasonFolderActive) {
         var seasonFolderNaming = (await settings.get('SeasonTemp')) as string

@@ -19,6 +19,10 @@
             </div>
         </div>
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
+            <div class="text-sm mb-2">Max Concurrent Downloads</div>
+            <input v-model="selectedMaxDownloads" type="number" class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" />
+        </div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
             <div class="text-sm mb-2"> Default Dubs </div>
             <div class="w-full bg-[#636363] rounded-xl grid grid-cols-10 gap-1 p-1 z-10">
                 <button
@@ -115,6 +119,7 @@ const locales = ref<Array<{ locale: string; name: string }>>([
 const selectedVideoQuality = ref<number>()
 const selectedAudioQuality = ref<number>()
 const selectedVideoFormat = ref<number>()
+const selectedMaxDownloads = ref<number>()
 
 const toggleDub = (lang: { locale: string; name: string }) => {
     const index = dubLocales.value.findIndex((i) => i.locale === lang.locale)
@@ -218,6 +223,18 @@ const selectOutputFormat = () => {
     }
 }
 
+watch(selectedMaxDownloads, () => {
+    if (selectedMaxDownloads.value !== undefined && selectedMaxDownloads.value !== null) {
+        selectMaxDownloads()
+    }
+})
+
+const selectMaxDownloads = () => {
+    if (process.client) {
+        ;(window as any).myAPI.setDefaultMaxDownloads(selectedMaxDownloads.value)
+    }
+}
+
 onMounted(() => {
     ;(window as any).myAPI.getArray('defdubarray').then((result: any) => {
         dubLocales.value = JSON.parse(result)
@@ -233,6 +250,9 @@ onMounted(() => {
     })
     ;(window as any).myAPI.getDefaultOutputFormat().then((result: any) => {
         selectedVideoFormat.value = result
+    })
+    ;(window as any).myAPI.getDefaultMaxDownloads().then((result: any) => {
+        selectedMaxDownloads.value = result
     })
 })
 </script>

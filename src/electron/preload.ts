@@ -32,5 +32,7 @@ contextBridge.exposeInMainWorld('myAPI', {
     setDefaultOutputFormat: (format: string) => ipcRenderer.invoke('dialog:setDefaultOutputFormatTemplate', format),
     getDefaultOutputFormat: () => ipcRenderer.invoke('dialog:getDefaultOutputFormatTemplate'),
     setDefaultCrunchyrollLanguage: (lang: string) => ipcRenderer.invoke('dialog:setDefaultCrunchyrollLanguageTemplate', lang),
-    getDefaultCrunchyrollLanguage: () => ipcRenderer.invoke('dialog:getDefaultCrunchyrollLanguageTemplate')
+    getDefaultCrunchyrollLanguage: () => ipcRenderer.invoke('dialog:getDefaultCrunchyrollLanguageTemplate'),
+    setDefaultMaxDownloads: (max: number) => ipcRenderer.invoke('dialog:setDefaultMaxDownloadsTemplate', max),
+    getDefaultMaxDownloads: () => ipcRenderer.invoke('dialog:getDefaultMaxDownloadsTemplate')
 })
