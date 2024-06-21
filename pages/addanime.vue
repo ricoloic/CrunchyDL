@@ -187,7 +187,7 @@
             <div v-if="service === 'adn' && ADNselectedShow" class="relative flex flex-col select-none">
                 <div @click="selectDub ? (selectDub = false) : (selectDub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                     Dubs:
-                    {{ selectedDubs.map((t) => t.name).join(', ') }}
+                    {{ selectedDubs.length !== 0 ? selectedDubs.map((t) => t.name).join(', ') : 'No Dubs selected' }}
                 </div>
                 <div v-if="selectDub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
                     <button
@@ -292,10 +292,18 @@
                         <option :value="480" class="text-sm text-slate-200">480p</option>
                     </select>
                 </div>
+                <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
+                    <select v-model="qualityaudio" name="format" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+                        <option :value="1" class="text-sm text-slate-200">44.10 kHz</option>
+                        <option :value="2" class="text-sm text-slate-200">44.10 kHz (2)</option>
+                        <option :value="3" class="text-sm text-slate-200">22.05 kHz</option>
+                    </select>
+                </div>
                 <div class="relative flex flex-col w-full">
                     <select v-model="format" name="format" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-                        <option value="mp4" class="text-sm text-slate-200">MP4</option>
                         <option value="mkv" class="text-sm text-slate-200">MKV</option>
+                        <option value="mp4" class="text-sm text-slate-200">MP4</option>
+                        <option value="untouched" class="text-sm text-slate-200">Untouched</option>
                     </select>
                 </div>
             </div>
@@ -410,7 +418,8 @@ const hardsub = ref<boolean>(false)
 const added = ref<boolean>(false)
 const isHardsubDisabled = ref<boolean>(true)
 const quality = ref<1080 | 720 | 480 | 360 | 240>(1080)
-const format = ref<'mp4' | 'mkv'>('mkv')
+const qualityaudio = ref<1 | 2 | 3>(1)
+const format = ref<'mp4' | 'mkv' | 'untouched'>('mkv')
 
 const isFetchingSeasons = ref<number>(0)
 const isFetchingEpisodes = ref<number>(0)
@@ -837,6 +846,7 @@ const addToPlaylist = async () => {
         dir: path.value,
         hardsub: hardsub.value,
         quality: quality.value,
+        qualityaudio: qualityaudio.value,
         service: 'CR',
         format: format.value
     }

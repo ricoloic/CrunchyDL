@@ -1,6 +1,23 @@
 <template>
     <div class="flex flex-col gap-3 mt-3 font-dm" style="-webkit-app-region: no-drag">
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
+            <div class="text-sm mb-2">Default Language</div>
+            <select v-model="selectedLanguage" @change="selectLanguage()" class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+                <option value="en-US">English</option>
+                <option value="de-DE">Deutsch</option>
+                <option value="it-IT">Italiano</option>
+                <option value="es-419">Español</option>
+                <option value="es-ES">Español (España)</option>
+                <option value="fr-FR">Français (France)</option>
+                <option value="pt-BR">Português (Brasil)</option>
+                <option value="pt-PT">Português (Portugal)</option>
+                <option value="ru-RU">Русский</option>
+                <option value="ar-SA">العربية</option>
+                <option value="hi-IN">हिंदी</option>
+            </select>
+            <div class="text-xs mt-2"> For search, series and episode name </div>
+        </div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
             <div class="text-sm mb-2">Stream Endpoint</div>
             <select v-model="selectedEndpoint" @change="selectEndpoint()" class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                 <option :value="1">Switch (DRM PROTECTED)</option>
@@ -23,13 +40,24 @@
 </template>
 
 <script lang="ts" setup>
+const selectedLanguage = ref<string>()
 const selectedEndpoint = ref<number>()
 
 onMounted(() => {
     ;(window as any).myAPI.getEndpoint().then((result: any) => {
         selectedEndpoint.value = result
     })
+
+    ;(window as any).myAPI.getDefaultCrunchyrollLanguage().then((result: any) => {
+        selectedLanguage.value = result
+    })
 })
+
+const selectLanguage = () => {
+    if (process.client) {
+        ;(window as any).myAPI.setDefaultCrunchyrollLanguage(selectedLanguage.value)
+    }
+}
 
 const selectEndpoint = () => {
     if (process.client) {

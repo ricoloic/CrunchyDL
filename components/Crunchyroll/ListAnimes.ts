@@ -5,8 +5,13 @@ import type { CrunchyAnimeFetch, CrunchyEpisodeFetch, CrunchyEpisodesFetch, Crun
 
 export async function searchCrunchy(q: string) {
     var isProxyActive: boolean | undefined
+    var selectedLanguage: string | undefined
+
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
+    })
+    ;(window as any).myAPI.getDefaultCrunchyrollLanguage().then((result: string) => {
+        selectedLanguage = result
     })
 
     var proxies
@@ -32,7 +37,9 @@ export async function searchCrunchy(q: string) {
             q: q,
             n: 100,
             type: 'series',
-            ratings: false
+            ratings: false,
+            preferred_audio_language: selectedLanguage,
+            locale: selectedLanguage
         }
     })
 
@@ -61,7 +68,9 @@ export async function searchCrunchy(q: string) {
                         q: q,
                         n: 100,
                         type: 'series',
-                        ratings: false
+                        ratings: false,
+                        preferred_audio_language: selectedLanguage,
+                        locale: selectedLanguage
                     }
                 })
 
@@ -119,8 +128,13 @@ export async function searchCrunchy(q: string) {
 
 export async function getCRSeries(q: string) {
     var isProxyActive: boolean | undefined
+    var selectedLanguage: string | undefined
+
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
+    })
+    ;(window as any).myAPI.getDefaultCrunchyrollLanguage().then((result: string) => {
+        selectedLanguage = result
     })
 
     var proxies
@@ -141,6 +155,10 @@ export async function getCRSeries(q: string) {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token.value.access_token}`
+        },
+        query: {
+            preferred_audio_language: selectedLanguage,
+            locale: selectedLanguage
         }
     })
 
@@ -162,6 +180,10 @@ export async function getCRSeries(q: string) {
                     method: 'GET',
                     headers: {
                         Authorization: `Bearer ${tokeng.value.access_token}`
+                    },
+                    query: {
+                        preferred_audio_language: selectedLanguage,
+                        locale: selectedLanguage
                     }
                 })
 
@@ -201,8 +223,13 @@ export async function getCRSeries(q: string) {
 
 export async function getCREpisodeSeriesID(q: string) {
     var isProxyActive: boolean | undefined
+    var selectedLanguage: string | undefined
+
     ;(window as any).myAPI.getProxyActive().then((result: boolean) => {
         isProxyActive = result
+    })
+    ;(window as any).myAPI.getDefaultCrunchyrollLanguage().then((result: string) => {
+        selectedLanguage = result
     })
 
     var proxies
@@ -223,6 +250,10 @@ export async function getCREpisodeSeriesID(q: string) {
         method: 'GET',
         headers: {
             Authorization: `Bearer ${token.value.access_token}`
+        },
+        query: {
+            preferred_audio_language: selectedLanguage,
+            locale: selectedLanguage
         }
     })
 
@@ -244,6 +275,10 @@ export async function getCREpisodeSeriesID(q: string) {
                     method: 'GET',
                     headers: {
                         Authorization: `Bearer ${tokeng.value.access_token}`
+                    },
+                    query: {
+                        preferred_audio_language: selectedLanguage,
+                        locale: selectedLanguage
                     }
                 })
 

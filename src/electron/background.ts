@@ -334,6 +334,25 @@ ipcMain.handle('dialog:getSeasonTemplate', async (events) => {
     return seTP
 })
 
+ipcMain.handle('dialog:setDefaultCrunchyrollLanguageTemplate', async (events, lang: string) => {
+    await settings.set('CrunchyrollDefaultLanguage', lang)
+
+    return lang
+})
+
+ipcMain.handle('dialog:getDefaultCrunchyrollLanguageTemplate', async (events) => {
+    const seTP = await settings.get('CrunchyrollDefaultLanguage')
+
+    if (!seTP) {
+        await settings.set('CrunchyrollDefaultLanguage', 'en-US')
+
+        return 'en-US'
+    }
+
+    return seTP
+})
+
+
 const openWindows = new Map()
 
 // Open New Window

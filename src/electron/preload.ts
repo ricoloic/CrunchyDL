@@ -24,5 +24,13 @@ contextBridge.exposeInMainWorld('myAPI', {
     setSeasonTemplate: (name: string) => ipcRenderer.invoke('dialog:setSeasonTemplate', name),
     getSeasonTemplate: () => ipcRenderer.invoke('dialog:getSeasonTemplate'),
     setSeasonEnabled: (active: boolean) => ipcRenderer.invoke('dialog:setSeasonEnabledTemplate', active),
-    getSeasonEnabled: () => ipcRenderer.invoke('dialog:getSeasonEnabledTemplate')
+    getSeasonEnabled: () => ipcRenderer.invoke('dialog:getSeasonEnabledTemplate'),
+    // setDefaultVideoQuality: (quality: number) => ipcRenderer.invoke('dialog:setDefaultVideoQualityTemplate', quality),
+    // getDefaultVideoQuality: () => ipcRenderer.invoke('dialog:getDefaultVideoQualityTemplate'),
+    // setDefaultAudioQuality: (quality: number) => ipcRenderer.invoke('dialog:setDefaultAudioQualityTemplate', quality),
+    // getDefaultAudioQuality: () => ipcRenderer.invoke('dialog:getDefaultAudioQualityTemplate'),
+    // setDefaultOutputFormat: (format: string) => ipcRenderer.invoke('dialog:setDefaultOutputFormatTemplate', format),
+    // getDefaultOutputFormat: () => ipcRenderer.invoke('dialog:getDefaultOutputFormatTemplate'),
+    setDefaultCrunchyrollLanguage: (lang: string) => ipcRenderer.invoke('dialog:setDefaultCrunchyrollLanguageTemplate', lang),
+    getDefaultCrunchyrollLanguage: () => ipcRenderer.invoke('dialog:getDefaultCrunchyrollLanguageTemplate')
 })
