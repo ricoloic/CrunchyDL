@@ -228,6 +228,7 @@ export async function addEpisodeToPlaylist(
         | 'completed'
         | 'failed',
     quality: 1080 | 720 | 480 | 360 | 240,
+    qualityaudio: 1 | 2 | 3 | undefined,
     service: 'CR' | 'ADN',
     format: 'mp4' | 'mkv'
 ) {
@@ -239,6 +240,7 @@ export async function addEpisodeToPlaylist(
         hardsub: hardsub,
         status: status,
         quality: quality,
+        qualityaudio: qualityaudio,
         service: service,
         format: format
     })
@@ -297,6 +299,7 @@ async function checkPlaylists() {
                         (e.dataValues.media as CrunchyEpisode).episode_number,
                         (e.dataValues.media as CrunchyEpisode).episode,
                         e.dataValues.quality,
+                        e.dataValues.qualityaudio ? e.dataValues.qualityaudio-1 : 0,
                         e.dataValues.dir,
                         e.dataValues.format,
                         (e.dataValues.media as CrunchyEpisode).geo
@@ -470,6 +473,7 @@ export async function downloadCrunchyrollPlaylist(
     episode: number,
     episode_string: string,
     quality: 1080 | 720 | 480 | 360 | 240,
+    qualityaudio: number,
     downloadPath: string,
     format: 'mp4' | 'mkv',
     geo: string | undefined
@@ -744,11 +748,13 @@ export async function downloadCrunchyrollPlaylist(
 
             if (!playlist) return
 
-            const assetId = playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].resolvedUri.match(/\/assets\/(?:p\/)?([^_,]+)/)
+            const playlistindex = playlist.mediaGroups.AUDIO.audio.main.playlists[qualityaudio] ? qualityaudio : 0
+
+            const assetId = playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].segments[0].resolvedUri.match(/\/assets\/(?:p\/)?([^_,]+)/)
 
             if (!assetId) {
-                console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0])
-                console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].uri)
+                console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].segments[0])
+                console.log(playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].segments[0].uri)
                 console.log('No AssetID found, exiting.')
                 await updatePlaylistByID(downloadID, 'failed')
                 messageBox('error', ['Cancel'], 2, 'No AssetID found', 'No AssetID found', "No AssetID found, can't download MPD.")
@@ -766,8 +772,8 @@ export async function downloadCrunchyrollPlaylist(
 
             let p: { filename: string; url: string }[] = []
 
-            if (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection) {
-                if (!playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh) {
+            if (playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection) {
+                if (!playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection['com.widevine.alpha'].pssh) {
                     console.log('No PSSH found, exiting.')
                     messageBox(
                         'error',
@@ -786,7 +792,7 @@ export async function downloadCrunchyrollPlaylist(
                     })
                     return
                 }
-                pssh = Uint8ArrayToBase64(playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection['com.widevine.alpha'].pssh)
+                pssh = Uint8ArrayToBase64(playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection['com.widevine.alpha'].pssh)
 
                 keys = await getDRMKeys(pssh, assetId[1], list.account_id)
 
@@ -804,9 +810,9 @@ export async function downloadCrunchyrollPlaylist(
             }
 
             if (
-                (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection && !drmL3blob && !drmL3key) ||
-                (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection && !drmL3blob) ||
-                (playlist.mediaGroups.AUDIO.audio.main.playlists[0].contentProtection && !drmL3key)
+                (playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection && !drmL3blob && !drmL3key) ||
+                (playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection && !drmL3blob) ||
+                (playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection && !drmL3key)
             ) {
                 await updatePlaylistByID(downloadID, 'failed')
                 messageBox(
@@ -828,11 +834,11 @@ export async function downloadCrunchyrollPlaylist(
             }
 
             p.push({
-                filename: (playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
-                url: playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments[0].map.resolvedUri
+                filename: (playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].segments[0].map.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
+                url: playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].segments[0].map.resolvedUri
             })
 
-            for (const s of playlist.mediaGroups.AUDIO.audio.main.playlists[0].segments) {
+            for (const s of playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].segments) {
                 p.push({
                     filename: (s.uri.match(/([^\/]+)\?/) as RegExpMatchArray)[1],
                     url: s.resolvedUri

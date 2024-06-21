@@ -101,6 +101,7 @@ export async function addPlaylistController(
             dir: string
             hardsub: boolean
             quality: 1080 | 720 | 480 | 360 | 240
+            qualityaudio: 1 | 2 | 3 | undefined
             service: 'CR' | 'ADN'
             format: 'mp4' | 'mkv'
         }
@@ -110,7 +111,7 @@ export async function addPlaylistController(
     const body = request.body
 
     for (const e of body.episodes) {
-        await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir, body.hardsub, 'waiting', body.quality, body.service, body.format)
+        await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir, body.hardsub, 'waiting', body.quality, body.qualityaudio, body.service, body.format)
     }
 
     return reply.code(201).send()

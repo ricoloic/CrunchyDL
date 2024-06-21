@@ -5,7 +5,7 @@ import { ADNEpisode } from '../types/adn'
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: app.getPath('documents') + '/Crunchyroll Downloader/databases/v1/data.db'
+    storage: app.getPath('documents') + '/Crunchyroll Downloader/databases/v2/data.db'
 })
 
 interface AccountAttributes {
@@ -48,6 +48,7 @@ interface PlaylistAttributes {
     sub: Array<string>
     hardsub: boolean
     quality: 1080 | 720 | 480 | 360 | 240
+    qualityaudio: 1 | 2 | 3 | undefined
     dir: string
     installDir: string
     failedreason: string
@@ -61,6 +62,7 @@ interface PlaylistCreateAttributes {
     sub: Array<string>
     dir: string
     quality: 1080 | 720 | 480 | 360 | 240
+    qualityaudio: 1 | 2 | 3 | undefined
     hardsub: boolean
     status:
         | 'waiting'
@@ -149,6 +151,10 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
         type: DataTypes.STRING
     },
     quality: {
+        allowNull: true,
+        type: DataTypes.BOOLEAN
+    },
+    qualityaudio: {
         allowNull: true,
         type: DataTypes.BOOLEAN
     },
