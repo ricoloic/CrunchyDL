@@ -715,7 +715,7 @@ export async function downloadCrunchyrollPlaylist(
             return null
         }
 
-        const chapterPath = await createChapterFile(metadata, chapterFolder)
+        const chapterPath = await createChapterFile(metadata, chapterFolder, format)
 
         return chapterPath
     }

@@ -230,3 +230,13 @@ export interface VideoMetadata {
     lastUpdated: Date
     mediaId: string
 }
+
+export interface VideoMetadataSingle {
+    approverId: string
+    distributionNumber: string
+    end: number
+    seriesId: string
+    start: number
+    title: string
+    type: string
+}

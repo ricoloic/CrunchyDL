@@ -352,6 +352,59 @@ ipcMain.handle('dialog:getDefaultCrunchyrollLanguageTemplate', async (events) =>
     return seTP
 })
 
+ipcMain.handle('dialog:setDefaultVideoQualityTemplate', async (events, quality: number) => {
+    await settings.set('CrunchyrollDefaultVideoQuality', quality)
+
+    return quality
+})
+
+ipcMain.handle('dialog:getDefaultVideoQualityTemplate', async (events) => {
+    const seTP = await settings.get('CrunchyrollDefaultVideoQuality')
+
+    if (!seTP) {
+        await settings.set('CrunchyrollDefaultVideoQuality', 1080)
+
+        return 1080
+    }
+
+    return seTP
+})
+
+ipcMain.handle('dialog:setDefaultAudioQualityTemplate', async (events, quality: number) => {
+    await settings.set('CrunchyrollDefaultAudioQuality', quality)
+
+    return quality
+})
+
+ipcMain.handle('dialog:getDefaultAudioQualityTemplate', async (events) => {
+    const seTP = await settings.get('CrunchyrollDefaultAudioQuality')
+
+    if (!seTP) {
+        await settings.set('CrunchyrollDefaultAudioQuality', 1)
+
+        return 1
+    }
+
+    return seTP
+})
+
+ipcMain.handle('dialog:setDefaultOutputFormatTemplate', async (events, format: string) => {
+    await settings.set('DefaultOutputFormat', format)
+
+    return format
+})
+
+ipcMain.handle('dialog:getDefaultOutputFormatTemplate', async (events) => {
+    const seTP = await settings.get('DefaultOutputFormat')
+
+    if (!seTP) {
+        await settings.set('DefaultOutputFormat', 'mkv')
+
+        return 'mkv'
+    }
+
+    return seTP
+})
 
 const openWindows = new Map()
 
