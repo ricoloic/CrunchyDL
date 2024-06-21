@@ -9,16 +9,7 @@
 ![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
 <!---![MacOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=apple&logoColor=white)-->
 
-### Important: At the moment its only possible to download with L3 Widevine keys since Crunchyroll added drm to the switch endpoint
-**Guides to get L3 Widevine keys:**
-
-https://forum.videohelp.com/threads/408031-Dumping-Your-own-L3-CDM-with-Android-Studio 
-
-https://simpcity.su/threads/guide-for-getting-drm-content-wip.181199/
-
-**Add the keys you get here:**
-
-![Screenshot 2024-06-19 131046](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/assets/166541445/7e6f51b9-54e3-4de3-b3be-752cbdc756ae)
+### Important: At the moment its only possible to download with L3 Widevine keys since Crunchyroll added drm to the switch endpoint. More about that [here](https://github.com/stratuma/Crunchyroll-Downloader-v4.0/discussions/23)
 
 **A simple tool for downloading videos from Crunchyroll and ADN.**
 
