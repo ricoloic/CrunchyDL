@@ -49,6 +49,7 @@
         "@fastify/cors": "^9.0.1",
         "ass-compiler": "^0.1.11",
         "crypto-js": "^4.2.0",
+        "electron-context-menu": "^3.6.1",
         "electron-log": "^5.1.5",
         "electron-settings": "^4.0.4",
         "electron-updater": "^6.1.8",
