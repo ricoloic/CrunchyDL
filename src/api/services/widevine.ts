@@ -9,7 +9,14 @@ export async function getWVKPath() {
     const drmL3key = (await settings.get('l3key')) as string
 
     if (!drmL3blob || !drmL3key) {
-        messageBox('error', ['Cancel'], 2, 'No decryption keys found', 'No decryption keys found', "Video/Audio with DRM detected, tried to decrypt but didn't found any decryption keys. Please add them in settings -> widevine. Aborting Download")
+        messageBox(
+            'error',
+            ['Cancel'],
+            2,
+            'No decryption keys found',
+            'No decryption keys found',
+            "Video/Audio with DRM detected, tried to decrypt but didn't found any decryption keys. Please add them in settings -> widevine. Aborting Download"
+        )
         server.logger.log({
             level: 'error',
             message: 'No L3 Keys found',
