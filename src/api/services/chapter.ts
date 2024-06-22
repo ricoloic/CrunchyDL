@@ -40,8 +40,6 @@ export async function createChapterFile(rawchapters: VideoMetadata, dir: string,
     var chapters: string[] = []
 
     chapters.push(';FFMETADATA1')
-    chapters.push(`title=${mediaid}`)
-    chapters.push(`artist=Crunchyroll`)
     chapters.push(``)
 
     if (rawchapters.intro && rawchapters.intro.type && rawchapters.intro.start && rawchapters.intro.end) {
