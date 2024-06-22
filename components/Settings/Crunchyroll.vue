@@ -26,13 +26,13 @@
                 <option :value="4">XBOX One (DRM PROTECTED)</option>
                 <option :value="5">Firefox (DRM PROTECTED)</option>
                 <option :value="6">Edge (DRM PROTECTED)</option>
-                <option :value="7">Safari (DRM PROTECTED)</option>
-                <option :value="8">Chrome (DRM PROTECTED)</option>
-                <option :value="9">Web Fallback (DRM PROTECTED)</option>
-                <option :value="10">Iphone (DRM PROTECTED)</option>
-                <option :value="11">Ipad (DRM PROTECTED)</option>
-                <option :value="12">Android (DRM PROTECTED)</option>
-                <option :value="13">Samsung TV (DRM PROTECTED)</option>
+                <!-- <option :value="7">Safari (DRM PROTECTED)</option> -->
+                <option :value="7">Chrome (DRM PROTECTED)</option>
+                <option :value="8">Web Fallback (DRM PROTECTED)</option>
+                <!-- <option :value="10">Iphone (DRM PROTECTED)</option>
+                <option :value="11">Ipad (DRM PROTECTED)</option> -->
+                <option :value="9">Android (DRM PROTECTED)</option>
+                <option :value="10">Samsung TV (DRM PROTECTED)</option>
             </select>
             <div class="text-xs mt-2"> Fallback to non-drm stream if no widevine key provided </div>
         </div>
