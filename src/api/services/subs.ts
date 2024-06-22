@@ -134,7 +134,7 @@ function resamplePOSSubtitle(subtitle: string, ox: number, oy: number, nx: numbe
         }
 
         if (line.includes('\\fs')) {
-            let posMatches = line.matchAll(/\\fs(-?\d+(?:\.\d+)?)/g)
+            let posMatches = line.matchAll(/\\fs(\d+(?:\.\d+)?)/g)
             for (let posMatch of posMatches) {
                 let font = parseInt(posMatch[1])
                 let newFontSize = Math.round((font / oy) * ny)
@@ -151,6 +151,22 @@ function resamplePOSSubtitle(subtitle: string, ox: number, oy: number, nx: numbe
                 let newBord = Math.round((oldBord / oy) * ny)
                 let bord = `\\bord${newBord}`
                 line = line.replace(posMatch[0], bord)
+            }
+            lines[i] = line
+        }
+
+        if (line.match(/m\s|l\s/)) {
+            let posMatches = line.matchAll(/([ml])\s*(-?\d+(?:\.\d+)?)\s*(-?\d+(?:\.\d+)?)/g)
+            for (let posMatch of posMatches) {
+                let command = posMatch[1]
+                let oldX = parseFloat(posMatch[2])
+                let oldY = parseFloat(posMatch[3])
+
+                let newX = Math.round((oldX / ox) * nx)
+                let newY = Math.round((oldY / oy) * ny)
+
+                let newCommand = `${command} ${newX} ${newY}`
+                line = line.replace(posMatch[0], newCommand)
             }
             lines[i] = line
         }
