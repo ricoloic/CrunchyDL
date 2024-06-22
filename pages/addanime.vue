@@ -387,7 +387,8 @@ const locales = ref<Array<{ locale: string; name: string }>>([
     { locale: 'th-TH', name: 'TH' },
     { locale: 'vi-VN', name: 'VI' },
     { locale: 'id-ID', name: 'ID' },
-    { locale: 'ko-KR', name: 'KO' }
+    { locale: 'ko-KR', name: 'KO' },
+    { locale: 'zh-CN', name: 'CN' },
 ])
 
 const isProduction = process.env.NODE_ENV !== 'development'

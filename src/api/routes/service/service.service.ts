@@ -636,36 +636,43 @@ export async function downloadCrunchyrollPlaylist(
         }
 
         if (!subPlaylist) {
-            await updatePlaylistByID(downloadID, 'failed')
-            console.log('Subtitle Playlist not found')
-            messageBox('error', ['Cancel'], 2, 'Subtitle Playlist not found', 'Subtitle Playlist not found', 'Subtitle Playlist not found')
+            console.log(`Subtitle Playlist for ${s} not found, skipping`)
+            messageBox(
+                'warning',
+                ['Cancel'],
+                2,
+                `Subtitle Playlist for ${s} not found`,
+                `Subtitle Playlist for ${s} not found`,
+                `Sub Playlist for ${s} not found, skipping download`
+            )
             server.logger.log({
                 level: 'error',
-                message: 'Subtitle Playlist not found',
+                message: `Subtitle Playlist for ${s} not found, skipping`,
                 timestamp: new Date().toISOString(),
-                section: 'crunchyrollDownloadProcess'
+                section: 'crunchyrollSubtitleDownloadProcess'
             })
-            return
         }
 
-        const found = subPlaylist.data.subtitles.find((sub) => sub.language === s)
-        if (found) {
-            subDownloadList.push({ ...found, isDub: false })
-            console.log(`Subtitle ${s}.ass found, adding to download`)
-            server.logger.log({
-                level: 'info',
-                message: `Subtitle ${s}.ass found in Download ${downloadID}, adding to download`,
-                timestamp: new Date().toISOString(),
-                section: 'crunchyrollDownloadProcessSubtitles'
-            })
-        } else {
-            console.warn(`Subtitle ${s}.ass not found, skipping`)
-            server.logger.log({
-                level: 'warn',
-                message: `Subtitle ${s}.ass not found in Download ${downloadID}, skipping`,
-                timestamp: new Date().toISOString(),
-                section: 'crunchyrollDownloadProcessSubtitles'
-            })
+        if (subPlaylist) {
+            const found = subPlaylist.data.subtitles.find((sub) => sub.language === s)
+            if (found) {
+                subDownloadList.push({ ...found, isDub: false })
+                console.log(`Subtitle ${s}.ass found, adding to download`)
+                server.logger.log({
+                    level: 'info',
+                    message: `Subtitle ${s}.ass found in Download ${downloadID}, adding to download`,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessSubtitles'
+                })
+            } else {
+                console.warn(`Subtitle ${s}.ass not found, skipping`)
+                server.logger.log({
+                    level: 'warn',
+                    message: `Subtitle ${s}.ass not found in Download ${downloadID}, skipping`,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessSubtitles'
+                })
+            }
         }
     }
 
