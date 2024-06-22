@@ -1343,7 +1343,8 @@ async function mergeVideoFile(
         { locale: 'th-TH', name: 'TH', iso: 'tha', title: 'Thai' },
         { locale: 'vi-VN', name: 'VI', iso: 'vie', title: 'Vietnamese' },
         { locale: 'id-ID', name: 'ID', iso: 'ind', title: 'Indonesian' },
-        { locale: 'ko-KR', name: 'KO', iso: 'kor', title: 'Korean' }
+        { locale: 'ko-KR', name: 'KO', iso: 'kor', title: 'Korean' },
+        { locale: 'zh-CN', name: 'CN', iso: 'zho', title: 'Chinese' }
     ]
 
     return new Promise((resolve, reject) => {
