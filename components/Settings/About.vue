@@ -5,8 +5,8 @@
             Crunchyroll <br />
             Downloader
         </div>
-        <div class="text-sm mt-1 text-gray-200"> v1.2.2 </div>
-        <div class="absolute right-0 bottom-0 text-xs text-gray-200"> Made by Stratum </div>
+        <div class="text-sm mt-1 text-gray-200"> v1.2.3 </div>
+        <div class="absolute right-0 bottom-0 text-xs text-gray-200"> Made by OpenSTDL </div>
     </div>
 </template>
 
