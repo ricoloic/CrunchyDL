@@ -36,14 +36,21 @@
             </select>
             <div class="text-xs mt-2"> Fallback to non-drm stream if no widevine key provided </div>
         </div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
+            <div class="text-sm mb-2">Subtitle Resampler (Experimental)</div>
+            <select v-model="selectedSubResampler" @change="setResampler()" class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+                <option :value="true">Actived</option>
+                <option :value="false">Deactivated</option>
+            </select>
+            <div class="text-xs mt-2"> Fixes broken crunchyroll subtitles </div>
+        </div>
     </div>
 </template>
 
 <script lang="ts" setup>
 const selectedLanguage = ref<string>()
 const selectedEndpoint = ref<number>()
-const selectedVideoQuality = ref<number>()
-const selectedAudioQuality = ref<number>()
+const selectedSubResampler = ref<boolean>()
 
 onMounted(() => {
     ;(window as any).myAPI.getEndpoint().then((result: any) => {
@@ -51,6 +58,9 @@ onMounted(() => {
     })
     ;(window as any).myAPI.getDefaultCrunchyrollLanguage().then((result: any) => {
         selectedLanguage.value = result
+    })
+    ;(window as any).myAPI.getSubtitleResampler().then((result: boolean) => {
+        selectedSubResampler.value = result
     })
 })
 
@@ -63,6 +73,12 @@ const selectLanguage = () => {
 const selectEndpoint = () => {
     if (process.client) {
         ;(window as any).myAPI.selectEndpoint(selectedEndpoint.value)
+    }
+}
+
+const setResampler = () => {
+    if (process.client) {
+        ;(window as any).myAPI.setSubtitleResampler(selectedSubResampler.value)
     }
 }
 </script>

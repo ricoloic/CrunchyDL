@@ -429,6 +429,23 @@ ipcMain.handle('dialog:getDefaultMaxDownloadsTemplate', async (events) => {
     return seTP
 })
 
+ipcMain.handle('dialog:getSubtitleResamplerTemplate', async (events) => {
+    const savedStat = await settings.get('subtitleResamplerActive')
+
+    if (savedStat === undefined || savedStat === null) {
+        await settings.set('subtitleResamplerActive', true)
+        return true
+    }
+
+    return savedStat
+})
+
+ipcMain.handle('dialog:setSubtitleResamplerTemplate', async (events, active: boolean) => {
+    await settings.set('subtitleResamplerActive', active)
+
+    return active
+})
+
 const openWindows = new Map()
 
 // Open New Window

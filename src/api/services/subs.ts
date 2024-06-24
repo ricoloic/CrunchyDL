@@ -4,6 +4,7 @@ import { Readable } from 'stream'
 import { finished } from 'stream/promises'
 import CryptoJS from 'crypto-js'
 import { server } from '../api'
+import settings from 'electron-settings'
 
 export async function downloadCRSub(
     sub: {
@@ -16,6 +17,13 @@ export async function downloadCRSub(
     qual: 1080 | 720 | 480 | 360 | 240
 ) {
     try {
+
+        var resamplerActive = await settings.get('subtitleResamplerActive')
+
+        if (resamplerActive === undefined || resamplerActive === null) {
+            resamplerActive = true
+        }
+
         const path = `${dir}/${sub.language}${sub.isDub ? `-FORCED` : ''}.${sub.format}`
         var qualX
         var qualY
@@ -45,6 +53,15 @@ export async function downloadCRSub(
 
         const stream = fs.createWriteStream(path)
         const response = await fetch(sub.url)
+
+        if (!resamplerActive) {
+            const readableStream = Readable.from([await response.text()])
+
+            await finished(readableStream.pipe(stream))
+            console.log(`Sub ${sub.language}.${sub.format} downloaded`)
+    
+            return path 
+        }
 
         var parsedASS = parse(await response.text())
 

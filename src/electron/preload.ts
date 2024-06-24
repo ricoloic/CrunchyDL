@@ -34,5 +34,7 @@ contextBridge.exposeInMainWorld('myAPI', {
     setDefaultCrunchyrollLanguage: (lang: string) => ipcRenderer.invoke('dialog:setDefaultCrunchyrollLanguageTemplate', lang),
     getDefaultCrunchyrollLanguage: () => ipcRenderer.invoke('dialog:getDefaultCrunchyrollLanguageTemplate'),
     setDefaultMaxDownloads: (max: number) => ipcRenderer.invoke('dialog:setDefaultMaxDownloadsTemplate', max),
-    getDefaultMaxDownloads: () => ipcRenderer.invoke('dialog:getDefaultMaxDownloadsTemplate')
+    getDefaultMaxDownloads: () => ipcRenderer.invoke('dialog:getDefaultMaxDownloadsTemplate'),
+    setSubtitleResampler: (active: boolean) => ipcRenderer.invoke('dialog:setSubtitleResamplerTemplate', active),
+    getSubtitleResampler: () => ipcRenderer.invoke('dialog:getSubtitleResamplerTemplate')
 })
