@@ -127,6 +127,7 @@
                         </div>
                         <div class="relative flex flex-row gap-2 h-full items-end">
                             <div class="text-xs">{{ p.quality }}p</div>
+                            <div v-if="p.qualityaudio" class="text-xs">{{ audioQualities[p.qualityaudio-1] ?? '44.10 kHz' }}</div>
                             <div class="text-xs uppercase">{{ p.format }}</div>
                             <div class="text-xs">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
                             <div class="text-xs mr-20">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
@@ -171,6 +172,7 @@ const playlist = ref<
         downloadspeed: number
         totaldownloaded: number
         quality: number
+        qualityaudio: 1 | 2 | 3 | undefined
         service: string
         format: string
         audiosdownloading: {
@@ -179,6 +181,8 @@ const playlist = ref<
         }[]
     }>
 >()
+
+const audioQualities = ref<string[]>(['44.10 kHz', '44.10 kHz (2)', '22.05 kHz'])
 
 const getPlaylist = async () => {
     const { data, error } = await useFetch<
@@ -195,6 +199,7 @@ const getPlaylist = async () => {
             downloadspeed: number
             totaldownloaded: number
             quality: number
+            qualityaudio: 1 | 2 | 3 | undefined
             service: string
             format: string
             audiosdownloading: {
