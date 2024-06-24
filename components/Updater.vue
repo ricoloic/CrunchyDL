@@ -1,6 +1,6 @@
 <template>
     <div
-        class="fixed bottom-3 right-5 p-3 flex flex-col bg-[#111111dc] w-80 min-h-24 rounded-xl font-dm text-white transition-all duration-300"
+        class="fixed bottom-3 right-5 p-3 z-50 flex flex-col bg-[#111111dc] w-80 min-h-24 rounded-xl font-dm text-white transition-all duration-300"
         :class="
             (data?.status === 'update-available' && !ignoreUpdate) || data?.status === 'downloading' || data?.status === 'update-downloaded'
                 ? 'opacity-100'

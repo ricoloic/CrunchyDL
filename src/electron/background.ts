@@ -20,6 +20,11 @@ var mainWindow: BrowserWindow
 function createWindow() {
     console.log('System info', { isProduction, platform, architucture })
 
+    settings.configure({
+        dir: app.getPath('documents') + '/Crunchyroll Downloader/',
+        fileName: 'settings.json'
+    })
+
     mainWindow = new BrowserWindow({
         title: 'Crunchyroll Downloader',
         icon: __dirname + '/icon/favicon.ico',
