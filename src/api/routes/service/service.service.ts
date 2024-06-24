@@ -209,10 +209,10 @@ export async function updatePlaylistByID(
 // Add Episode to Playlist
 export async function addEpisodeToPlaylist(
     e: CrunchyEpisode,
-    s: Array<string>,
-    d: Array<string>,
+    s: { name: string | undefined; locale: string }[],
+    d: { name: string | undefined; locale: string }[],
+    hardsub: { name: string | undefined; locale: string, format: string } | undefined,
     dir: string,
-    hardsub: boolean,
     status:
         | 'waiting'
         | 'preparing'
@@ -295,8 +295,8 @@ async function checkPlaylists() {
                 if (e.dataValues.service === 'CR') {
                     downloadCrunchyrollPlaylist(
                         (e.dataValues.media as CrunchyEpisode).id,
-                        (e as any).dataValues.dub.map((s: { locale: any }) => s.locale),
-                        (e as any).dataValues.sub.map((s: { locale: any }) => s.locale),
+                        e.dataValues.dub.map((s: { locale: any }) => s.locale),
+                        e.dataValues.sub.map((s: { locale: any }) => s.locale),
                         e.dataValues.hardsub,
                         (e.dataValues.media as CrunchyEpisode).id,
                         e.dataValues.id,
@@ -471,7 +471,7 @@ export async function downloadCrunchyrollPlaylist(
     e: string,
     dubs: Array<string>,
     subs: Array<string>,
-    hardsub: boolean,
+    hardsub: { name: string | undefined; locale: string; format: string; },
     episodeID: string,
     downloadID: number,
     name: string,
@@ -926,7 +926,7 @@ export async function downloadCrunchyrollPlaylist(
             return
         }
 
-        const play = await crunchyGetPlaylist(code, geo)
+        var play = await crunchyGetPlaylist(code, geo)
 
         if (!play) {
             await updatePlaylistByID(downloadID, 'failed')
@@ -945,24 +945,61 @@ export async function downloadCrunchyrollPlaylist(
 
         var downloadGEO
 
-        if (hardsub) {
-            const hardsubURL = play.data.hardSubs.find((h) => h.hlang === subs[0])?.url
+        if (hardsub && hardsub.locale) {
+            var hardsubURL: string | undefined;
 
-            const hardsubGEO = play.data.hardSubs.find((h) => h.hlang === subs[0])?.geo
+            var hardsubGEO: string | undefined;;
+
+            if (hardsub.format === 'dub') {
+                const found = play.data.versions.find((h) => h.audio_locale === hardsub.locale)
+                if (!found) {
+                    hardsubURL = undefined
+                } else {
+                    const newplay = await crunchyGetPlaylist(found.guid, found.geo)
+                    if (!newplay) {
+                        hardsubURL = undefined
+                        hardsubGEO = undefined
+                    } else {
+                        hardsubURL = newplay.data.hardSubs.find((h) => h.hlang === hardsub.locale)?.url
+                        hardsubGEO = newplay.data.hardSubs.find((h) => h.hlang === subs[0])?.geo
+                    }
+                }
+            }
+
+            if (hardsub.format === 'sub') {
+                const found = play.data.versions.find((h) => h.audio_locale === 'ja-JP')
+                if (!found) {
+                    hardsubURL = undefined
+                } else {
+                    const newplay = await crunchyGetPlaylist(found.guid, found.geo)
+                    if (!newplay) {
+                        hardsubURL = undefined
+                        hardsubGEO = undefined
+                    } else {
+                        hardsubURL = newplay.data.hardSubs.find((h) => h.hlang === hardsub.locale)?.url
+                        hardsubGEO = newplay.data.hardSubs.find((h) => h.hlang === subs[0])?.geo
+                    }
+                }
+            }
 
             if (hardsubURL) {
                 downloadURL = hardsubURL
                 downloadGEO = hardsubGEO
-                console.log('Hardsub Playlist found')
             } else {
                 downloadURL = play.data.url
                 downloadGEO = play.data.geo
                 console.log('Hardsub Playlist not found')
+                messageBox('warning', ['Cancel'], 2, 'Hardsub Playlist not found', 'Hardsub Playlist not found', `${hardsub.locale} Hardsub Playlist not found, downloading japanese playlist instead.`)
+                server.logger.log({
+                    level: 'error',
+                    message: `${hardsub.locale} Hardsub Playlist not found, downloading japanese playlist instead.`,
+                    timestamp: new Date().toISOString(),
+                    section: 'crunchyrollDownloadProcessVideo'
+                })
             }
         } else {
             downloadURL = play.data.url
             downloadGEO = play.data.geo
-            console.log('Hardsub disabled, skipping')
         }
 
         var mdp = await crunchyGetPlaylistMPD(downloadURL, downloadGEO)

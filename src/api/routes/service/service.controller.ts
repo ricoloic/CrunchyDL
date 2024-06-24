@@ -96,10 +96,10 @@ export async function addPlaylistController(
     request: FastifyRequest<{
         Body: {
             episodes: CrunchyEpisodes
-            dubs: Array<string>
-            subs: Array<string>
+            dubs: { name: string | undefined; locale: string }[]
+            subs: { name: string | undefined; locale: string }[]
+            hardsub: { name: string | undefined; locale: string, format: string } | undefined
             dir: string
-            hardsub: boolean
             quality: 1080 | 720 | 480 | 360 | 240
             qualityaudio: 1 | 2 | 3 | undefined
             service: 'CR' | 'ADN'
@@ -111,7 +111,7 @@ export async function addPlaylistController(
     const body = request.body
 
     for (const e of body.episodes) {
-        await addEpisodeToPlaylist(e, body.subs, body.dubs, body.dir, body.hardsub, 'waiting', body.quality, body.qualityaudio, body.service, body.format)
+        await addEpisodeToPlaylist(e, body.subs, body.dubs, body.hardsub, body.dir, 'waiting', body.quality, body.qualityaudio, body.service, body.format)
     }
 
     return reply.code(201).send()

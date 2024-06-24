@@ -5,7 +5,7 @@ import { ADNEpisode } from '../types/adn'
 
 const sequelize = new Sequelize({
     dialect: 'sqlite',
-    storage: app.getPath('documents') + '/Crunchyroll Downloader/databases/v2/data.db'
+    storage: app.getPath('documents') + '/Crunchyroll Downloader/databases/v3/data.db'
 })
 
 interface AccountAttributes {
@@ -44,9 +44,9 @@ interface PlaylistAttributes {
         | 'completed'
         | 'failed'
     media: CrunchyEpisode | ADNEpisode
-    dub: Array<string>
-    sub: Array<string>
-    hardsub: boolean
+    dub: { name: string | undefined; locale: string }[]
+    sub: { name: string | undefined; locale: string }[]
+    hardsub: { name: string | undefined; locale: string, format: string }
     quality: 1080 | 720 | 480 | 360 | 240
     qualityaudio: 1 | 2 | 3 | undefined
     dir: string
@@ -58,12 +58,12 @@ interface PlaylistAttributes {
 
 interface PlaylistCreateAttributes {
     media: CrunchyEpisode | ADNEpisode
-    dub: Array<string>
-    sub: Array<string>
+    dub: { name: string | undefined; locale: string }[]
+    sub: { name: string | undefined; locale: string }[]
+    hardsub: { name: string | undefined; locale: string, format: string } | undefined
     dir: string
     quality: 1080 | 720 | 480 | 360 | 240
     qualityaudio: 1 | 2 | 3 | undefined
-    hardsub: boolean
     status:
         | 'waiting'
         | 'preparing'
@@ -134,6 +134,10 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
         allowNull: false,
         type: DataTypes.JSON
     },
+    hardsub: {
+        allowNull: true,
+        type: DataTypes.JSON
+    },
     dir: {
         allowNull: false,
         type: DataTypes.STRING
@@ -141,10 +145,6 @@ const Playlist: ModelDefined<PlaylistAttributes, PlaylistCreateAttributes> = seq
     installDir: {
         allowNull: true,
         type: DataTypes.STRING
-    },
-    hardsub: {
-        allowNull: false,
-        type: DataTypes.BOOLEAN
     },
     failedreason: {
         allowNull: true,
