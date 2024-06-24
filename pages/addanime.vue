@@ -233,6 +233,34 @@
                     </button>
                 </div>
             </div>
+            <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
+                <div @click="selectHardSub ? (selectHardSub = false) : (selectHardSub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+                    Hardsub:
+                    {{ selectedHardSub ? `${selectedHardSub.name} (${selectedHardSub.format})` : 'No Hardsub selected' }}
+                </div>
+                <div v-if="selectHardSub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl h-40 grid grid-cols-8 gap-1 p-1 z-10 overflow-y-scroll">
+                    <button
+                        v-for="l in CRselectedShow?.Subs.map((s) => {
+                            return { name: locales.find((l) => l.locale === s) ? locales.find((l) => l.locale === s)?.name : s, locale: s }
+                        })"
+                        @click="toggleHardsub(l, 'sub')"
+                        class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+                        :class="selectedHardSub && selectedHardSub.locale === l.locale && selectedHardSub.format === 'sub' ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                    >
+                        {{ l.name }}<br>(sub)
+                    </button>
+                    <button
+                        v-for="l in CRselectedShow?.Dubs.map((s) => {
+                            return { name: locales.find((l) => l.locale === s) ? locales.find((l) => l.locale === s)?.name : s, locale: s }
+                        })"
+                        @click="toggleHardsub(l, 'dub')"
+                        class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+                        :class="selectedHardSub && selectedHardSub.locale === l.locale && selectedHardSub.format === 'dub' ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                    >
+                        {{ l.name }}<br>(dub)
+                    </button>
+                </div>
+            </div>
             <div v-if="service === 'adn' && ADNselectedShow" class="relative flex flex-col select-none">
                 <div @click="selectSub ? (selectSub = false) : (selectSub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                     Subs:
@@ -258,7 +286,7 @@
                 </div>
             </div>
             <div class="flex flex-row gap-3">
-                <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
+                <!-- <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
                     <select
                         v-model="hardsub"
                         name="episode"
@@ -275,7 +303,7 @@
                         <Icon name="mdi:loading" class="h-6 w-6 animate-spin" />
                         <div class="text-sm">Loading</div></div
                     >
-                </div>
+                </div> -->
                 <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
                     <select v-model="quality" name="quality" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                         <option :value="1080" class="text-sm text-slate-200">1080p</option>
@@ -399,6 +427,9 @@ const subLocales = ref<Array<{ locale: string; name: string }>>([])
 
 const selectSub = ref<boolean>(false)
 const selectedSubs = ref<Array<{ name: string | undefined; locale: string }>>([])
+
+const selectHardSub = ref<boolean>(false)
+const selectedHardSub = ref<{ name: string | undefined; locale: string, format: string }>()
 
 const tab = ref<number>(1)
 const search = ref<string>('')
@@ -836,6 +867,18 @@ const toggleSub = (lang: { name: string | undefined; locale: string }) => {
     return
 }
 
+const toggleHardsub = (lang: { name: string | undefined; locale: string }, format: string) => {
+    if (selectedHardSub.value && selectedHardSub.value.format === format && selectedHardSub.value.name === lang.name) {
+        selectedHardSub.value = undefined
+        return
+    }
+
+    selectedHardSub.value = {
+        ...lang,
+        format: format
+    }
+}
+
 const addToPlaylist = async () => {
     if (!episodes.value) return
 
@@ -854,7 +897,7 @@ const addToPlaylist = async () => {
         dubs: selectedDubs.value,
         subs: selectedSubs.value,
         dir: path.value,
-        hardsub: hardsub.value,
+        hardsub: selectedHardSub.value,
         quality: quality.value,
         qualityaudio: qualityaudio.value,
         service: 'CR',
