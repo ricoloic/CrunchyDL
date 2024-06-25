@@ -372,11 +372,6 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             name: 'Edge',
             url: `/web/edge/play`
         },
-        // {
-        //     id: 7,
-        //     name: 'Safari',
-        //     url: `/web/safari/play`
-        // },
         {
             id: 7,
             name: 'Chrome',
@@ -387,16 +382,6 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
             name: 'Web Fallback',
             url: `/web/fallback/play`
         },
-        // {
-        //     id: 10,
-        //     name: 'Iphone',
-        //     url: `/ios/iphone/play`
-        // },
-        // {
-        //     id: 11,
-        //     name: 'Ipad',
-        //     url: `/ios/ipad/play`
-        // },
         {
             id: 9,
             name: 'Android',

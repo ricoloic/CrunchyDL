@@ -242,8 +242,10 @@ export interface CrunchyEpisodesFetch {
 export interface CrunchyEpisodeFetch {
     total: number
     data: Array<{
+        id: string
         episode_metadata: {
-            series_id: string
+            series_id: string,
+            season_id: string
         }
     }>
     meta: {

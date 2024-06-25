@@ -268,7 +268,7 @@ export async function getCREpisodeSeriesID(q: string) {
                     return
                 }
 
-                const { data: fdata, error: ferror } = await useFetch<CrunchyEpisodeFetch>(`https://beta-api.crunchyroll.com/content/v2/cms/series/${q}`, {
+                const { data: fdata, error: ferror } = await useFetch<CrunchyEpisodeFetch>(`https://beta-api.crunchyroll.com/content/v2/cms/objects/${q}`, {
                     method: 'GET',
                     headers: {
                         Authorization: `Bearer ${tokeng.value.access_token}`
@@ -293,5 +293,9 @@ export async function getCREpisodeSeriesID(q: string) {
 
     const episode = data.value.data[0]
 
-    return episode.episode_metadata.series_id
+    return {
+        id: episode.episode_metadata.series_id,
+        season: episode.episode_metadata.season_id,
+        episode: episode.id
+    }
 }
