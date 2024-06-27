@@ -1398,26 +1398,35 @@ async function mergeVideoFile(
             options.push('-c:s mov_text')
         }
 
+        const getFilename = function(path: string, ext: string, delimiter: string): string {
+            const segments = path.split(delimiter)
+        
+            if (segments.length == 0) {
+                return "unkown"
+            }
+        
+            return segments[segments.length - 1].split(ext)[0]
+        }
+        
         for (const [index, a] of audios.entries()) {
             output.addInput(a)
             options.push(`-map ${ffindex}:a:0`)
             options.push(
                 `-metadata:s:a:${index} language=${
-                    locales.find((l) => l.locale === a.split('/')[1].split('.aac')[0])
-                        ? locales.find((l) => l.locale === a.split('/')[1].split('.aac')[0])?.iso
-                        : a.split('/')[1].split('.aac')[0]
+                    locales.find((l) => l.locale === getFilename(a, '.aac', '/'))
+                        ? locales.find((l) => l.locale === getFilename(a, '.aac', '/'))?.iso
+                        : getFilename(a, '.aac', '/')
                 }`
             )
-
-            ffindex++
-
             options.push(
                 `-metadata:s:a:${index} title=${
-                    locales.find((l) => l.locale === a.split('/')[1].split('.aac')[0])
-                        ? locales.find((l) => l.locale === a.split('/')[1].split('.aac')[0])?.title
-                        : a.split('/')[1].split('.aac')[0]
+                    locales.find((l) => l.locale === getFilename(a, '.aac', '/'))
+                        ? locales.find((l) => l.locale === getFilename(a, '.aac', '/'))?.title
+                        : getFilename(a, '.aac', '/')
                 }`
             )
+            
+            ffindex++
         }
 
         options.push(`-disposition:a:0 default`)
@@ -1430,17 +1439,17 @@ async function mergeVideoFile(
                 if (s.includes('-FORCED')) {
                     options.push(
                         `-metadata:s:s:${index} language=${
-                            locales.find((l) => l.locale === s.split('/')[1].split('-FORCED.ass')[0])
-                                ? locales.find((l) => l.locale === s.split('/')[1].split('-FORCED.ass')[0])?.iso
-                                : s.split('/')[1].split('-FORCED.ass')[0]
+                            locales.find((l) => l.locale === getFilename(s, '-FORCED.ass', '/'))
+                                ? locales.find((l) => l.locale === getFilename(s, '-FORCED.ass', '/'))?.iso
+                                : getFilename(s, '-FORCED.ass', '/')
                         }`
                     )
                 } else {
                     options.push(
                         `-metadata:s:s:${index} language=${
-                            locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])
-                                ? locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])?.iso
-                                : s.split('/')[1].split('.ass')[0]
+                            locales.find((l) => l.locale === getFilename(s, '.ass', '/'))
+                                ? locales.find((l) => l.locale === getFilename(s, '.ass', '/'))?.iso
+                                : getFilename(s, '.ass', '/')
                         }`
                     )
                 }
@@ -1448,17 +1457,17 @@ async function mergeVideoFile(
                 if (s.includes('-FORCED')) {
                     options.push(
                         `-metadata:s:s:${index} title=${
-                            locales.find((l) => l.locale === s.split('/')[1].split('-FORCED.ass')[0])
-                                ? locales.find((l) => l.locale === s.split('/')[1].split('-FORCED.ass')[0])?.title
-                                : s.split('/')[1].split('-FORCED.ass')[0]
+                            locales.find((l) => l.locale === getFilename(s, '-FORCED.ass', '/'))
+                                ? locales.find((l) => l.locale === getFilename(s, '-FORCED.ass', '/'))?.title
+                                : getFilename(s, '-FORCED.ass', '/')
                         }[FORCED]`
                     )
                 } else {
                     options.push(
                         `-metadata:s:s:${index} title=${
-                            locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])
-                                ? locales.find((l) => l.locale === s.split('/')[1].split('.ass')[0])?.title
-                                : s.split('/')[1].split('.ass')[0]
+                            locales.find((l) => l.locale === getFilename(s, '.ass', '/'))
+                                ? locales.find((l) => l.locale === getFilename(s, '.ass', '/'))?.title
+                                : getFilename(s, '.ass', '/')
                         }`
                     )
                 }
