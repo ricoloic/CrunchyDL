@@ -1,7 +1,7 @@
 import { Account, Playlist } from '../../db/database'
 import { downloadMPDAudio } from '../../services/audio'
 import { concatenateTSFiles } from '../../services/concatenate'
-import { checkFileExistence, createFolder, createFolderName, deleteFolder, deleteTemporaryFolders } from '../../services/folder'
+import { checkFileExistence, createFolder, createFolderName, deleteFolder, deleteTemporaryFolders, getFilename } from '../../services/folder'
 import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
 import { checkAccountMaxStreams, crunchyGetMetadata, crunchyGetPlaylist, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
@@ -1396,16 +1396,6 @@ async function mergeVideoFile(
         var options = [chapter ? '-map_metadata 1' : '-map_metadata -1', '-metadata:s:v:0 VENDOR_ID=', '-metadata:s:v:0 language=', '-c copy', '-map 0']
         if (format === 'mp4') {
             options.push('-c:s mov_text')
-        }
-
-        const getFilename = function(path: string, ext: string, delimiter: string): string {
-            const segments = path.split(delimiter)
-        
-            if (segments.length == 0) {
-                return "unkown"
-            }
-        
-            return segments[segments.length - 1].split(ext)[0]
         }
         
         for (const [index, a] of audios.entries()) {
