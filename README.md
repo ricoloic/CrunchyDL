@@ -60,38 +60,9 @@ Requires:
 
 2. Use PNPM to install the packages `pnpm i`
 
-3. Go to node_modules and search for the folder jsencrypt, open the jsencrypt.js file located in bin and replace this:
-```
-(function webpackUniversalModuleDefinition(root, factory) {
-    if(typeof exports === 'object' && typeof module === 'object')
-        module.exports = factory();
-    else if(typeof define === 'function' && define.amd)
-        define([], factory);
-    else if(typeof exports === 'object')
-        exports["JSEncrypt"] = factory();
-    else
-        root["JSEncrypt"] = factory();
-})(window, () => {
+3. Put the ffmpeg binaries in the ffmpeg folder and the mp4decrypt binaries in the mp4decrypt folder.
 
-```
-
-with this:
-```
-(function (root, factory) {
-  if (typeof exports === 'object' && typeof module === 'object')
-      module.exports = factory();
-  else if (typeof define === 'function' && define.amd)
-      define([], factory);
-  else if (typeof exports === 'object')
-      exports["JSEncrypt"] = factory();
-  else
-      root["JSEncrypt"] = factory();
-})(typeof self !== 'undefined' ? self : this, () => {
-```
-
-4. Put the ffmpeg binaries in the ffmpeg folder and the mp4decrypt binaries in the mp4decrypt folder.
-
-5. To run dev run `pnpm dev:electron`  when on linux or mac, for windows use `pnpm dev:electron:win`
+4. To run dev run `pnpm dev:electron` when on linux or mac, for windows use `pnpm dev:electron:win`
 
 6. To build use the command `pnpm build:electron`
 
