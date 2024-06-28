@@ -17,7 +17,6 @@ export async function downloadCRSub(
     qual: 1080 | 720 | 480 | 360 | 240
 ) {
     try {
-
         var resamplerActive = await settings.get('subtitleResamplerActive')
 
         if (resamplerActive === undefined || resamplerActive === null) {
@@ -59,8 +58,8 @@ export async function downloadCRSub(
 
             await finished(readableStream.pipe(stream))
             console.log(`Sub ${sub.language}.${sub.format} downloaded`)
-    
-            return path 
+
+            return path
         }
 
         var parsedASS = parse(await response.text())

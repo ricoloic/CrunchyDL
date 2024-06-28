@@ -15,9 +15,9 @@ import { ADNEpisode } from '../../types/adn'
 import { messageBox } from '../../../electron/background'
 import { getFFMPEGPath } from '../../services/ffmpeg'
 import { getDRMKeys, Uint8ArrayToBase64 } from '../../services/decryption'
-import { getMP4DecryptPath } from '../../services/mp4decrypt'
+import { getShakaPath } from '../../services/shaka'
 const ffmpegP = getFFMPEGPath()
-const mp4e = getMP4DecryptPath()
+const shaka = getShakaPath()
 import util from 'util'
 import settings from 'electron-settings'
 import { server } from '../../api'
@@ -211,7 +211,7 @@ export async function addEpisodeToPlaylist(
     e: CrunchyEpisode,
     s: { name: string | undefined; locale: string }[],
     d: { name: string | undefined; locale: string }[],
-    hardsub: { name: string | undefined; locale: string, format: string } | undefined,
+    hardsub: { name: string | undefined; locale: string; format: string } | undefined,
     dir: string,
     status:
         | 'waiting'
@@ -471,7 +471,7 @@ export async function downloadCrunchyrollPlaylist(
     e: string,
     dubs: Array<string>,
     subs: Array<string>,
-    hardsub: { name: string | undefined; locale: string; format: string; },
+    hardsub: { name: string | undefined; locale: string; format: string },
     episodeID: string,
     downloadID: number,
     name: string,
@@ -792,7 +792,7 @@ export async function downloadCrunchyrollPlaylist(
             let p: { filename: string; url: string }[] = []
 
             if (playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection) {
-                if (!playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection['com.widevine.alpha'].pssh) {
+                if (!playlist.mediaGroups.AUDIO.audio.main.playlists![playlistindex]!.contentProtection!['com.widevine.alpha']!.pssh) {
                     console.log('No PSSH found, exiting.')
                     messageBox(
                         'error',
@@ -811,7 +811,7 @@ export async function downloadCrunchyrollPlaylist(
                     })
                     return
                 }
-                pssh = Uint8ArrayToBase64(playlist.mediaGroups.AUDIO.audio.main.playlists[playlistindex].contentProtection['com.widevine.alpha'].pssh)
+                pssh = Uint8ArrayToBase64(playlist.mediaGroups.AUDIO.audio.main.playlists![playlistindex]!.contentProtection!['com.widevine.alpha'].pssh!)
 
                 keys = await getDRMKeys(pssh, assetId[1], list.account_id)
 
@@ -946,9 +946,9 @@ export async function downloadCrunchyrollPlaylist(
         var downloadGEO
 
         if (hardsub && hardsub.locale) {
-            var hardsubURL: string | undefined;
+            var hardsubURL: string | undefined
 
-            var hardsubGEO: string | undefined;;
+            var hardsubGEO: string | undefined
 
             if (hardsub.format === 'dub') {
                 const found = play.data.versions.find((h) => h.audio_locale === hardsub.locale)
@@ -989,7 +989,14 @@ export async function downloadCrunchyrollPlaylist(
                 downloadURL = play.data.url
                 downloadGEO = play.data.geo
                 console.log('Hardsub Playlist not found')
-                messageBox('warning', ['Cancel'], 2, 'Hardsub Playlist not found', 'Hardsub Playlist not found', `${hardsub.locale} Hardsub Playlist not found, downloading japanese playlist instead.`)
+                messageBox(
+                    'warning',
+                    ['Cancel'],
+                    2,
+                    'Hardsub Playlist not found',
+                    'Hardsub Playlist not found',
+                    `${hardsub.locale} Hardsub Playlist not found, downloading japanese playlist instead.`
+                )
                 server.logger.log({
                     level: 'error',
                     message: `${hardsub.locale} Hardsub Playlist not found, downloading japanese playlist instead.`,
@@ -1296,11 +1303,8 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
 
             await updatePlaylistByID(downloadID, 'decrypting video')
             console.log('Video Decryption started')
-            const inputFilePath = `${tmp}/temp-main.m4s`
-            const outputFilePath = `${tmp}/main.m4s`
-            const keyArgument = `--show-progress --key ${drmkeys[1].kid}:${drmkeys[1].key}`
 
-            const command = `${mp4e} ${keyArgument} "${inputFilePath}" "${outputFilePath}"`
+            const command = `${shaka} input="${tmp}/temp-main.m4s",stream=video,output="${tmp}/main.m4s" --enable_raw_key_decryption --keys key_id=${drmkeys[1].kid}:key=${drmkeys[1].key}`
 
             await exec(command)
             console.log('Video Decryption finished')
@@ -1397,15 +1401,13 @@ async function mergeVideoFile(
         if (format === 'mp4') {
             options.push('-c:s mov_text')
         }
-        
+
         for (const [index, a] of audios.entries()) {
             output.addInput(a)
             options.push(`-map ${ffindex}:a:0`)
             options.push(
                 `-metadata:s:a:${index} language=${
-                    locales.find((l) => l.locale === getFilename(a, '.aac', '/'))
-                        ? locales.find((l) => l.locale === getFilename(a, '.aac', '/'))?.iso
-                        : getFilename(a, '.aac', '/')
+                    locales.find((l) => l.locale === getFilename(a, '.aac', '/')) ? locales.find((l) => l.locale === getFilename(a, '.aac', '/'))?.iso : getFilename(a, '.aac', '/')
                 }`
             )
             options.push(
@@ -1415,7 +1417,7 @@ async function mergeVideoFile(
                         : getFilename(a, '.aac', '/')
                 }`
             )
-            
+
             ffindex++
         }
 

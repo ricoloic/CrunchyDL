@@ -20,11 +20,11 @@ build/
 crunchyroll-downloader-output-*/
 
 # FFMPEG
-ffmpeg/ffmpeg.exe
-ffmpeg/ffprobe.exe
+ffmpeg/*
+ffmpeg/!.gitkeep
 
-# MP4DECRYPT
-mp4decrypt/mp4decrypt.exe
+# SHAKA
+shaka/shaka.exe
 
 # Keys
 keys/client

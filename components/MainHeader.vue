@@ -31,7 +31,7 @@
 </template>
 
 <script lang="ts" setup>
-import packageJson from '../package.json';
+import packageJson from '../package.json'
 
 const isProduction = process.env.NODE_ENV !== 'development'
 

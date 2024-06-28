@@ -105,7 +105,7 @@ export function getFilename(path: string, ext: string, delimiter: string) {
     const segments = path.split(delimiter)
 
     if (segments.length == 0) {
-        return "unkown"
+        return 'unkown'
     }
 
     return segments[segments.length - 1].split(ext)[0]

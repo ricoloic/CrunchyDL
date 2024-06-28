@@ -98,7 +98,7 @@ export async function addPlaylistController(
             episodes: CrunchyEpisodes
             dubs: { name: string | undefined; locale: string }[]
             subs: { name: string | undefined; locale: string }[]
-            hardsub: { name: string | undefined; locale: string, format: string } | undefined
+            hardsub: { name: string | undefined; locale: string; format: string } | undefined
             dir: string
             quality: 1080 | 720 | 480 | 360 | 240
             qualityaudio: 1 | 2 | 3 | undefined

@@ -127,7 +127,7 @@
                         </div>
                         <div class="relative flex flex-row gap-2 h-full items-end">
                             <div class="text-xs">{{ p.quality }}p</div>
-                            <div v-if="p.qualityaudio" class="text-xs">{{ audioQualities[p.qualityaudio-1] ?? '44.10 kHz' }}</div>
+                            <div v-if="p.qualityaudio" class="text-xs">{{ audioQualities[p.qualityaudio - 1] ?? '44.10 kHz' }}</div>
                             <div class="text-xs uppercase">{{ p.format }}</div>
                             <div class="text-xs">Dubs: {{ p.dub.map((t) => t.name).join(', ') }}</div>
                             <div class="text-xs">Subs: {{ p.sub.length !== 0 ? p.sub.map((t) => t.name).join(', ') : '-' }}</div>
@@ -166,7 +166,7 @@ const playlist = ref<
         media: CrunchyEpisode | ADNEpisode
         dub: Array<{ locale: string; name: string }>
         sub: Array<{ locale: string; name: string }>
-        hardsub: { name: string | undefined; locale: string, format: string }
+        hardsub: { name: string | undefined; locale: string; format: string }
         dir: string
         installDir: string
         partsleft: number
@@ -194,7 +194,7 @@ const getPlaylist = async () => {
             media: CrunchyEpisode | ADNEpisode
             dub: Array<{ locale: string; name: string }>
             sub: Array<{ locale: string; name: string }>
-            hardsub: { name: string | undefined; locale: string, format: string }
+            hardsub: { name: string | undefined; locale: string; format: string }
             dir: string
             installDir: string
             partsleft: number

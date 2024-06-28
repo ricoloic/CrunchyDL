@@ -4,9 +4,9 @@ import { checkFileExistence, createFolder, deleteFolder } from './folder'
 import { concatenateTSFiles } from './concatenate'
 import Ffmpeg from 'fluent-ffmpeg'
 import { getFFMPEGPath } from './ffmpeg'
-import { getMP4DecryptPath } from '../services/mp4decrypt'
+import { getShakaPath } from './shaka'
 const ffmpegP = getFFMPEGPath()
-const mp4e = getMP4DecryptPath()
+const shaka = getShakaPath()
 import util from 'util'
 import { server } from '../api'
 const exec = util.promisify(require('child_process').exec)
@@ -161,11 +161,8 @@ async function mergePartsAudio(
                 dn.status = 'decrypting'
             }
             console.log(`Audio Decryption started`)
-            const inputFilePath = `${tmp}/temp-main.m4s`
-            const outputFilePath = `${tmp}/main.m4s`
-            const keyArgument = `--show-progress --key ${drmkeys[1].kid}:${drmkeys[1].key}`
 
-            const command = `${mp4e} ${keyArgument} "${inputFilePath}" "${outputFilePath}"`
+            const command = `${shaka} input="${tmp}/temp-main.m4s",stream=audio,output="${tmp}/main.m4s" --enable_raw_key_decryption --keys key_id=${drmkeys[1].kid}:key=${drmkeys[1].key}`
 
             await exec(command)
             concatenatedFile = `${tmp}/main.m4s`

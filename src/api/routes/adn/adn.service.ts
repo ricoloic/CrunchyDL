@@ -1,11 +1,10 @@
-import JSEncrypt from 'jsencrypt'
 import CryptoJS from 'crypto-js'
 import { server } from '../../api'
 import { ADNLink, ADNPlayerConfig } from '../../types/adn'
 import { messageBox } from '../../../electron/background'
 import { useFetch } from '../useFetch'
 import { loggedInCheck } from '../service/service.service'
-import { parse as mpdParse, parse } from 'mpd-parser'
+import * as forge from 'node-forge'
 
 export async function adnLogin(user: string, passw: string) {
     const cachedData:
@@ -178,12 +177,9 @@ async function getPlayerEncryptedToken(id: number, geo: 'de' | 'fr') {
 
     if (!token) return
 
-    var key = new JSEncrypt()
-    var random = randomHexaString(16)
+    const publicKeyPem = `-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbQrCJBRmaXM4gJidDmcpWDssgnumHinCLHAgS4buMtdH7dEGGEUfBofLzoEdt1jqcrCDT6YNhM0aFCqbLOPFtx9cg/X2G/G5bPVu8cuFM0L+ehp8s6izK1kjx3OOPH/kWzvstM5tkqgJkNyNEvHdeJl6KhS+IFEqwvZqgbBpKuwIDAQAB-----END PUBLIC KEY-----`
 
-    key.setPublicKey(
-        '-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbQrCJBRmaXM4gJidDmcpWDssgnumHinCLHAgS4buMtdH7dEGGEUfBofLzoEdt1jqcrCDT6YNhM0aFCqbLOPFtx9cg/X2G/G5bPVu8cuFM0L+ehp8s6izK1kjx3OOPH/kWzvstM5tkqgJkNyNEvHdeJl6KhS+IFEqwvZqgbBpKuwIDAQAB-----END PUBLIC KEY-----'
-    )
+    var random = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex)
 
     const data = {
         k: random,
@@ -192,9 +188,17 @@ async function getPlayerEncryptedToken(id: number, geo: 'de' | 'fr') {
 
     const finisheddata = JSON.stringify(data)
 
-    const encryptedData = key.encrypt(finisheddata) || ''
+    const encryptedData = encryptWithPublicKey(publicKeyPem, finisheddata)
 
     return { data: encryptedData, random: random }
+}
+
+function encryptWithPublicKey(publicKeyPem: string, data: string) {
+    const publicKey = forge.pki.publicKeyFromPem(publicKeyPem)
+    const encryptedData = publicKey.encrypt(data, 'RSA-OAEP', {
+        md: forge.md.sha256.create()
+    })
+    return forge.util.encode64(encryptedData)
 }
 
 export async function adnGetPlaylist(animeid: number, geo: 'de' | 'fr') {

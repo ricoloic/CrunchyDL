@@ -234,7 +234,10 @@
                 </div>
             </div>
             <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
-                <div @click="selectHardSub ? (selectHardSub = false) : (selectHardSub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+                <div
+                    @click="selectHardSub ? (selectHardSub = false) : (selectHardSub = true)"
+                    class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+                >
                     Hardsub:
                     {{ selectedHardSub ? `${selectedHardSub.name} (${selectedHardSub.format})` : 'No Hardsub selected' }}
                 </div>
@@ -247,7 +250,7 @@
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedHardSub && selectedHardSub.locale === l.locale && selectedHardSub.format === 'sub' ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
                     >
-                        {{ l.name }}<br>(sub)
+                        {{ l.name }}<br />(sub)
                     </button>
                     <button
                         v-for="l in CRselectedShow?.Dubs.map((s) => {
@@ -257,7 +260,7 @@
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedHardSub && selectedHardSub.locale === l.locale && selectedHardSub.format === 'dub' ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
                     >
-                        {{ l.name }}<br>(dub)
+                        {{ l.name }}<br />(dub)
                     </button>
                 </div>
             </div>
@@ -429,7 +432,7 @@ const selectSub = ref<boolean>(false)
 const selectedSubs = ref<Array<{ name: string | undefined; locale: string }>>([])
 
 const selectHardSub = ref<boolean>(false)
-const selectedHardSub = ref<{ name: string | undefined; locale: string, format: string }>()
+const selectedHardSub = ref<{ name: string | undefined; locale: string; format: string }>()
 
 const tab = ref<number>(1)
 const search = ref<string>('')
@@ -779,7 +782,7 @@ const switchToSeason = async () => {
 
     if (url.value && url.value.includes('crunchyroll') && url.value.includes('/watch/') && !CRselectedShow.value) {
         var episodeID: string | string[] = url.value.split('/')
-        episodeID = episodeID[episodeID.length-2]
+        episodeID = episodeID[episodeID.length - 2]
         const seriesID = await getCREpisodeSeriesID(episodeID)
         if (!seriesID) {
             alert('Episode not found')
@@ -798,7 +801,7 @@ const switchToSeason = async () => {
             isFetchingSeasons.value--
             return
         }
-        selectedSeason.value = seasons.value.find(s => s.id === seriesID.season) ?? seasons.value[0]
+        selectedSeason.value = seasons.value.find((s) => s.id === seriesID.season) ?? seasons.value[0]
         episodes.value = await listEpisodeCrunchy(selectedSeason.value.id, CRselectedShow.value.Geo)
         if (episodes.value) {
             selectedStartEpisode.value = episodes.value[0]

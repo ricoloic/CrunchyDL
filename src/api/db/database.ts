@@ -46,7 +46,7 @@ interface PlaylistAttributes {
     media: CrunchyEpisode | ADNEpisode
     dub: { name: string | undefined; locale: string }[]
     sub: { name: string | undefined; locale: string }[]
-    hardsub: { name: string | undefined; locale: string, format: string }
+    hardsub: { name: string | undefined; locale: string; format: string }
     quality: 1080 | 720 | 480 | 360 | 240
     qualityaudio: 1 | 2 | 3 | undefined
     dir: string
@@ -60,7 +60,7 @@ interface PlaylistCreateAttributes {
     media: CrunchyEpisode | ADNEpisode
     dub: { name: string | undefined; locale: string }[]
     sub: { name: string | undefined; locale: string }[]
-    hardsub: { name: string | undefined; locale: string, format: string } | undefined
+    hardsub: { name: string | undefined; locale: string; format: string } | undefined
     dir: string
     quality: 1080 | 720 | 480 | 360 | 240
     qualityaudio: 1 | 2 | 3 | undefined
