@@ -22,7 +22,12 @@ import util from 'util'
 import settings from 'electron-settings'
 import { server } from '../../api'
 import { createChapterFile } from '../../services/chapter'
+import { app } from 'electron'
 const exec = util.promisify(require('child_process').exec)
+
+settings.configure({
+    dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
+})
 
 // Get All Accounts
 export async function getAllAccounts() {

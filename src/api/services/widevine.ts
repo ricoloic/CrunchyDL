@@ -4,6 +4,10 @@ import path from 'path'
 import { messageBox } from '../../electron/background'
 import { server } from '../api'
 
+settings.configure({
+    dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
+})
+
 export async function getWVKPath() {
     const drmL3blob = (await settings.get('l3blob')) as string
     const drmL3key = (await settings.get('l3key')) as string

@@ -3,6 +3,10 @@ import { app } from 'electron'
 import fs from 'fs'
 import settings from 'electron-settings'
 
+settings.configure({
+    dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
+})
+
 export async function createFolder() {
     var tempPath = (await settings.get('tempPath')) as string
 

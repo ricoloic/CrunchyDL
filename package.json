@@ -14,7 +14,7 @@
         "transpile-src": "tsc -p ./src --outDir .output/src",
         "dev:electron": "NODE_ENV=development concurrently --kill-others \"nuxt dev\" \"tsc-watch -p ./src --outDir .output/src --onSuccess 'electron ./.output/src/electron/background.js'\"",
         "dev:electron:win": "set NODE_ENV=development& concurrently --kill-others \"nuxt dev\" \"tsc-watch -p ./src --outDir .output/src --onSuccess run.electron\"",
-        "build:electron": "pnpm prettier:fix && nuxt generate && pnpm transpile-src && node build.js",
+        "build:electron": "pnpm prettier:fix && modclean --run && nuxt generate && pnpm transpile-src && node build.js",
         "prettier:fix": "pnpm prettier src --write && pnpm prettier components --write && pnpm prettier pages --write && pnpm prettier build.js --write"
     },
     "devDependencies": {
@@ -42,7 +42,7 @@
         "sass": "^1.77.6",
         "sass-loader": "^13.3.3",
         "tsc-watch": "^6.2.0",
-        "typescript": "5.4.4",
+        "typescript": "^5.5.2",
         "wait-on": "^7.2.0"
     },
     "dependencies": {
@@ -74,7 +74,8 @@
             "!**/.git/*",
             "!**/.github/*",
             "!**/.nuxt/*",
-            "!**/.vscode/*"
+            "!**/.vscode/*",
+            "!**/*.md"
         ],
         "extraResources": [
             "./ffmpeg/**",

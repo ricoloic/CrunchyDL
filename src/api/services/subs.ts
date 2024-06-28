@@ -5,6 +5,11 @@ import { finished } from 'stream/promises'
 import CryptoJS from 'crypto-js'
 import { server } from '../api'
 import settings from 'electron-settings'
+import { app } from 'electron'
+
+settings.configure({
+    dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
+})
 
 export async function downloadCRSub(
     sub: {

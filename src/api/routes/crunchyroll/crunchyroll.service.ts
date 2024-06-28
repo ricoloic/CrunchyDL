@@ -5,14 +5,11 @@ import { useFetch } from '../useFetch'
 import { parse as mpdParse } from 'mpd-parser'
 import { checkProxies, loggedInCheck } from '../service/service.service'
 import settings from 'electron-settings'
+import { app } from 'electron'
 
-// Crunchyroll Error message list
-const crErrors = [
-    {
-        error: 'invalid_grant',
-        response: 'Email/Password is wrong'
-    }
-]
+settings.configure({
+    dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
+})
 
 // Crunchyroll Login Handler
 export async function crunchyLogin(user: string, passw: string, geo: string) {

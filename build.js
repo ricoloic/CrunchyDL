@@ -26,6 +26,8 @@ const options = {
         output: 'crunchyroll-downloader-output-${version}'
     },
 
+    electronLanguages: ['en-US'],
+
     win: {
         compression: 'maximum',
         artifactName: 'crunchyroll-downloader-${version}-windows-installer.${ext}',

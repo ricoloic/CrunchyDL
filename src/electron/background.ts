@@ -10,6 +10,10 @@ import startAPI from '../api/api'
 import settings from 'electron-settings'
 import contextMenu from 'electron-context-menu'
 
+settings.configure({
+    dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
+})
+
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true'
 const isProduction = process.env.NODE_ENV !== 'development'
 const platform: 'darwin' | 'win32' | 'linux' = process.platform as any
@@ -17,13 +21,12 @@ const architucture: '64' | '32' = os.arch() === 'x64' ? '64' : '32'
 const modules = [titleBarActionsModule, macMenuModule, updaterModule]
 var mainWindow: BrowserWindow
 
+settings.configure({
+    dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
+})
+
 function createWindow() {
     console.log('System info', { isProduction, platform, architucture })
-
-    settings.configure({
-        dir: app.getPath('documents') + '/Crunchyroll Downloader/',
-        fileName: 'settings.json'
-    })
 
     mainWindow = new BrowserWindow({
         title: 'Crunchyroll Downloader',

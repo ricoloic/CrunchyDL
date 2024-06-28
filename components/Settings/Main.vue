@@ -150,14 +150,18 @@ const toggleSub = (lang: { locale: string; name: string }) => {
 
     if (index !== -1) {
         subLocales.value.splice(index, 1)
-        ;(window as any).myAPI.setArraySub(JSON.stringify(subLocales.value))
+        if (process.client) {
+            ;(window as any).myAPI.setArraySub(JSON.stringify(subLocales.value))
+        }
 
         return
     }
 
     if (index === -1) {
         subLocales.value.push(lang)
-        ;(window as any).myAPI.setArraySub(JSON.stringify(subLocales.value))
+        if (process.client) {
+            ;(window as any).myAPI.setArraySub(JSON.stringify(subLocales.value))
+        }
 
         return
     }
@@ -237,11 +241,30 @@ const selectMaxDownloads = () => {
 }
 
 onMounted(() => {
+    if (!(window as any).myAPI) return
     ;(window as any).myAPI.getArray('defdubarray').then((result: any) => {
-        dubLocales.value = JSON.parse(result)
+        try {
+            if (result.length !== 0 && result !== null && result !== undefined && result !== '') {
+                dubLocales.value = JSON.parse(result)
+            } else {
+                dubLocales.value = []
+            }
+        } catch (e) {
+            console.error('Failed to parse JSON:', e)
+            dubLocales.value = []
+        }
     })
     ;(window as any).myAPI.getArray('defsubarray').then((result: any) => {
-        subLocales.value = JSON.parse(result)
+        try {
+            if (result.length !== 0 && result !== null && result !== undefined && result !== '') {
+                subLocales.value = JSON.parse(result)
+            } else {
+                subLocales.value = []
+            }
+        } catch (e) {
+            console.error('Failed to parse JSON:', e)
+            subLocales.value = []
+        }
     })
     ;(window as any).myAPI.getDefaultVideoQuality().then((result: any) => {
         selectedVideoQuality.value = result
