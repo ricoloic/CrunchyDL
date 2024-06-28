@@ -60,7 +60,7 @@ Requires:
 
 2. Use PNPM to install the packages `pnpm i`
 
-3. Put the ffmpeg binaries in the ffmpeg folder and the mp4decrypt binaries in the mp4decrypt folder.
+3. Put the ffmpeg binaries in the ffmpeg folder and the shaka packager in the shaka folder.
 
 4. To run dev run `pnpm dev:electron` when on linux or mac, for windows use `pnpm dev:electron:win`
 
