@@ -53,7 +53,7 @@ Requires:
 ```
 1. NodeJS v19 or newer
 2. FFMPEG Binaries (for your os)
-3. MP4Decrypt Binaries (for your os)
+3. Shaka Packager (for your os)
 ```
 
 1. Clone the repo: `git clone https://github.com/stratuma/Crunchyroll-Downloader-v4.0.git`
