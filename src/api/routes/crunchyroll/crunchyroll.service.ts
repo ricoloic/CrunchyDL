@@ -14,12 +14,6 @@ settings.configure({
 // Crunchyroll Login Handler
 export async function crunchyLogin(user: string, passw: string, geo: string) {
     var endpoint = await settings.get('CREndpoint')
-    const drmL3blob = await settings.has('l3blob')
-    const drmL3key = await settings.has('l3key')
-
-    if (!drmL3blob || !drmL3key) {
-        endpoint = 1
-    }
 
     if (!endpoint) {
         await settings.set('CREndpoint', 1)
@@ -72,12 +66,6 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
     var body
 
     var endpoint = await settings.get('CREndpoint')
-    const drmL3blob = await settings.has('l3blob')
-    const drmL3key = await settings.has('l3key')
-
-    if (!drmL3blob || !drmL3key) {
-        endpoint = 1
-    }
 
     if (!endpoint) {
         await settings.set('CREndpoint', 1)
@@ -117,7 +105,7 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
         return
     }
 
-    if (endpoint !== 1 && drmL3blob && drmL3key) {
+    if (endpoint !== 1) {
         headers = {
             Authorization: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M=',
             'Content-Type': 'application/json',
@@ -200,19 +188,13 @@ async function crunchyLoginFetch(user: string, passw: string) {
     var body
 
     var endpoint = await settings.get('CREndpoint')
-    const drmL3blob = await settings.has('l3blob')
-    const drmL3key = await settings.has('l3key')
-
-    if (!drmL3blob || !drmL3key) {
-        endpoint = 1
-    }
 
     if (!endpoint) {
         await settings.set('CREndpoint', 1)
         endpoint = 1
     }
 
-    if (endpoint !== 1 && drmL3blob && drmL3key) {
+    if (endpoint !== 1) {
         headers = {
             Authorization: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M=',
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -326,12 +308,6 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
     }
 
     var endpoint = await settings.get('CREndpoint')
-    const drmL3blob = await settings.has('l3blob')
-    const drmL3key = await settings.has('l3key')
-
-    if (!drmL3blob || !drmL3key) {
-        endpoint = 1
-    }
 
     if (!endpoint) {
         await settings.set('CREndpoint', 1)
@@ -654,7 +630,6 @@ export async function deleteVideoToken(content: string, token: string) {
     } else {
         decrementPlaylistCounter()
         const error = await response.text()
-        // messageBox('error', ['Cancel'], 2, 'Failed to delete Crunchyroll Video Token', 'Failed to delete Crunchyroll Video Token', error)
         server.logger.log({
             level: 'error',
             message: 'Failed to disable Crunchyroll Video Token',
@@ -698,7 +673,6 @@ export async function activateVideoToken(content: string, token: string) {
         return 'ok'
     } else {
         const error = await response.text()
-        // messageBox('error', ['Cancel'], 2, 'Failed to delete Crunchyroll Video Token', 'Failed to delete Crunchyroll Video Token', error)
         server.logger.log({
             level: 'error',
             message: 'Failed to activate Crunchyroll Video Token',
@@ -824,7 +798,6 @@ export async function getAccountInfo() {
             return data
         } else {
             const error = await response.text()
-            messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll Account Info', 'Failed to get Crunchyroll Account Info', error)
             server.logger.log({
                 level: 'error',
                 message: 'Failed to get Crunchyroll Account Info',
@@ -897,6 +870,6 @@ export async function checkAccountMaxStreams() {
             throw new Error(await response.text())
         }
     } catch (e) {
-        throw new Error(e as string)
+        return 1
     }
 }
