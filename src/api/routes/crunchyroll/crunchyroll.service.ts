@@ -357,13 +357,43 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
         },
         {
             id: 9,
-            name: 'Android',
+            name: 'Android Phone',
             url: `/android/phone/play`
         },
         {
             id: 10,
+            name: 'Android Tablet',
+            url: `/android/tablet/play`
+        },
+        {
+            id: 11,
             name: 'Samsung TV',
             url: `/tv/samsung/play`
+        },
+        {
+            id: 12,
+            name: 'Chromecast',
+            url: `/tv/chromecast/play`
+        },
+        {
+            id: 13,
+            name: 'Fire TV',
+            url: `/tv/fire_tv/play`
+        },
+        {
+            id: 14,
+            name: 'Android TV',
+            url: `/tv/android_tv/play`
+        },
+        {
+            id: 15,
+            name: 'LG TV',
+            url: `/tv/lg/play`
+        },
+        {
+            id: 16,
+            name: 'Roku',
+            url: `/tv/roku/play`
         }
     ]
 
@@ -377,7 +407,8 @@ export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
 
     const headersLoc = {
         Authorization: `Bearer ${login.access_token}`,
-        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
+        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
+        'x-cr-disable-drm': 'true'
     }
 
     var playlist: VideoPlaylist
@@ -696,7 +727,8 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
 
     const headers = {
         Authorization: `Bearer ${login.access_token}`,
-        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
+        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
+        'x-cr-disable-drm': 'true'
     }
 
     const regex = /\/manifest\/([A-Z0-9]+)\/.*\?playbackGuid=([^&]+)/

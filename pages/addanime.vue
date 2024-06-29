@@ -289,24 +289,6 @@
                 </div>
             </div>
             <div class="flex flex-row gap-3">
-                <!-- <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
-                    <select
-                        v-model="hardsub"
-                        name="episode"
-                        class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
-                        :disabled="isHardsubDisabled"
-                    >
-                        <option :value="false" class="text-sm text-slate-200">Hardsub: false</option>
-                        <option :value="true" class="text-sm text-slate-200">Hardsub: true</option>
-                    </select>
-                    <div
-                        class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
-                        :class="isFetchingEpisodes ? 'opacity-100' : 'opacity-0 pointer-events-none'"
-                    >
-                        <Icon name="mdi:loading" class="h-6 w-6 animate-spin" />
-                        <div class="text-sm">Loading</div></div
-                    >
-                </div> -->
                 <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
                     <select v-model="quality" name="quality" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                         <option :value="1080" class="text-sm text-slate-200">1080p</option>

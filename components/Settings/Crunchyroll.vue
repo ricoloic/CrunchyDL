@@ -28,8 +28,14 @@
                 <option :value="6">Edge (DRM PROTECTED)</option>
                 <option :value="7">Chrome (DRM PROTECTED)</option>
                 <option :value="8">Web Fallback (DRM PROTECTED)</option>
-                <option :value="9">Android (DRM PROTECTED)</option>
-                <option :value="10">Samsung TV (DRM PROTECTED)</option>
+                <option :value="9">Android Phone (DRM PROTECTED)</option>
+                <option :value="10">Android Tablet (DRM PROTECTED)</option>
+                <option :value="11">Samsung TV (DRM PROTECTED)</option>
+                <option :value="12">Chromecast (DRM PROTECTED)</option>
+                <option :value="13">Fire TV (DRM PROTECTED)</option>
+                <option :value="14">Android TV (DRM PROTECTED)</option>
+                <option :value="15">LG TV (DRM PROTECTED)</option>
+                <option :value="16">Roku (DRM PROTECTED)</option>
             </select>
         </div>
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
