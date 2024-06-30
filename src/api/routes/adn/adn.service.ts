@@ -4,7 +4,7 @@ import { ADNLink, ADNPlayerConfig } from '../../types/adn'
 import { messageBox } from '../../../electron/background'
 import { useFetch } from '../useFetch'
 import { loggedInCheck } from '../service/service.service'
-import * as forge from 'node-forge'
+import crypto from 'crypto'
 
 export async function adnLogin(user: string, passw: string) {
     const cachedData:
@@ -125,7 +125,7 @@ export async function getPlayerConfigADN(id: number, geo: 'de' | 'fr') {
 
             return data
         } else {
-            throw new Error('Failed to fetch ADN')
+            throw new Error('Failed to fetch ADN Player config')
         }
     } catch (e) {
         throw new Error(e as string)
@@ -156,7 +156,7 @@ async function getPlayerToken(id: number, geo: 'de' | 'fr') {
 
             return data
         } else {
-            throw new Error('Failed to fetch ADN')
+            throw new Error('Failed to fetch ADN Player token')
         }
     } catch (e) {
         throw new Error(e as string)
@@ -167,57 +167,48 @@ function randomHexaString(length: number) {
     const characters = '0123456789abcdef'
     let result = ''
     for (let i = 0; i < length; i++) {
-        result += characters[Math.floor(Math.random() * characters.length)]
+        result += characters.charAt(Math.floor(Math.random() * characters.length))
     }
     return result
 }
 
-async function getPlayerEncryptedToken(id: number, geo: 'de' | 'fr') {
-    const token = await getPlayerToken(id, geo)
-
-    if (!token) return
-
-    const publicKeyPem = `-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbQrCJBRmaXM4gJidDmcpWDssgnumHinCLHAgS4buMtdH7dEGGEUfBofLzoEdt1jqcrCDT6YNhM0aFCqbLOPFtx9cg/X2G/G5bPVu8cuFM0L+ehp8s6izK1kjx3OOPH/kWzvstM5tkqgJkNyNEvHdeJl6KhS+IFEqwvZqgbBpKuwIDAQAB-----END PUBLIC KEY-----`
-
-    var random = CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex)
-
-    const data = {
-        k: random,
-        t: String(token.token)
-    }
-
-    const finisheddata = JSON.stringify(data)
-
-    const encryptedData = encryptWithPublicKey(publicKeyPem, finisheddata)
-
-    return { data: encryptedData, random: random }
-}
-
-function encryptWithPublicKey(publicKeyPem: string, data: string) {
-    const publicKey = forge.pki.publicKeyFromPem(publicKeyPem)
-    const encryptedData = publicKey.encrypt(data, 'RSA-OAEP', {
-        md: forge.md.sha256.create()
-    })
-    return forge.util.encode64(encryptedData)
-}
-
 export async function adnGetPlaylist(animeid: number, geo: 'de' | 'fr') {
-    const token = await getPlayerEncryptedToken(animeid, geo)
+    const player = await getPlayerToken(animeid, geo)
 
-    if (!token) return
+    if (!player) return
+
+    const random = randomHexaString(16)
+
+    const authorization = crypto
+        .publicEncrypt(
+            {
+                key: '-----BEGIN PUBLIC KEY-----\nMIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbQrCJBRmaXM4gJidDmcpWDssg\nnumHinCLHAgS4buMtdH7dEGGEUfBofLzoEdt1jqcrCDT6YNhM0aFCqbLOPFtx9cg\n/X2G/G5bPVu8cuFM0L+ehp8s6izK1kjx3OOPH/kWzvstM5tkqgJkNyNEvHdeJl6\nKhS+IFEqwvZqgbBpKuwIDAQAB\n-----END PUBLIC KEY-----',
+                padding: crypto.constants.RSA_PKCS1_PADDING
+            },
+            Buffer.from(
+                JSON.stringify({
+                    k: random,
+                    t: player.token
+                }),
+                'utf-8'
+            )
+        )
+        .toString('base64')
+
+    if (!authorization) return
 
     try {
         const response = await fetch(`https://gw.api.animationdigitalnetwork.fr/player/video/${animeid}/link`, {
             method: 'GET',
             headers: {
                 'x-target-distribution': geo,
-                'X-Player-Token': token.data
+                'X-Player-Token': authorization
             }
         })
 
         if (response.ok) {
             const data: ADNLink = await JSON.parse(await response.text())
-            return { data: data, secret: token.random }
+            return { data: data, secret: random }
         } else {
             const data: { message: string; code: string; statusCode: string } = JSON.parse(await response.text())
 

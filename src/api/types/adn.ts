@@ -45,6 +45,27 @@ export interface ADNLink {
                 fhd: string
                 auto: string
             }
+            vostf: {
+                mobile: string
+                sd: string
+                hd: string
+                fhd: string
+                auto: string
+            }
+            vde: {
+                mobile: string
+                sd: string
+                hd: string
+                fhd: string
+                auto: string
+            }
+            vf: {
+                mobile: string
+                sd: string
+                hd: string
+                fhd: string
+                auto: string
+            }
         }
         subtitles: {
             all: string

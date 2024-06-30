@@ -422,16 +422,60 @@ export async function downloadADNPlaylist(
 
         var link: string = ''
 
-        switch (quality) {
-            case 1080:
-                link = playlist.data.links.streaming.vostde.fhd
-                break
-            case 720:
-                link = playlist.data.links.streaming.vostde.hd
-                break
-            case 480:
-                link = playlist.data.links.streaming.vostde.sd
-                break
+        if (dubs.find((i) => i === 'ja-JP') && playlist.data.links.streaming.vostde) {
+            switch (quality) {
+                case 1080:
+                    link = playlist.data.links.streaming.vostde.fhd
+                    break
+                case 720:
+                    link = playlist.data.links.streaming.vostde.hd
+                    break
+                case 480:
+                    link = playlist.data.links.streaming.vostde.sd
+                    break
+            }
+        }
+
+        if (dubs.find((i) => i === 'ja-JP') && playlist.data.links.streaming.vostf) {
+            switch (quality) {
+                case 1080:
+                    link = playlist.data.links.streaming.vostf.fhd
+                    break
+                case 720:
+                    link = playlist.data.links.streaming.vostf.hd
+                    break
+                case 480:
+                    link = playlist.data.links.streaming.vostf.sd
+                    break
+            }
+        }
+
+        if (dubs.find((i) => i === 'de-DE')) {
+            switch (quality) {
+                case 1080:
+                    link = playlist.data.links.streaming.vde.fhd
+                    break
+                case 720:
+                    link = playlist.data.links.streaming.vde.hd
+                    break
+                case 480:
+                    link = playlist.data.links.streaming.vde.sd
+                    break
+            }
+        }
+
+        if (dubs.find((i) => i === 'fr-FR')) {
+            switch (quality) {
+                case 1080:
+                    link = playlist.data.links.streaming.vf.fhd
+                    break
+                case 720:
+                    link = playlist.data.links.streaming.vf.hd
+                    break
+                case 480:
+                    link = playlist.data.links.streaming.vf.sd
+                    break
+            }
         }
 
         if (!link) return

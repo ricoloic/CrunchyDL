@@ -191,28 +191,29 @@
                 </div>
                 <div v-if="selectDub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
                     <button
-                        @click="toggleDub({ locale: 'ja-JP', name: 'JP' })"
+                        v-if="ADNselectedShow.languages.find((l) => l === 'vostde') || ADNselectedShow.languages.find((l) => l === 'vostfr')"
+                        @click="toggleDubADN({ locale: 'ja-JP', name: 'JP' })"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedDubs.find((i) => i.locale === 'ja-JP') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
                     >
                         JP
                     </button>
-                    <!-- <button
-            v-if="ADNselectedShow.languages.find((l) => l === 'vde')"
-            @click="toggleDub({ locale: 'de-DE', name: 'DE' })"
-            class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
-            :class="selectedDubs.find((i) => i.locale === 'de-DE') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
-          >
-            DE
-          </button>
-          <button
-            v-if="ADNselectedShow.languages.find((l) => l === 'vf')"
-            @click="toggleDub({ locale: 'fr-FR', name: 'FR' })"
-            class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
-            :class="selectedDubs.find((i) => i.locale === 'fr-FR') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
-          >
-            FR
-          </button> -->
+                    <button
+                        v-if="ADNselectedShow.languages.find((l) => l === 'vde')"
+                        @click="toggleDubADN({ locale: 'de-DE', name: 'DE' })"
+                        class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+                        :class="selectedDubs.find((i) => i.locale === 'de-DE') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                    >
+                        DE
+                    </button>
+                    <button
+                        v-if="ADNselectedShow.languages.find((l) => l === 'vf')"
+                        @click="toggleDubADN({ locale: 'fr-FR', name: 'FR' })"
+                        class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
+                        :class="selectedDubs.find((i) => i.locale === 'fr-FR') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                    >
+                        FR
+                    </button>
                 </div>
             </div>
             <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
@@ -830,6 +831,12 @@ const toggleDub = (lang: { name: string | undefined; locale: string }) => {
         selectedDubs.value.push(lang)
         return
     }
+}
+
+const toggleDubADN = (lang: { name: string | undefined; locale: string }) => {
+    selectedDubs.value = []
+
+    selectedDubs.value.push(lang)
 }
 
 const toggleSub = (lang: { name: string | undefined; locale: string }) => {
