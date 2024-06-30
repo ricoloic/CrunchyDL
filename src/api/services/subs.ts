@@ -191,6 +191,25 @@ function resamplePOSSubtitle(subtitle: string, ox: number, oy: number, nx: numbe
             }
             lines[i] = line
         }
+
+        if (line.includes('\\clip')) {
+            let posMatches = line.matchAll(/\\clip\((-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)\)/g)
+            for (let posMatch of posMatches) {
+                let x1 = parseFloat(posMatch[1])
+                let y1 = parseFloat(posMatch[2])
+                let x2 = parseFloat(posMatch[3])
+                let y2 = parseFloat(posMatch[4])
+
+                let newX1 = Math.round((x1 / ox) * nx)
+                let newY1 = Math.round((y1 / oy) * ny)
+                let newX2 = Math.round((x2 / ox) * nx)
+                let newY2 = Math.round((y2 / oy) * ny)
+
+                let newClip = `\\clip(${newX1},${newY1},${newX2},${newY2})`
+                line = line.replace(posMatch[0], newClip)
+            }
+            lines[i] = line
+        }
     }
 
     return lines.join('\n')
