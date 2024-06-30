@@ -70,7 +70,6 @@
                 class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
             >
                 <option :value="1">44.10 kHz</option>
-                <option :value="2">44.10 kHz (2)</option>
                 <option :value="3">22.05 kHz</option>
             </select>
         </div>

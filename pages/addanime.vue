@@ -308,7 +308,6 @@
                 <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
                     <select v-model="qualityaudio" name="format" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                         <option :value="1" class="text-sm text-slate-200">44.10 kHz</option>
-                        <option :value="2" class="text-sm text-slate-200">44.10 kHz (2)</option>
                         <option :value="3" class="text-sm text-slate-200">22.05 kHz</option>
                     </select>
                 </div>
