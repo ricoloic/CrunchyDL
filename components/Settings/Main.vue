@@ -82,7 +82,6 @@
             >
                 <option value="mkv">MKV</option>
                 <option value="mp4">MP4</option>
-                <option value="untouched" disabled>Untouched</option>
             </select>
         </div>
     </div>

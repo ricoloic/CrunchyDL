@@ -315,7 +315,6 @@
                     <select v-model="format" name="format" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                         <option value="mkv" class="text-sm text-slate-200">MKV</option>
                         <option value="mp4" class="text-sm text-slate-200">MP4</option>
-                        <option value="untouched" class="text-sm text-slate-200" disabled>Untouched</option>
                     </select>
                 </div>
             </div>
