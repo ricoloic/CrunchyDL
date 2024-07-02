@@ -105,42 +105,21 @@ async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) 
         return
     }
 
-    if (endpoint !== 1) {
-        headers = {
-            Authorization: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M=',
-            'Content-Type': 'application/json',
-            'User-Agent': 'Crunchyroll/4.51.0 (bundle_identifier:com.crunchyroll.iphone; build_number:3634220.454824296) iOS/17.4.1 Gravity/4.51.0'
-        }
-
-        body = {
-            username: user,
-            password: passw,
-            grant_type: 'password',
-            scope: 'offline_access',
-            device_name: 'iPhone',
-            device_type: 'iPhone 13',
-            ursa: 'Crunchyroll/4.51.0 (bundle_identifier:com.crunchyroll.iphone; build_number:3634220.454824296) iOS/17.4.1 Gravity/4.51.0',
-            token: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M='
-        }
+    headers = {
+        Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
+        'Content-Type': 'application/json',
+        'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
     }
 
-    if (endpoint === 1) {
-        headers = {
-            Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-            'Content-Type': 'application/json',
-            'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
-        }
-
-        body = {
-            username: user,
-            password: passw,
-            grant_type: 'password',
-            scope: 'offline_access',
-            device_name: 'RMX2170',
-            device_type: 'realme RMX2170',
-            ursa: 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0',
-            token: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4='
-        }
+    body = {
+        username: user,
+        password: passw,
+        grant_type: 'password',
+        scope: 'offline_access',
+        device_name: 'RMX2170',
+        device_type: 'realme RMX2170',
+        ursa: 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0',
+        token: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4='
     }
 
     if (!headers || !body) return
@@ -194,38 +173,19 @@ async function crunchyLoginFetch(user: string, passw: string) {
         endpoint = 1
     }
 
-    if (endpoint !== 1) {
-        headers = {
-            Authorization: 'Basic dm52cHJyN21ubW1la2Uyd2xwNTM6V19IdWlNekxUS1JqSnlKZTBHRlFYZXFoTldDREdUM2M=',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Crunchyroll/4.51.0 (bundle_identifier:com.crunchyroll.iphone; build_number:3634220.454824296) iOS/17.4.1 Gravity/4.51.0'
-        }
-
-        body = {
-            username: user,
-            password: passw,
-            grant_type: 'password',
-            scope: 'offline_access',
-            device_name: 'iPhone',
-            device_type: 'iPhone 13'
-        }
+    headers = {
+        Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
     }
 
-    if (endpoint === 1) {
-        headers = {
-            Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
-        }
-
-        body = {
-            username: user,
-            password: passw,
-            grant_type: 'password',
-            scope: 'offline_access',
-            device_name: 'RMX2170',
-            device_type: 'realme RMX2170'
-        }
+    body = {
+        username: user,
+        password: passw,
+        grant_type: 'password',
+        scope: 'offline_access',
+        device_name: 'RMX2170',
+        device_type: 'realme RMX2170'
     }
 
     if (!headers || !body) return
@@ -727,8 +687,7 @@ export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) 
 
     const headers = {
         Authorization: `Bearer ${login.access_token}`,
-        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
-        'x-cr-disable-drm': 'true'
+        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
     }
 
     const regex = /\/manifest\/([A-Z0-9]+)\/.*\?playbackGuid=([^&]+)/
