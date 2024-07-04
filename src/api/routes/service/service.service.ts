@@ -1210,6 +1210,7 @@ export async function downloadCrunchyrollPlaylist(
         .replace('{seasonNumberDD}', season.toString().padStart(2, '0'))
         .replace('{episodeNumber}', episode ? episode.toString() : episode_string)
         .replace('{episodeNumberDD}', episode ? episode.toString().padStart(2, '0') : episode_string)
+        .replace('{episodeID}', episodeID)
         .replace('{quality}', quality.toString() + 'p')
 
     await mergeVideoFile(file as string, chapter, audios, subss, downloadDir, episodeNaming, format, downloadID)
