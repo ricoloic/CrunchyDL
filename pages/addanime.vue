@@ -859,6 +859,7 @@ const toggleSub = (lang: { name: string | undefined; locale: string }) => {
 const toggleHardsub = (lang: { name: string | undefined; locale: string }, format: string) => {
     if (selectedHardSub.value && selectedHardSub.value.format === format && selectedHardSub.value.name === lang.name) {
         selectedHardSub.value = undefined
+        selectHardSub.value = false
         return
     }
 
@@ -866,6 +867,7 @@ const toggleHardsub = (lang: { name: string | undefined; locale: string }, forma
         ...lang,
         format: format
     }
+    selectHardSub.value = false
 }
 
 const addToPlaylist = async () => {
