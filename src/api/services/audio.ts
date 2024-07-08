@@ -9,7 +9,7 @@ const ffmpegP = getFFMPEGPath()
 const shaka = getShakaPath()
 import util from 'util'
 import { server } from '../api'
-const exec = util.promisify(require('child_process').exec)
+const execFile = util.promisify(require('child_process').execFile)
 import { finished } from 'stream/promises'
 import { messageBox } from '../../electron/background'
 
@@ -163,9 +163,13 @@ async function mergePartsAudio(
 
             console.log(`Audio Decryption started`)
 
-            const command = `${shaka} input="${tmp}/temp-main.m4s",stream=audio,output="${tmp}/main.m4s" --enable_raw_key_decryption --keys key_id=${drmkeys[1].kid}:key=${drmkeys[1].key}`
+            await execFile(shaka, [
+                `input=${tmp}/temp-main.m4s,stream=audio,output=${tmp}/main.m4s`,
+                '--enable_raw_key_decryption',
+                '--keys',
+                `key_id=${drmkeys[1].kid}:key=${drmkeys[1].key}`
+            ])
 
-            await exec(command)
             concatenatedFile = `${tmp}/main.m4s`
             console.log(`Audio Decryption finished`)
         }

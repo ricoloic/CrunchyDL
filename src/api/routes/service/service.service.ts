@@ -23,7 +23,7 @@ import settings from 'electron-settings'
 import { server } from '../../api'
 import { createChapterFile } from '../../services/chapter'
 import { app } from 'electron'
-const exec = util.promisify(require('child_process').exec)
+const execFile = util.promisify(require('child_process').execFile)
 
 settings.configure({
     dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
@@ -1354,9 +1354,13 @@ async function mergeParts(parts: { filename: string; url: string }[], downloadID
             await updatePlaylistByID(downloadID, 'decrypting video')
             console.log('Video Decryption started')
 
-            const command = `${shaka} input="${tmp}/temp-main.m4s",stream=video,output="${tmp}/main.m4s" --enable_raw_key_decryption --keys key_id=${drmkeys[1].kid}:key=${drmkeys[1].key}`
+            await execFile(shaka, [
+                `input=${tmp}/temp-main.m4s,stream=video,output=${tmp}/main.m4s`,
+                '--enable_raw_key_decryption',
+                '--keys',
+                `key_id=${drmkeys[1].kid}:key=${drmkeys[1].key}`
+            ])
 
-            await exec(command)
             console.log('Video Decryption finished')
             concatenatedFile = `${tmp}/main.m4s`
         }

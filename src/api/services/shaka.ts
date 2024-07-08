@@ -14,7 +14,7 @@ export function getShakaPath() {
 
         return shaka
     } else {
-        const shaka = `"${path.join(shakaFolderPath, 'shaka.exe')}"`
+        const shaka = path.join(shakaFolderPath, 'shaka.exe')
 
         return shaka
     }
