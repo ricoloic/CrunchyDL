@@ -160,7 +160,7 @@ async function mergePartsAudio(
             if (dn) {
                 dn.status = 'decrypting'
             }
-            
+
             console.log(`Audio Decryption started`)
 
             const command = `${shaka} input="${tmp}/temp-main.m4s",stream=audio,output="${tmp}/main.m4s" --enable_raw_key_decryption --keys key_id=${drmkeys[1].kid}:key=${drmkeys[1].key}`

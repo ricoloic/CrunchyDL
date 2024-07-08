@@ -169,7 +169,7 @@
             <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
                 <div @click="selectDub ? (selectDub = false) : (selectDub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                     Dubs:
-                    {{ selectedDubs.map((t) => t.name).join(', ') }}
+                    {{ selectedDubs.length !== 0 ? selectedDubs.map((t) => t.name).join(', ') : 'No Dubs selected' }}
                 </div>
                 <div v-if="selectDub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
                     <button
@@ -821,10 +821,8 @@ const toggleDub = (lang: { name: string | undefined; locale: string }) => {
     const index = selectedDubs.value.findIndex((i) => i.locale === lang.locale)
 
     if (index !== -1) {
-        if (selectedDubs.value.length !== 1) {
-            selectedDubs.value.splice(index, 1)
-            return
-        }
+        selectedDubs.value.splice(index, 1)
+        return
     }
 
     if (index === -1) {
