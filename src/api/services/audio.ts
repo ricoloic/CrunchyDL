@@ -53,7 +53,9 @@ export async function downloadMPDAudio(
 
             console.log(`[${name} DOWNLOAD] Fetching Part ${ind + 1}`)
 
-            const response = await fetch(part.url)
+            const rawres = await fetch(part.url)
+
+            const response = rawres.clone()
 
             if (!response.ok) {
                 throw Error(await response.text())

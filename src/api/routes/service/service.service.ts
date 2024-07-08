@@ -1241,7 +1241,9 @@ async function downloadParts(parts: { filename: string; url: string }[], downloa
 
             console.log(`[Video DOWNLOAD] Fetching Part ${ind + 1}`)
 
-            const response = await fetch(part.url)
+            const rawres = await fetch(part.url)
+
+            const response = rawres.clone()
 
             if (!response.ok) {
                 throw Error(await response.text())
