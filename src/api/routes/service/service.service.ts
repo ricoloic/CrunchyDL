@@ -536,7 +536,7 @@ export async function downloadCrunchyrollPlaylist(
 ) {
     await updatePlaylistByID(downloadID, 'waiting for playlist')
 
-    const versions = await crunchyVersionsFetch(e);
+    const versions = await crunchyVersionsFetch(e)
 
     if (!versions) {
         messageBox('error', ['Cancel'], 2, 'Failed to get versions', 'Failed to get versions', 'Failed to get versions')
@@ -1075,7 +1075,27 @@ export async function downloadCrunchyrollPlaylist(
 
         if (!mdp) return
 
-        var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION?.height === quality)
+        var s_quality: number
+
+        switch (quality) {
+            case 1080:
+                s_quality = 720
+                break
+            case 720:
+                s_quality = 480
+                break
+            case 480:
+                s_quality = 360
+                break
+            case 360:
+                s_quality = 240
+                break
+            case 240:
+                s_quality = 200
+                break
+        }
+
+        var hq = mdp.playlists.find((i) => i.attributes.RESOLUTION!.height <= quality && i.attributes.RESOLUTION!.height > s_quality)
 
         if (!hq) {
             console.log(`Res ${quality}p not found, using res ${mdp.playlists[0].attributes.RESOLUTION?.height}p instead`)
