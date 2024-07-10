@@ -4,7 +4,7 @@ import { concatenateTSFiles } from '../../services/concatenate'
 import { checkFileExistence, createFolder, createFolderName, deleteFolder, deleteTemporaryFolders, getFilename } from '../../services/folder'
 import { downloadADNSub, downloadCRSub } from '../../services/subs'
 import { CrunchyEpisode } from '../../types/crunchyroll'
-import { checkAccountMaxStreams, crunchyGetMetadata, crunchyGetPlaylist, crunchyGetPlaylistMPD } from '../crunchyroll/crunchyroll.service'
+import { checkAccountMaxStreams, crunchyGetMetadata, crunchyGetPlaylist, crunchyGetPlaylistMPD, crunchyVersionsFetch } from '../crunchyroll/crunchyroll.service'
 import fs from 'fs'
 var cron = require('node-cron')
 import { Readable } from 'stream'
@@ -536,6 +536,19 @@ export async function downloadCrunchyrollPlaylist(
 ) {
     await updatePlaylistByID(downloadID, 'waiting for playlist')
 
+    const versions = await crunchyVersionsFetch(e);
+
+    if (!versions) {
+        messageBox('error', ['Cancel'], 2, 'Failed to get versions', 'Failed to get versions', 'Failed to get versions')
+        server.logger.log({
+            level: 'error',
+            message: `Failed to get versions ${downloadID}`,
+            timestamp: new Date().toISOString(),
+            section: 'crunchyrollDownloadProcess'
+        })
+        return
+    }
+
     var playlist = await crunchyGetPlaylist(e, geo)
 
     if (!playlist) {
@@ -551,9 +564,9 @@ export async function downloadCrunchyrollPlaylist(
         return
     }
 
-    if (playlist.data.versions && playlist.data.versions.length !== 0) {
+    if (versions && versions.length !== 0) {
         if (playlist.data.audioLocale !== subs[0]) {
-            const found = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
+            const found = versions.find((v) => v.audio_locale === 'ja-JP')
             if (found) {
                 playlist = await crunchyGetPlaylist(found.guid, found.geo)
             } else {
@@ -676,7 +689,7 @@ export async function downloadCrunchyrollPlaylist(
         var subPlaylist
 
         if (playlist.data.audioLocale !== 'ja-JP') {
-            const foundStream = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
+            const foundStream = versions.find((v) => v.audio_locale === 'ja-JP')
             if (foundStream) {
                 subPlaylist = await crunchyGetPlaylist(foundStream.guid, foundStream.geo)
             }
@@ -729,8 +742,8 @@ export async function downloadCrunchyrollPlaylist(
 
     for (const d of dubs) {
         var found
-        if (playlist.data.versions) {
-            found = playlist.data.versions.find((p) => p.audio_locale === d)
+        if (versions) {
+            found = versions.find((p) => p.audio_locale === d)
         }
 
         if (found) {
@@ -745,7 +758,7 @@ export async function downloadCrunchyrollPlaylist(
             }
             dubDownloadList.push(found)
             console.log(`Audio ${d}.aac found, adding to download`)
-        } else if (playlist.data.versions.length === 0) {
+        } else if (versions.length === 0) {
             const foundSub = playlist.data.subtitles.find((sub) => sub.language === d)
             if (foundSub) {
                 subDownloadList.push({ ...foundSub, isDub: true })
@@ -768,7 +781,7 @@ export async function downloadCrunchyrollPlaylist(
     }
 
     if (dubDownloadList.length === 0) {
-        const jpVersion = playlist.data.versions.find((v) => v.audio_locale === 'ja-JP')
+        const jpVersion = versions.find((v) => v.audio_locale === 'ja-JP')
 
         if (jpVersion) {
             console.log('Using ja-JP Audio because no Audio in download list')
@@ -951,11 +964,11 @@ export async function downloadCrunchyrollPlaylist(
 
         if (!playlist) return
 
-        if (playlist.data.versions && playlist.data.versions.length !== 0) {
-            if (playlist.data.versions.find((p) => p.audio_locale === dubs[0])) {
-                code = playlist.data.versions.find((p) => p.audio_locale === dubs[0])?.guid
+        if (versions && versions.length !== 0) {
+            if (versions.find((p) => p.audio_locale === dubs[0])) {
+                code = versions.find((p) => p.audio_locale === dubs[0])?.guid
             } else {
-                code = playlist.data.versions.find((p) => p.audio_locale === 'ja-JP')?.guid
+                code = versions.find((p) => p.audio_locale === 'ja-JP')?.guid
             }
         } else {
             code = e
@@ -1000,7 +1013,7 @@ export async function downloadCrunchyrollPlaylist(
             var hardsubGEO: string | undefined
 
             if (hardsub.format === 'dub') {
-                const found = play.data.versions.find((h) => h.audio_locale === hardsub.locale)
+                const found = versions.find((h) => h.audio_locale === hardsub.locale)
                 if (!found) {
                     hardsubURL = undefined
                 } else {
@@ -1016,7 +1029,7 @@ export async function downloadCrunchyrollPlaylist(
             }
 
             if (hardsub.format === 'sub') {
-                const found = play.data.versions.find((h) => h.audio_locale === 'ja-JP')
+                const found = versions.find((h) => h.audio_locale === 'ja-JP')
                 if (!found) {
                     hardsubURL = undefined
                 } else {

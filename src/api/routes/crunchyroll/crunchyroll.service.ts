@@ -231,6 +231,66 @@ async function crunchyLoginFetch(user: string, passw: string) {
     }
 }
 
+export async function crunchyVersionsFetch(q: string) {
+    
+    const account = await loggedInCheck('CR')
+
+    if (!account) return
+
+    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
+
+    if (!login) return
+
+    const headers = {
+        Authorization: `Bearer ${login.access_token}`
+    }
+
+    try {
+        const response = await fetch(`https://beta-api.crunchyroll.com/content/v2/cms/objects/${q}?ratings=true&locale=en-US`, {
+            method: 'GET',
+            headers: headers,
+            credentials: 'same-origin'
+        })
+
+        if (response.ok) {
+            const data: {
+                data: {
+                    episode_metadata: {
+                        versions: {
+                            audio_locale: string,
+                            guid: string,
+                            is_premium_only: boolean,
+                            media_guid: string,
+                            original: boolean,
+                            season_guid: string,
+                            variant: string,
+                            geo: string
+                        }[]
+                    }
+                }[]
+            } = JSON.parse(await response.text())
+
+            return data.data[0].episode_metadata.versions
+        } else {
+            const error = {
+                status: response.status,
+                message: await response.text()
+            }
+            throw new Error(JSON.stringify(error))
+        }
+    } catch (e) {
+        messageBox('error', ['Cancel'], 2, 'Failed to Fetch Crunchyroll Episode', 'Failed to Fetch Crunchyroll Episode', String(e))
+        server.logger.log({
+            level: 'error',
+            message: 'Failed to Fetch Crunchyroll Episode',
+            error: String(e),
+            timestamp: new Date().toISOString(),
+            section: 'episodeCrunchyrollFetch'
+        })
+        throw new Error(e as string)
+    }
+}
+
 let counter = 0
 var maxLimit = 0
 
