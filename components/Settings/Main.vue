@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col mt-3 gap-3 font-dm overflow-y-scroll h-[calc(100%)]" style="-webkit-app-region: no-drag">
-        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none">
-            <div class="text-sm mb-2"> Account Management </div>
+        <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none gap-2">
+            <div class="text-sm"> Account Management </div>
             <div v-for="account in accounts" class="flex flex-row items-center h-12 p-3 w-full bg-[#4b4b4b89] rounded-xl">
                 <Icon v-if="account.service === 'CR'" name="simple-icons:crunchyroll" class="h-6 w-6 text-white" />
                 <Icon v-if="account.service === 'ADN'" name="arcticons:animeultima" class="h-6 w-6 text-white" />

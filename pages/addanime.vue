@@ -191,7 +191,7 @@
                 </div>
                 <div v-if="selectDub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
                     <button
-                        v-if="ADNselectedShow.languages.find((l) => l === 'vostde') || ADNselectedShow.languages.find((l) => l === 'vostfr')"
+                        v-if="ADNselectedShow.languages.find((l) => l === 'vostde' || l === 'vostf') || ADNselectedShow.languages.find((l) => l === 'vostfr')"
                         @click="toggleDubADN({ locale: 'ja-JP', name: 'JP' })"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedDubs.find((i) => i.locale === 'ja-JP') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
@@ -670,7 +670,7 @@ const switchToSeason = async () => {
         selectedStartEpisodeADN.value = episodesADN.value[0]
         selectedEndEpisodeADN.value = episodesADN.value[0]
         tab.value = 2
-        selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+        selectedDubs.value = []
         selectedSubs.value = []
     }
 
@@ -698,7 +698,7 @@ const switchToSeason = async () => {
                 }
             }
         } else {
-            selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+            selectedDubs.value = []
         }
 
         if (subLocales.value && subLocales.value.length !== 0) {
@@ -747,7 +747,7 @@ const switchToSeason = async () => {
                 }
             }
         } else {
-            selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+            selectedDubs.value = []
         }
 
         if (subLocales.value && subLocales.value.length !== 0) {
@@ -800,7 +800,7 @@ const switchToSeason = async () => {
                 }
             }
         } else {
-            selectedDubs.value = [{ locale: 'ja-JP', name: 'JP' }]
+            selectedDubs.value = []
         }
 
         if (subLocales.value && subLocales.value.length !== 0) {
