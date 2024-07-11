@@ -1,14 +1,14 @@
 import * as path from 'path'
 import * as os from 'os'
-import { app, BrowserWindow, dialog, ipcMain, session, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import settings from 'electron-settings'
+import contextMenu from 'electron-context-menu'
+import startAPI from '../api/api'
 import singleInstance from './singleInstance'
 import dynamicRenderer from './dynamicRenderer'
 import titleBarActionsModule from './modules/titleBarActions'
 import updaterModule from './modules/updater'
 import macMenuModule from './modules/macMenu'
-import startAPI from '../api/api'
-import settings from 'electron-settings'
-import contextMenu from 'electron-context-menu'
 
 settings.configure({
     dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
@@ -19,7 +19,7 @@ const isProduction = process.env.NODE_ENV !== 'development'
 const platform: 'darwin' | 'win32' | 'linux' = process.platform as any
 const architucture: '64' | '32' = os.arch() === 'x64' ? '64' : '32'
 const modules = [titleBarActionsModule, macMenuModule, updaterModule]
-var mainWindow: BrowserWindow
+let mainWindow: BrowserWindow
 
 settings.configure({
     dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
@@ -102,27 +102,6 @@ app.whenReady().then(async () => {
 
     console.log('[!] Loading modules: Done.' + '\r\n' + '-'.repeat(30))
 })
-
-export async function messageBox(
-    type: 'none' | 'info' | 'error' | 'question' | 'warning' | undefined,
-    buttons: Array<'Cancel' | 'OK'>,
-    defaultId: number,
-    title: string,
-    message: string,
-    detail: string | undefined
-) {
-    const options = {
-        type: type as 'none' | 'info' | 'error' | 'question' | 'warning' | undefined,
-        buttons: buttons,
-        defaultId: defaultId,
-        title: title,
-        message: message,
-        detail: detail
-    }
-
-    const response = dialog.showMessageBox(options)
-    console.log(response)
-}
 
 ipcMain.handle('dialog:openFolder', async (events, dir: string) => {
     shell.showItemInFolder(dir)

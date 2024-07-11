@@ -3,9 +3,9 @@
         <div class="relative flex flex-row items-center justify-center">
             <button
                 v-if="tab === 2"
-                @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null), (url = '')"
                 class="absolute left-0 bg-[#5c5b5b9c] py-1.5 px-3 rounded-xl flex flex-row items-center justify-center gap-0.5 hover:bg-[#4b4a4a] transition-all text-sm"
                 style="-webkit-app-region: no-drag"
+                @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null), (url = '')"
             >
                 <Icon name="formkit:arrowleft" class="h-5 w-5" />
                 Back
@@ -15,12 +15,12 @@
         <div v-if="tab === 1" class="flex flex-col mt-5 gap-3.5 h-full" style="-webkit-app-region: no-drag">
             <div class="relative flex flex-col">
                 <select v-model="service" name="service" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer">
-                    <option value="crunchyroll">Crunchyroll</option>
-                    <option value="adn">ADN</option>
+                    <option :value="SERVICES.crunchyroll">Crunchyroll</option>
+                    <option :value="SERVICES.animationdigitalnetwork">ADN</option>
                 </select>
             </div>
-            <div v-if="(isLoggedInCR && service === 'crunchyroll') || (isLoggedInADN && service === 'adn')" class="relative flex flex-col">
-                <input v-model="search" @input="handleInputChange" placeholder="SEARCH" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center" />
+            <div v-if="(isLoggedInCR && service === SERVICES.crunchyroll) || (isLoggedInADN && service === SERVICES.animationdigitalnetwork)" class="relative flex flex-col">
+                <input v-model="search" placeholder="SEARCH" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center" @input="handleInputChange" />
                 <div
                     class="absolute top-full left-0 h-28 w-full bg-[#868585] rounded-xl z-10 flex items-center justify-center transition-all duration-300"
                     :class="isFetchingResults ? 'opacity-100' : 'opacity-0 pointer-events-none'"
@@ -32,7 +32,7 @@
                     style="-webkit-app-region: no-drag"
                     :class="searchActive ? 'opacity-100' : 'opacity-0 pointer-events-none'"
                 >
-                    <button v-for="result in crunchySearchResults" @click="selectShow(result)" class="flex flex-row gap-3 px-3 py-3 hover:bg-[#747474] rounded-xl">
+                    <button v-for="result in crunchySearchResults" :key="result.ID" class="flex flex-row gap-3 px-3 py-3 hover:bg-[#747474] rounded-xl" @click="selectShow(result)">
                         <div class="min-w-10 w-10 bg-gray-700">
                             <img :src="result.Images.poster_tall[0].find((p) => p.height === 720)?.source" alt="Image Banner" class="h-full w-full object-cover" />
                         </div>
@@ -40,11 +40,16 @@
                             <div class="text-sm line-clamp-1">
                                 {{ result.Title }}
                             </div>
-                            <div v-if="service === 'crunchyroll'" class="text-xs"> Seasons: {{ result.Seasons }} </div>
+                            <div v-if="service === SERVICES.crunchyroll" class="text-xs"> Seasons: {{ result.Seasons }} </div>
                             <div class="text-xs"> Episodes: {{ result.Episodes }} </div>
                         </div>
                     </button>
-                    <button v-for="result in adnSearchResults" @click="selectShow(result)" class="flex flex-row gap-3 px-3 py-3 hover:bg-[#747474] rounded-xl h-20">
+                    <button
+                        v-for="result in adnSearchResults"
+                        :key="result.id"
+                        class="flex flex-row gap-3 px-3 py-3 hover:bg-[#747474] rounded-xl h-20"
+                        @click="selectShow(result)"
+                    >
                         <div class="min-w-10 w-10 h-14 bg-gray-700">
                             <img :src="result.image2x" alt="Image Banner" class="h-full w-full object-cover" />
                         </div>
@@ -57,31 +62,31 @@
                     </button>
                 </div>
             </div>
-            <div v-if="(isLoggedInCR && service === 'crunchyroll') || (isLoggedInADN && service === 'adn')" class="relative flex flex-col">
+            <div v-if="(isLoggedInCR && service === SERVICES.crunchyroll) || (isLoggedInADN && service === SERVICES.animationdigitalnetwork)" class="relative flex flex-col">
                 <input v-model="url" type="text" name="text" placeholder="URL" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center" />
             </div>
-            <div v-if="(isLoggedInCR && service === 'crunchyroll') || (isLoggedInADN && service === 'adn')" class="relative flex flex-col">
+            <div v-if="(isLoggedInCR && service === SERVICES.crunchyroll) || (isLoggedInADN && service === SERVICES.animationdigitalnetwork)" class="relative flex flex-col">
                 <input
-                    @click="getFolderPath()"
                     v-model="path"
                     type="text"
                     name="text"
                     placeholder="Path"
                     class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
                     readonly
+                    @click="getFolderPath()"
                 />
             </div>
-            <div v-if="service === 'crunchyroll'" class="relative flex flex-col text-sm text-center">
+            <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col text-sm text-center">
                 Crunchyroll Download needs L3 Widevine keys that can be added in settings -> widevine
             </div>
-            <div v-if="!isLoggedInCR && service === 'crunchyroll'" class="relative flex flex-col">
-                <button @click="openCRLogin" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer">Click to Login</button>
+            <div v-if="!isLoggedInCR && service === SERVICES.crunchyroll" class="relative flex flex-col">
+                <button class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer" @click="openCRLogin">Click to Login</button>
             </div>
-            <div v-if="!isLoggedInADN && service === 'adn'" class="relative flex flex-col">
-                <button @click="openADNLogin" class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer">Click to Login</button>
+            <div v-if="!isLoggedInADN && service === SERVICES.animationdigitalnetwork" class="relative flex flex-col">
+                <button class="bg-[#5c5b5b] focus:outline-none px-3 py-3 rounded-xl text-sm text-center cursor-pointer" @click="openADNLogin">Click to Login</button>
             </div>
             <div class="relative flex flex-col mt-auto">
-                <button @click="switchToSeason" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
+                <button class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center" @click="switchToSeason">
                     <div class="flex flex-row items-center justify-center transition-all" :class="isFetchingSeasons ? 'opacity-0' : 'opacity-100'">
                         <div class="text-xl">Next</div>
                     </div>
@@ -93,18 +98,18 @@
             </div>
         </div>
         <div v-if="tab === 2" class="flex flex-col mt-5 gap-3.5 h-full" style="-webkit-app-region: no-drag">
-            <div v-if="service === 'crunchyroll'" class="relative flex flex-col">
+            <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col">
                 <select v-model="selectedSeason" name="seasons" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-                    <option v-for="season in seasons" :value="season" class="text-sm text-slate-200"
-                        >S{{ season.season_display_number ? season.season_display_number : season.season_number }} - {{ season.title }}</option
-                    >
+                    <option v-for="season in seasons" :key="season.id" :value="season" class="text-sm text-slate-200">
+                        S{{ season.season_display_number ? season.season_display_number : season.season_number }} - {{ season.title }}
+                    </option>
                 </select>
             </div>
-            <div v-if="service === 'crunchyroll'" class="relative flex flex-col">
+            <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col">
                 <select v-model="selectedStartEpisode" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-                    <option v-for="episode in episodes" :value="episode" class="text-sm text-slate-200"
-                        >E{{ episode.episode_number ? episode.episode_number : episode.episode }} - {{ episode.title }}</option
-                    >
+                    <option v-for="episode in episodes" :key="episode.id" :value="episode" class="text-sm text-slate-200">
+                        E{{ episode.episode_number ? episode.episode_number : episode.episode }} - {{ episode.title }}
+                    </option>
                 </select>
                 <div
                     class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
@@ -114,11 +119,11 @@
                     <div class="text-sm">Loading</div>
                 </div>
             </div>
-            <div v-if="service === 'adn'" class="relative flex flex-col">
+            <div v-if="service === SERVICES.animationdigitalnetwork" class="relative flex flex-col">
                 <select v-model="selectedStartEpisodeADN" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
-                    <option v-for="episode in episodesADN" :value="episode" class="text-sm text-slate-200"
-                        >E{{ episode.shortNumber ? episode.shortNumber : episode.number }} - {{ episode.name }}</option
-                    >
+                    <option v-for="episode in episodesADN" :key="episode.id" :value="episode" class="text-sm text-slate-200">
+                        E{{ episode.shortNumber ? episode.shortNumber : episode.number }} - {{ episode.name }}
+                    </option>
                 </select>
                 <div
                     class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
@@ -128,16 +133,18 @@
                     <div class="text-sm">Loading</div>
                 </div>
             </div>
-            <div v-if="service === 'crunchyroll'" class="relative flex flex-col">
+            <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col">
                 <select v-model="selectedEndEpisode" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                     <option
-                        v-if="episodes && selectedStartEpisode"
                         v-for="(episode, index) in episodes"
+                        v-if="episodes && selectedStartEpisode"
+                        :key="episode.id"
                         :value="episode"
                         class="text-sm text-slate-200"
                         :disabled="index < episodes.findIndex((i) => i.id === selectedStartEpisode?.id)"
-                        >E{{ episode.episode_number ? episode.episode_number : episode.episode }} - {{ episode.title }}</option
                     >
+                        E{{ episode.episode_number ? episode.episode_number : episode.episode }} - {{ episode.title }}
+                    </option>
                 </select>
                 <div
                     class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
@@ -147,150 +154,148 @@
                     <div class="text-sm">Loading</div></div
                 >
             </div>
-            <div v-if="service === 'adn'" class="relative flex flex-col">
+            <div v-if="service === SERVICES.animationdigitalnetwork" class="relative flex flex-col">
                 <select v-model="selectedEndEpisodeADN" name="episode" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                     <option
-                        v-if="episodesADN && selectedEndEpisodeADN"
                         v-for="(episode, index) in episodesADN"
+                        v-if="episodesADN && selectedEndEpisodeADN"
+                        :key="episode.id"
                         :value="episode"
                         class="text-sm text-slate-200"
                         :disabled="index < episodesADN.findIndex((i) => i.id === selectedStartEpisodeADN?.id)"
-                        >E{{ episode.shortNumber ? episode.shortNumber : episode.number }} - {{ episode.name }}</option
                     >
+                        E{{ episode.shortNumber ? episode.shortNumber : episode.number }} - {{ episode.name }}
+                    </option>
                 </select>
                 <div
                     class="absolute w-full h-9 bg-[#afadad] rounded-xl transition-all flex flex-row items-center justify-center gap-1 text-black"
                     :class="isFetchingEpisodes ? 'opacity-100' : 'opacity-0 pointer-events-none'"
                 >
                     <Icon name="mdi:loading" class="h-6 w-6 animate-spin" />
-                    <div class="text-sm">Loading</div></div
-                >
+                    <div class="text-sm">Loading</div>
+                </div>
             </div>
-            <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
-                <div @click="selectDub ? (selectDub = false) : (selectDub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+            <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col select-none">
+                <div class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" @click="selectDub ? (selectDub = false) : (selectDub = true)">
                     Dubs:
                     {{ selectedDubs.length !== 0 ? selectedDubs.map((t) => t.name).join(', ') : 'No Dubs selected' }}
                 </div>
                 <div v-if="selectDub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
                     <button
-                        v-for="l in CRselectedShow?.Dubs.map((s) => {
-                            return { name: locales.find((l) => l.locale === s) ? locales.find((l) => l.locale === s)?.name : s, locale: s }
-                        })"
-                        @click="toggleDub(l)"
+                        v-for="l in mapLocales(CRselectedShow?.Dubs ?? [])"
+                        :key="l.locale"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedDubs.find((i) => i.locale === l.locale) ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleDub(l)"
                     >
                         {{ l.name }}
                     </button>
                 </div>
             </div>
-            <div v-if="service === 'adn' && ADNselectedShow" class="relative flex flex-col select-none">
-                <div @click="selectDub ? (selectDub = false) : (selectDub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+            <div v-if="service === SERVICES.animationdigitalnetwork && ADNselectedShow" class="relative flex flex-col select-none">
+                <div class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" @click="selectDub ? (selectDub = false) : (selectDub = true)">
                     Dubs:
                     {{ selectedDubs.length !== 0 ? selectedDubs.map((t) => t.name).join(', ') : 'No Dubs selected' }}
                 </div>
                 <div v-if="selectDub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
                     <button
-                        v-if="ADNselectedShow.languages.find((l) => l === 'vostde' || l === 'vostf') || ADNselectedShow.languages.find((l) => l === 'vostfr')"
-                        @click="toggleDubADN({ locale: 'ja-JP', name: 'JP' })"
+                        v-if="ADNselectedShow.languages.find((l) => l === 'vostde' || l === 'vostf' || l === 'vostfr')"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedDubs.find((i) => i.locale === 'ja-JP') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleDubADN({ locale: 'ja-JP', name: 'JP' })"
                     >
                         JP
                     </button>
                     <button
                         v-if="ADNselectedShow.languages.find((l) => l === 'vde')"
-                        @click="toggleDubADN({ locale: 'de-DE', name: 'DE' })"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedDubs.find((i) => i.locale === 'de-DE') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleDubADN({ locale: 'de-DE', name: 'DE' })"
                     >
                         DE
                     </button>
                     <button
                         v-if="ADNselectedShow.languages.find((l) => l === 'vf')"
-                        @click="toggleDubADN({ locale: 'fr-FR', name: 'FR' })"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedDubs.find((i) => i.locale === 'fr-FR') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleDubADN({ locale: 'fr-FR', name: 'FR' })"
                     >
                         FR
                     </button>
                 </div>
             </div>
-            <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
-                <div @click="selectSub ? (selectSub = false) : (selectSub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+            <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col select-none">
+                <div class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" @click="selectSub ? (selectSub = false) : (selectSub = true)">
                     Subs:
                     {{ selectedSubs.length !== 0 ? selectedSubs.map((t) => t.name).join(', ') : 'No Subs selected' }}
                 </div>
                 <div v-if="selectSub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
                     <button
-                        v-for="l in CRselectedShow?.Subs.map((s) => {
-                            return { name: locales.find((l) => l.locale === s) ? locales.find((l) => l.locale === s)?.name : s, locale: s }
-                        })"
-                        @click="toggleSub(l)"
+                        v-for="l in mapLocales(CRselectedShow?.Subs ?? [])"
+                        :key="l.locale"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedSubs.find((i) => i.locale === l.locale) ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleSub(l)"
                     >
                         {{ l.name }}
                     </button>
                 </div>
             </div>
-            <div v-if="service === 'crunchyroll'" class="relative flex flex-col select-none">
+            <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col select-none">
                 <div
-                    @click="selectHardSub ? (selectHardSub = false) : (selectHardSub = true)"
                     class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+                    @click="selectHardSub ? (selectHardSub = false) : (selectHardSub = true)"
                 >
                     Hardsub:
                     {{ selectedHardSub ? `${selectedHardSub.name} (${selectedHardSub.format})` : 'No Hardsub selected' }}
                 </div>
                 <div v-if="selectHardSub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl h-40 grid grid-cols-8 gap-1 p-1 z-10 overflow-y-scroll">
                     <button
-                        v-for="l in CRselectedShow?.Subs.map((s) => {
-                            return { name: locales.find((l) => l.locale === s) ? locales.find((l) => l.locale === s)?.name : s, locale: s }
-                        })"
-                        @click="toggleHardsub(l, 'sub')"
+                        v-for="l in mapLocales(CRselectedShow?.Subs ?? [])"
+                        :key="l.locale"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedHardSub && selectedHardSub.locale === l.locale && selectedHardSub.format === 'sub' ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleHardsub(l, 'sub')"
                     >
                         {{ l.name }}<br />(sub)
                     </button>
                     <button
-                        v-for="l in CRselectedShow?.Dubs.map((s) => {
-                            return { name: locales.find((l) => l.locale === s) ? locales.find((l) => l.locale === s)?.name : s, locale: s }
-                        })"
-                        @click="toggleHardsub(l, 'dub')"
+                        v-for="l in mapLocales(CRselectedShow?.Dubs ?? [])"
+                        :key="l.locale"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedHardSub && selectedHardSub.locale === l.locale && selectedHardSub.format === 'dub' ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleHardsub(l, 'dub')"
                     >
                         {{ l.name }}<br />(dub)
                     </button>
                 </div>
             </div>
-            <div v-if="service === 'adn' && ADNselectedShow" class="relative flex flex-col select-none">
-                <div @click="selectSub ? (selectSub = false) : (selectSub = true)" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
+            <div v-if="service === SERVICES.animationdigitalnetwork && ADNselectedShow" class="relative flex flex-col select-none">
+                <div class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer" @click="selectSub ? (selectSub = false) : (selectSub = true)">
                     Subs:
                     {{ selectedSubs.length !== 0 ? selectedSubs.map((t) => t.name).join(', ') : 'No Subs selected' }}
                 </div>
                 <div v-if="selectSub" class="absolute top-full left-0 w-full bg-[#868585] rounded-xl grid grid-cols-12 gap-1 p-1 z-10">
                     <button
                         v-if="ADNselectedShow.languages.find((l) => l === 'vostde')"
-                        @click="toggleSub({ locale: 'de-DE', name: 'DE' })"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedSubs.find((i) => i.locale === 'de-DE') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleSub({ locale: 'de-DE', name: 'DE' })"
                     >
                         DE
                     </button>
                     <button
                         v-if="ADNselectedShow.languages.find((l) => l === 'vostf')"
-                        @click="toggleSub({ locale: 'fr-FR', name: 'FR' })"
                         class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                         :class="selectedSubs.find((i) => i.locale === 'fr-FR') ? 'bg-[#585858]' : 'hover:bg-[#747474]'"
+                        @click="toggleSub({ locale: 'fr-FR', name: 'FR' })"
                     >
                         FR
                     </button>
                 </div>
             </div>
             <div class="flex flex-row gap-3">
-                <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
+                <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col w-full">
                     <select v-model="quality" name="quality" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                         <option :value="1080" class="text-sm text-slate-200">1080p</option>
                         <option :value="720" class="text-sm text-slate-200">720p</option>
@@ -299,14 +304,14 @@
                         <option :value="240" class="text-sm text-slate-200">240p</option>
                     </select>
                 </div>
-                <div v-if="service === 'adn'" class="relative flex flex-col w-full">
+                <div v-if="service === SERVICES.animationdigitalnetwork" class="relative flex flex-col w-full">
                     <select v-model="qualityADN" name="quality" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                         <option :value="1080" class="text-sm text-slate-200">1080p</option>
                         <option :value="720" class="text-sm text-slate-200">720p</option>
                         <option :value="480" class="text-sm text-slate-200">480p</option>
                     </select>
                 </div>
-                <div v-if="service === 'crunchyroll'" class="relative flex flex-col w-full">
+                <div v-if="service === SERVICES.crunchyroll" class="relative flex flex-col w-full">
                     <select v-model="qualityaudio" name="format" class="bg-[#5c5b5b] focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer">
                         <option :value="1" class="text-sm text-slate-200">44.10 kHz</option>
                         <option :value="3" class="text-sm text-slate-200">22.05 kHz</option>
@@ -322,8 +327,8 @@
 
             <!-- {{ CRselectedShow?.Subs.map(s=> { return locales.find(l => l.locale === s)?.name }) }}
       {{ CRselectedShow?.Dubs.map(s=> { return locales.find(l => l.locale === s)?.name }) }} -->
-            <div v-if="!added && service === 'crunchyroll'" class="relative flex flex-col mt-auto">
-                <button @click="addToPlaylist" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
+            <div v-if="!added && service === SERVICES.crunchyroll" class="relative flex flex-col mt-auto">
+                <button class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center" @click="addToPlaylist">
                     <div class="flex flex-row items-center justify-center transition-all" :class="isFetchingSeasons ? 'opacity-0' : 'opacity-100'">
                         <div class="text-xl">Add to Download</div>
                     </div>
@@ -333,8 +338,8 @@
                     </div>
                 </button>
             </div>
-            <div v-if="!added && service === 'adn'" class="relative flex flex-col mt-auto">
-                <button @click="addToPlaylistADN" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center">
+            <div v-if="!added && service === SERVICES.animationdigitalnetwork" class="relative flex flex-col mt-auto">
+                <button class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center" @click="addToPlaylistADN">
                     <div class="flex flex-row items-center justify-center transition-all" :class="isFetchingSeasons ? 'opacity-0' : 'opacity-100'">
                         <div class="text-xl">Add to Download</div>
                     </div>
@@ -346,15 +351,15 @@
             </div>
             <div v-if="added" class="relative flex flex-row gap-5 mt-auto">
                 <button
-                    @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null), (url = '')"
                     class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center cursor-default w-full"
+                    @click=";(tab = 1), (added = false), (CRselectedShow = null), (ADNselectedShow = null), (url = '')"
                 >
                     <div class="flex gap-1 flex-row items-center justify-center transition-all">
                         <Icon name="formkit:arrowleft" class="h-6 w-6" />
                         <div class="text-xl">Back</div>
                     </div>
                 </button>
-                <button @click="added = false" class="relative py-3 border-2 border-green-400 rounded-xl flex flex-row items-center justify-center cursor-default w-full">
+                <button class="relative py-3 border-2 border-green-400 rounded-xl flex flex-row items-center justify-center cursor-default w-full" @click="added = false">
                     <div class="flex gap-1 flex-row items-center justify-center transition-all">
                         <!-- <Icon name="material-symbols:check" class="h-6 w-6 text-green-200" /> -->
                         <div class="text-xl text-green-200">Added</div>
@@ -377,43 +382,21 @@ import { listSeasonCrunchy } from '~/components/Crunchyroll/ListSeasons'
 import type { CrunchyEpisode, CrunchyEpisodes } from '~/components/Episode/Types'
 import type { ADNSearchResult, ADNSearchResults, CrunchyrollSearchResult, CrunchyrollSearchResults } from '~/components/Search/Types'
 import type { CrunchySeason, CrunchySeasons } from '~/components/Season/Types'
+import { type Locale, type Locales, LOCALES, type Services, SERVICES } from '~/src/constants'
 
 let timeoutId: ReturnType<typeof setTimeout> | null = null
 
-const locales = ref<Array<{ locale: string; name: string }>>([
-    { locale: 'ja-JP', name: 'JP' },
-    { locale: 'de-DE', name: 'DE' },
-    { locale: 'hi-IN', name: 'HI' },
-    { locale: 'ru-RU', name: 'RU' },
-    { locale: 'en-US', name: 'EN' },
-    { locale: 'fr-FR', name: 'FR' },
-    { locale: 'pt-BR', name: 'PT' },
-    { locale: 'es-419', name: 'LA-ES' },
-    { locale: 'en-IN', name: 'EN-IN' },
-    { locale: 'it-IT', name: 'IT' },
-    { locale: 'es-ES', name: 'ES' },
-    { locale: 'ta-IN', name: 'TA' },
-    { locale: 'te-IN', name: 'TE' },
-    { locale: 'ar-SA', name: 'AR' },
-    { locale: 'ms-MY', name: 'MS' },
-    { locale: 'th-TH', name: 'TH' },
-    { locale: 'vi-VN', name: 'VI' },
-    { locale: 'id-ID', name: 'ID' },
-    { locale: 'ko-KR', name: 'KO' },
-    { locale: 'zh-CN', name: 'CN' }
-])
-
 const isProduction = process.env.NODE_ENV !== 'development'
 const selectDub = ref<boolean>(false)
-const selectedDubs = ref<Array<{ name: string | undefined; locale: string }>>([{ locale: 'ja-JP', name: 'JP' }])
-const dubLocales = ref<Array<{ locale: string; name: string }>>([])
-const subLocales = ref<Array<{ locale: string; name: string }>>([])
+const selectedDubs = ref<Locales[]>([{ locale: 'ja-JP', name: 'JP' }])
+const dubLocales = ref<Locales[]>([])
+const subLocales = ref<Locales[]>([])
 
 const selectSub = ref<boolean>(false)
-const selectedSubs = ref<Array<{ name: string | undefined; locale: string }>>([])
+const selectedSubs = ref<Locales[]>([])
 
 const selectHardSub = ref<boolean>(false)
-const selectedHardSub = ref<{ name: string | undefined; locale: string; format: string }>()
+const selectedHardSub = ref<{ format: string } & Locales>()
 
 const tab = ref<number>(1)
 const search = ref<string>('')
@@ -424,7 +407,7 @@ const CRselectedShow = ref<CrunchyrollSearchResult | null>()
 const ADNselectedShow = ref<ADNSearchResult | null>()
 const url = ref<string>('')
 const path = ref<string>()
-const service = ref<'adn' | 'crunchyroll'>('crunchyroll')
+const service = ref<Services>(SERVICES.crunchyroll)
 const seasons = ref<CrunchySeasons>()
 const episodes = ref<CrunchyEpisodes>()
 const selectedSeason = ref<CrunchySeason>()
@@ -451,8 +434,10 @@ const isLoggedInADN = ref<boolean>(false)
 let intervalcr: NodeJS.Timeout
 let intervaladn: NodeJS.Timeout
 
+const mapLocales = (from: Locale[]): Locales[] => from.map((fromLocale) => LOCALES.find((l) => l.locale === fromLocale)).filter((l) => l !== undefined)
+
 const checkIfLoggedInCR = async () => {
-    const { data, error } = await checkAccount('CR')
+    const { error } = await checkAccount(SERVICES.crunchyroll)
 
     if (error.value) {
         isLoggedInCR.value = false
@@ -479,7 +464,7 @@ const openCRLogin = () => {
 }
 
 const checkIfLoggedInADN = async () => {
-    const { data, error } = await checkAccount('ADN')
+    const { error } = await checkAccount(SERVICES.animationdigitalnetwork)
 
     if (error.value) {
         isLoggedInADN.value = false
@@ -520,11 +505,11 @@ const fetchSearch = async () => {
         isFetchingResults.value++
     }
 
-    if (service.value === 'adn') {
+    if (service.value === SERVICES.animationdigitalnetwork) {
         adnSearchResults.value = await searchADN(search.value)
     }
 
-    if (service.value === 'crunchyroll') {
+    if (service.value === SERVICES.crunchyroll) {
         crunchySearchResults.value = await searchCrunchy(search.value)
     }
 
@@ -585,13 +570,13 @@ const getFolderPath = () => {
     }
 }
 
-const selectShow = async (show: any) => {
-    if (service.value === 'adn') {
+const selectShow = (show: any) => {
+    if (service.value === SERVICES.animationdigitalnetwork) {
         ADNselectedShow.value = show
         url.value = show.url
     }
 
-    if (service.value === 'crunchyroll') {
+    if (service.value === SERVICES.crunchyroll) {
         CRselectedShow.value = show
         url.value = show.Url + '/'
     }
@@ -610,7 +595,9 @@ watch(selectedSeason, () => {
 })
 
 watch(service, () => {
-    ;(url.value = ''), (CRselectedShow.value = null), (ADNselectedShow.value = null)
+    url.value = ''
+    CRselectedShow.value = null
+    ADNselectedShow.value = null
 })
 
 watch(selectedStartEpisode, () => {
@@ -762,7 +749,7 @@ const switchToSeason = async () => {
     }
 
     if (url.value && url.value.includes('crunchyroll') && url.value.includes('/watch/') && !CRselectedShow.value) {
-        var episodeID: string | string[] = url.value.split('/')
+        let episodeID: string | string[] = url.value.split('/')
         episodeID = episodeID[episodeID.length - 2]
         const seriesID = await getCREpisodeSeriesID(episodeID)
         if (!seriesID) {
@@ -817,7 +804,7 @@ const switchToSeason = async () => {
     isFetchingSeasons.value--
 }
 
-const toggleDub = (lang: { name: string | undefined; locale: string }) => {
+const toggleDub = (lang: Locales) => {
     const index = selectedDubs.value.findIndex((i) => i.locale === lang.locale)
 
     if (index !== -1) {
@@ -827,17 +814,15 @@ const toggleDub = (lang: { name: string | undefined; locale: string }) => {
 
     if (index === -1) {
         selectedDubs.value.push(lang)
-        return
     }
 }
 
-const toggleDubADN = (lang: { name: string | undefined; locale: string }) => {
+const toggleDubADN = (lang: Locales) => {
     selectedDubs.value = []
-
     selectedDubs.value.push(lang)
 }
 
-const toggleSub = (lang: { name: string | undefined; locale: string }) => {
+const toggleSub = (lang: Locales) => {
     const index = selectedSubs.value.findIndex((i) => i.locale === lang.locale)
 
     if (index === -1) {
@@ -853,10 +838,9 @@ const toggleSub = (lang: { name: string | undefined; locale: string }) => {
         hardsub.value = false
         isHardsubDisabled.value = true
     }
-    return
 }
 
-const toggleHardsub = (lang: { name: string | undefined; locale: string }, format: string) => {
+const toggleHardsub = (lang: Locales, format: string) => {
     if (selectedHardSub.value && selectedHardSub.value.format === format && selectedHardSub.value.name === lang.name) {
         selectedHardSub.value = undefined
         selectHardSub.value = false
@@ -865,7 +849,7 @@ const toggleHardsub = (lang: { name: string | undefined; locale: string }, forma
 
     selectedHardSub.value = {
         ...lang,
-        format: format
+        format
     }
     selectHardSub.value = false
 }
@@ -927,7 +911,7 @@ const addToPlaylistADN = async () => {
         dir: path.value,
         hardsub: false,
         quality: qualityADN.value,
-        service: 'ADN',
+        service: SERVICES.animationdigitalnetwork,
         format: format.value
     }
 
@@ -947,13 +931,13 @@ const addToPlaylistADN = async () => {
 <style scoped>
 ::-webkit-scrollbar-track {
     background: #303030;
-    border-radius: 0px 12px 12px 0px;
+    border-radius: 0 12px 12px 0;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
     background: #cac9c9;
-    border-radius: 0px 12px 12px 0px;
+    border-radius: 0 12px 12px 0;
 }
 
 /* Handle on hover */
@@ -967,18 +951,6 @@ const addToPlaylistADN = async () => {
 
 .font-dm {
     font-family: 'DM Sans', sans-serif;
-}
-
-.font-protest {
-    font-family: 'Protest Riot', sans-serif;
-    font-weight: 400;
-    font-style: normal;
-}
-
-.font-dm-big {
-    font-family: 'DM Sans', sans-serif;
-    font-weight: 1000;
-    font-style: normal;
 }
 
 select {

@@ -12,7 +12,7 @@
             </div>
         </div>
         <div class="relative flex flex-col mt-auto">
-            <button @click="login" class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center" style="-webkit-app-region: no-drag">
+            <button class="relative py-3 border-2 rounded-xl flex flex-row items-center justify-center" style="-webkit-app-region: no-drag" @click="login">
                 <div class="flex flex-row items-center justify-center transition-all" :class="isLoggingIn ? 'opacity-0' : 'opacity-100'">
                     <div class="text-xl">Login</div>
                 </div>
@@ -27,6 +27,7 @@
 
 <script lang="ts" setup>
 import { loginAccount } from '~/components/Crunchyroll/Account'
+import { SERVICES } from '~/src/constants'
 const isProduction = process.env.NODE_ENV !== 'development'
 
 const username = ref<string>()
@@ -45,7 +46,7 @@ const login = async () => {
         return
     }
 
-    const { data, error } = await loginAccount(username.value, password.value, 'ADN')
+    const { error } = await loginAccount(username.value, password.value, SERVICES.animationdigitalnetwork)
 
     if (error.value) {
         isLoggingIn.value--

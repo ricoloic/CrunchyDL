@@ -1,299 +1,106 @@
-import { messageBox } from '../../../electron/background'
-import { server } from '../../api'
-import { VideoMetadata, VideoPlaylist, VideoPlaylistNoGEO } from '../../types/crunchyroll'
-import { useFetch } from '../useFetch'
-import { parse as mpdParse } from 'mpd-parser'
-import { checkProxies, loggedInCheck } from '../service/service.service'
+import { type Manifest, parse as mpdParse } from 'mpd-parser'
 import settings from 'electron-settings'
 import { app } from 'electron'
+import { server } from '../../api'
+import { VideoMetadata, VideoPlaylist, VideoPlaylistNoGEO } from '../../types/crunchyroll'
+import { MessageBoxBuilder } from '../../../electron/utils/messageBox'
+import { isProxyActive, Proxy, validateProxies } from '../../utils/proxy'
+import { getOneAccountByService } from '../../db/models/account'
+import { SERVICES } from '../../../constants'
 
 settings.configure({
     dir: app.getPath('documents') + '/Crunchyroll Downloader/settings/'
 })
 
-// Crunchyroll Login Handler
-export async function crunchyLogin(user: string, passw: string, geo: string) {
-    var endpoint = await settings.get('CREndpoint')
-
-    if (!endpoint) {
-        await settings.set('CREndpoint', 1)
-        endpoint = 1
+const ENDPOINT_KEY = 'CREndpoint'
+const CRUNCHYROLL_BETA_API = 'https://beta-api.crunchyroll.com/'
+const ENDPOINTS = [
+    {
+        id: 1,
+        name: 'Switch',
+        url: `/console/switch/play`
+    },
+    {
+        id: 2,
+        name: 'PS4',
+        url: `/console/ps4/play`
+    },
+    {
+        id: 3,
+        name: 'PS5',
+        url: `/console/ps5/play`
+    },
+    {
+        id: 4,
+        name: 'XBOX One',
+        url: `/console/xbox_one/play`
+    },
+    {
+        id: 5,
+        name: 'Firefox',
+        url: `/web/firefox/play`
+    },
+    {
+        id: 6,
+        name: 'Edge',
+        url: `/web/edge/play`
+    },
+    {
+        id: 7,
+        name: 'Chrome',
+        url: `/web/chrome/play`
+    },
+    {
+        id: 8,
+        name: 'Web Fallback',
+        url: `/web/fallback/play`
+    },
+    {
+        id: 9,
+        name: 'Android Phone',
+        url: `/android/phone/play`
+    },
+    {
+        id: 10,
+        name: 'Android Tablet',
+        url: `/android/tablet/play`
+    },
+    {
+        id: 11,
+        name: 'Samsung TV',
+        url: `/tv/samsung/play`
+    },
+    {
+        id: 12,
+        name: 'Chromecast',
+        url: `/tv/chromecast/play`
+    },
+    {
+        id: 13,
+        name: 'Fire TV',
+        url: `/tv/fire_tv/play`
+    },
+    {
+        id: 14,
+        name: 'Android TV',
+        url: `/tv/android_tv/play`
+    },
+    {
+        id: 15,
+        name: 'LG TV',
+        url: `/tv/lg/play`
+    },
+    {
+        id: 16,
+        name: 'Roku',
+        url: `/tv/roku/play`
     }
-
-    const cachedData:
-        | {
-              access_token: string
-              refresh_token: string
-              expires_in: number
-              token_type: string
-              scope: string
-              country: string
-              account_id: string
-              profile_id: string
-          }
-        | undefined = server.CacheController.get(`crtoken-${geo}-${endpoint}`)
-
-    if (!cachedData) {
-        if (geo === 'LOCAL') {
-            const data = await crunchyLoginFetch(user, passw)
-
-            if (!data) return
-
-            server.CacheController.set(`crtoken-${geo}-${endpoint}`, data, data.expires_in - 30)
-
-            return data
-        }
-
-        if (geo !== 'LOCAL') {
-            const data = await crunchyLoginFetchProxy(user, passw, geo)
-
-            if (!data) return
-
-            server.CacheController.set(`crtoken-${geo}-${endpoint}`, data, data.expires_in - 30)
-
-            return data
-        }
-    }
-
-    return cachedData
-}
-
-// Crunchyroll Login Fetch Proxy
-async function crunchyLoginFetchProxy(user: string, passw: string, geo: string) {
-    const proxies = await checkProxies()
-
-    var headers
-    var body
-
-    var endpoint = await settings.get('CREndpoint')
-
-    if (!endpoint) {
-        await settings.set('CREndpoint', 1)
-        endpoint = 1
-    }
-
-    var proxy:
-        | {
-              name: string
-              code: string
-              url: string
-              status: string | undefined
-          }
-        | undefined
-
-    proxy = proxies.find((p) => p.code === geo)
-
-    if (!proxy) {
-        messageBox('error', ['Cancel'], 2, 'Login Proxy not found', 'Login Proxy not found', `Login Proxy ${geo} not found`)
-        server.logger.log({
-            level: 'error',
-            message: `Login Proxy ${geo} not found`,
-            timestamp: new Date().toISOString(),
-            section: 'loginCrunchyrollFetchProxy'
-        })
-        return
-    }
-
-    if (proxy.status === 'offline') {
-        messageBox('error', ['Cancel'], 2, 'Login Proxy is offline', 'Login Proxy is offline', `Login Proxy ${geo} is offline`)
-        server.logger.log({
-            level: 'error',
-            message: `Login Proxy ${geo} is offline`,
-            timestamp: new Date().toISOString(),
-            section: 'loginCrunchyrollFetchProxy'
-        })
-        return
-    }
-
-    headers = {
-        Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
-    }
-
-    body = {
-        username: user,
-        password: passw,
-        grant_type: 'password',
-        scope: 'offline_access',
-        device_name: 'RMX2170',
-        device_type: 'realme RMX2170',
-        ursa: 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0',
-        token: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4='
-    }
-
-    if (!headers || !body) return
-
-    try {
-        const response = await fetch(proxy.url + 'auth/v1/token', {
-            method: 'POST',
-            body: JSON.stringify(body),
-            headers: headers,
-            credentials: 'same-origin'
-        })
-
-        if (response.ok) {
-            const data: {
-                access_token: string
-                refresh_token: string
-                expires_in: number
-                token_type: string
-                scope: string
-                country: string
-                account_id: string
-                profile_id: string
-            } = JSON.parse(await response.text())
-
-            return data
-        } else {
-            console.log(response)
-            throw new Error(JSON.stringify(response))
-        }
-    } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Failed to Login to Crunchyroll', 'Failed to Login to Crunchyroll', String(e))
-        server.logger.log({
-            level: 'error',
-            message: 'Failed to Login to Crunchyroll',
-            error: String(e),
-            timestamp: new Date().toISOString(),
-            section: 'loginCrunchyrollFetchProxy'
-        })
-        throw new Error(e as string)
-    }
-}
-
-async function crunchyLoginFetch(user: string, passw: string) {
-    var headers
-    var body
-
-    var endpoint = await settings.get('CREndpoint')
-
-    if (!endpoint) {
-        await settings.set('CREndpoint', 1)
-        endpoint = 1
-    }
-
-    headers = {
-        Authorization: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
-    }
-
-    body = {
-        username: user,
-        password: passw,
-        grant_type: 'password',
-        scope: 'offline_access',
-        device_name: 'RMX2170',
-        device_type: 'realme RMX2170'
-    }
-
-    if (!headers || !body) return
-
-    try {
-        const response = await fetch('https://beta-api.crunchyroll.com/auth/v1/token', {
-            method: 'POST',
-            body: new URLSearchParams(body).toString(),
-            headers: headers,
-            credentials: 'same-origin'
-        })
-
-        if (response.ok) {
-            const data: {
-                access_token: string
-                refresh_token: string
-                expires_in: number
-                token_type: string
-                scope: string
-                country: string
-                account_id: string
-                profile_id: string
-            } = JSON.parse(await response.text())
-
-            return data
-        } else {
-            const error = {
-                status: response.status,
-                message: await response.text()
-            }
-            throw new Error(JSON.stringify(error))
-        }
-    } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Failed to Login to Crunchyroll', 'Failed to Login to Crunchyroll', String(e))
-        server.logger.log({
-            level: 'error',
-            message: 'Failed to Login to Crunchyroll',
-            error: String(e),
-            timestamp: new Date().toISOString(),
-            section: 'loginCrunchyroll Fetch'
-        })
-        throw new Error(e as string)
-    }
-}
-
-export async function crunchyVersionsFetch(q: string) {
-    
-    const account = await loggedInCheck('CR')
-
-    if (!account) return
-
-    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
-
-    if (!login) return
-
-    const headers = {
-        Authorization: `Bearer ${login.access_token}`
-    }
-
-    try {
-        const response = await fetch(`https://beta-api.crunchyroll.com/content/v2/cms/objects/${q}?ratings=true&locale=en-US`, {
-            method: 'GET',
-            headers: headers,
-            credentials: 'same-origin'
-        })
-
-        if (response.ok) {
-            const data: {
-                data: {
-                    episode_metadata: {
-                        versions: {
-                            audio_locale: string,
-                            guid: string,
-                            is_premium_only: boolean,
-                            media_guid: string,
-                            original: boolean,
-                            season_guid: string,
-                            variant: string,
-                            geo: string
-                        }[]
-                    }
-                }[]
-            } = JSON.parse(await response.text())
-
-            return data.data[0].episode_metadata.versions
-        } else {
-            const error = {
-                status: response.status,
-                message: await response.text()
-            }
-            throw new Error(JSON.stringify(error))
-        }
-    } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Failed to Fetch Crunchyroll Episode', 'Failed to Fetch Crunchyroll Episode', String(e))
-        server.logger.log({
-            level: 'error',
-            message: 'Failed to Fetch Crunchyroll Episode',
-            error: String(e),
-            timestamp: new Date().toISOString(),
-            section: 'episodeCrunchyrollFetch'
-        })
-        throw new Error(e as string)
-    }
-}
+]
 
 let counter = 0
-var maxLimit = 0
+let maxLimit = 0
 
+// eslint-disable-next-line require-await
 async function incrementPlaylistCounter() {
     return new Promise<void>((resolve) => {
         const interval = setInterval(() => {
@@ -312,615 +119,742 @@ function decrementPlaylistCounter() {
     }
 }
 
-// Crunchyroll Playlist Fetch
-export async function crunchyGetPlaylist(q: string, geo: string | undefined) {
-    const isProxyActive = await settings.get('proxyActive')
+interface UserData {
+    access_token: string
+    refresh_token: string
+    expires_in: number
+    token_type: string
+    scope: string
+    country: string
+    account_id: string
+    profile_id: string
+}
 
-    var proxies: {
-        name: string
-        code: string
-        url: string
-        status: string | undefined
-    }[] = []
+interface Version {
+    audio_locale: string
+    guid: string
+    is_premium_only: boolean
+    media_guid: string
+    original: boolean
+    season_guid: string
+    variant: string
+    geo: string
+}
 
-    if (isProxyActive) {
-        proxies = await checkProxies()
+interface ActiveStream {
+    accountId: string
+    active: boolean
+    assetId: string
+    clientId: string
+    contentId: string
+    country: string
+    createdTimestamp: string
+    deviceSubtype: string
+    deviceType: string
+    episodeIdentity: string
+    id: string
+    token: string
+}
+
+interface Item {
+    __class__: string
+    __href__: string
+    __links__: string
+    __actions__: string
+    benefit: string
+    source: string
+}
+
+export function logCrunchyrollServiceError(
+    action: Function,
+    message: string,
+    exception: any,
+    show: boolean = true
+) {
+    const title = `Crunchyroll Service Error`
+    const section = `crunchyroll_service.${action.name}`
+    const detail = JSON.stringify(exception)
+    const timestamp = new Date().toISOString()
+
+    if (show) {
+        MessageBoxBuilder.new('error').button('Cancel', true).detail(detail).build(title, message)
+    }
+    server.logger.log({ level: 'error', message, error: exception, timestamp, section })
+}
+
+export function logCrunchyrollServiceInfo(action: Function, message: string) {
+    const section = `crunchyroll_service.${action.name}`
+    const timestamp = new Date().toISOString()
+    server.logger.log({ level: 'info', message, timestamp, section })
+}
+
+export class CrunchyrollService {
+    static async endpoint() {
+        const endpoint = await settings.get(ENDPOINT_KEY)
+        if (endpoint) return endpoint
+
+        await settings.set(ENDPOINT_KEY, 1)
+        return 1
     }
 
-    var endpoint = await settings.get('CREndpoint')
-
-    if (!endpoint) {
-        await settings.set('CREndpoint', 1)
-        endpoint = 1
-    }
-
-    const endpoints: { id: number; name: string; url: string }[] = [
-        {
-            id: 1,
-            name: 'Switch',
-            url: `/console/switch/play`
-        },
-        {
-            id: 2,
-            name: 'PS4',
-            url: `/console/ps4/play`
-        },
-        {
-            id: 3,
-            name: 'PS5',
-            url: `/console/ps5/play`
-        },
-        {
-            id: 4,
-            name: 'XBOX One',
-            url: `/console/xbox_one/play`
-        },
-        {
-            id: 5,
-            name: 'Firefox',
-            url: `/web/firefox/play`
-        },
-        {
-            id: 6,
-            name: 'Edge',
-            url: `/web/edge/play`
-        },
-        {
-            id: 7,
-            name: 'Chrome',
-            url: `/web/chrome/play`
-        },
-        {
-            id: 8,
-            name: 'Web Fallback',
-            url: `/web/fallback/play`
-        },
-        {
-            id: 9,
-            name: 'Android Phone',
-            url: `/android/phone/play`
-        },
-        {
-            id: 10,
-            name: 'Android Tablet',
-            url: `/android/tablet/play`
-        },
-        {
-            id: 11,
-            name: 'Samsung TV',
-            url: `/tv/samsung/play`
-        },
-        {
-            id: 12,
-            name: 'Chromecast',
-            url: `/tv/chromecast/play`
-        },
-        {
-            id: 13,
-            name: 'Fire TV',
-            url: `/tv/fire_tv/play`
-        },
-        {
-            id: 14,
-            name: 'Android TV',
-            url: `/tv/android_tv/play`
-        },
-        {
-            id: 15,
-            name: 'LG TV',
-            url: `/tv/lg/play`
-        },
-        {
-            id: 16,
-            name: 'Roku',
-            url: `/tv/roku/play`
-        }
-    ]
-
-    const account = await loggedInCheck('CR')
-
-    if (!account) return
-
-    const login = await crunchyLogin(account.username, account.password, geo ? geo : 'LOCAL')
-
-    if (!login) return
-
-    const headersLoc = {
-        Authorization: `Bearer ${login.access_token}`,
-        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
-        'x-cr-disable-drm': 'true'
-    }
-
-    var playlist: VideoPlaylist
-
-    if (maxLimit === 0) {
-        maxLimit = await checkAccountMaxStreams()
-    }
-
-    await incrementPlaylistCounter()
-
-    try {
-        const response = await fetch(
-            `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
-                endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
-            }`,
-            {
-                method: 'GET',
-                headers: headersLoc
-            }
+    static async loginHandler(username: string, password: string, geo: string) {
+        const endpoint = CrunchyrollService.endpoint()
+        const cached: UserData | undefined = server.CacheController.get(
+            `crtoken-${geo}-${endpoint}`
         )
 
-        if (response.ok) {
-            const data: VideoPlaylist = JSON.parse(await response.text())
+        if (cached) return cached
 
-            data.hardSubs = Object.values((data as any).hardSubs)
+        if (geo === 'LOCAL') {
+            const { data, error } = await CrunchyrollService.login(username, password)
+            if (error) return null
 
-            data.subtitles = Object.values((data as any).subtitles)
-
-            data.geo = geo
-
-            playlist = data
-
-            deleteVideoToken(q, playlist.token)
-        } else {
-            const error = await response.text()
-            const errorJSON: {
-                activeStreams: {
-                    accountId: string
-                    active: boolean
-                    assetId: string
-                    clientId: string
-                    contentId: string
-                    country: string
-                    createdTimestamp: string
-                    deviceSubtype: string
-                    deviceType: string
-                    episodeIdentity: string
-                    id: string
-                    token: string
-                }[]
-            } = await JSON.parse(error)
-
-            if (errorJSON && errorJSON.activeStreams && errorJSON.activeStreams.length !== 0) {
-                for (const e of errorJSON.activeStreams) {
-                    await deleteVideoToken(e.contentId, e.token)
-                }
-
-                server.logger.log({
-                    level: 'error',
-                    message: 'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
-                    error: errorJSON,
-                    timestamp: new Date().toISOString(),
-                    section: 'playlistCrunchyrollFetch'
-                })
-
-                return await crunchyGetPlaylist(q, geo)
-            }
-
-            messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll Video Playlist', 'Failed to get Crunchyroll Video Playlist', error)
-            server.logger.log({
-                level: 'error',
-                message: 'Failed to get Crunchyroll Video Playlist',
-                error: error,
-                timestamp: new Date().toISOString(),
-                section: 'playlistCrunchyrollFetch'
-            })
-            throw new Error(error)
+            server.CacheController.set(`crtoken-${geo}-${endpoint}`, data, data.expires_in - 30)
+            return data
         }
-    } catch (e) {
-        throw new Error(e as string)
+
+        const { data, error } = await CrunchyrollService.loginProxy(username, password, geo)
+        if (error) return null
+
+        server.CacheController.set(`crtoken-${geo}-${endpoint}`, data, data.expires_in - 30)
+        return data
     }
 
-    if (isProxyActive) {
-        for (const p of proxies) {
-            if (p.code !== login.country) {
+    static async login(
+        username: string,
+        password: string
+    ): Promise<
+        { data: UserData; error: null } | { data: null; error: { status: number; message: string } }
+    > {
+        await CrunchyrollService.endpoint()
+        const headers = {
+            Authorization:
+                'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
+        }
+        const body = {
+            username,
+            password,
+            grant_type: 'password',
+            scope: 'offline_access',
+            device_name: 'RMX2170',
+            device_type: 'realme RMX2170'
+        }
+
+        return await fetch(`${CRUNCHYROLL_BETA_API}auth/v1/token`, {
+            method: 'POST',
+            body: new URLSearchParams(body).toString(),
+            headers,
+            credentials: 'same-origin'
+        })
+            .then(async (response) => {
+                const text = await response.text()
+
+                if (response.ok) {
+                    return { data: JSON.parse(text) as UserData, error: null }
+                }
+
+                return { error: { status: response.status, message: text }, data: null }
+            })
+            .catch((error) => {
+                logCrunchyrollServiceError(
+                    CrunchyrollService.login,
+                    'Failed to Login to Crunchyroll',
+                    error
+                )
+                return { data: null, error: { status: 500, message: String(error) } }
+            })
+    }
+
+    static async loginProxy(
+        username: string,
+        password: string,
+        geo: string
+    ): Promise<
+        { data: UserData; error: null } | { data: null; error: { status: number; message: string } }
+    > {
+        const proxies = await validateProxies()
+
+        await CrunchyrollService.endpoint()
+        const proxy = proxies.find((p) => p.code === geo)
+
+        if (!proxy) {
+            logCrunchyrollServiceError(
+                CrunchyrollService.loginProxy,
+                'Login Proxy not found',
+                `Login Proxy ${geo} not found`
+            )
+            return { error: { status: 500, message: `Login Proxy ${geo} not found` }, data: null }
+        }
+
+        if (proxy.status === 'offline') {
+            logCrunchyrollServiceError(
+                CrunchyrollService.loginProxy,
+                `Login Proxy is offline`,
+                `Login Proxy ${geo} is offline`
+            )
+            return { error: { status: 500, message: `Login Proxy ${geo} is offline` }, data: null }
+        }
+
+        const headers = {
+            Authorization:
+                'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4=',
+            'Content-Type': 'application/json',
+            'User-Agent': 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0'
+        }
+        const body = {
+            username,
+            password,
+            grant_type: 'password',
+            scope: 'offline_access',
+            device_name: 'RMX2170',
+            device_type: 'realme RMX2170',
+            ursa: 'Crunchyroll/3.46.2 Android/13 okhttp/4.12.0',
+            token: 'Basic dC1rZGdwMmg4YzNqdWI4Zm4wZnE6eWZMRGZNZnJZdktYaDRKWFMxTEVJMmNDcXUxdjVXYW4='
+        }
+
+        return await fetch(`${proxy.url}auth/v1/token`, {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers,
+            credentials: 'same-origin'
+        })
+            .then(async (response) => {
+                const text = await response.text()
+
+                if (response.ok) {
+                    return { data: JSON.parse(text) as UserData, error: null }
+                }
+
+                return { error: { status: response.status, message: text }, data: null }
+            })
+            .catch((error) => {
+                logCrunchyrollServiceError(
+                    CrunchyrollService.loginProxy,
+                    'Failed to Login to Crunchyroll',
+                    error
+                )
+                return { data: null, error: { status: 500, message: String(error) } }
+            })
+    }
+
+    static async versions(query: string) {
+        const account = await getOneAccountByService(SERVICES.crunchyroll)
+        if (account === null) return null
+
+        const user = await CrunchyrollService.loginHandler(
+            account.username,
+            account.password,
+            'LOCAL'
+        )
+        if (user === null) return null
+
+        const headers = {
+            Authorization: `Bearer ${user.access_token}`
+        }
+
+        return await fetch(
+            `${CRUNCHYROLL_BETA_API}content/v2/cms/objects/${query}?ratings=true&locale=en-US`,
+            {
+                method: 'GET',
+                headers,
+                credentials: 'same-origin'
+            }
+        )
+            .then(async (response) => {
+                const text = await response.text()
+
+                if (response.ok) {
+                    const body: { data: { episode_metadata: { versions: Version[] } }[] } =
+                        JSON.parse(text)
+                    return body.data[0].episode_metadata.versions
+                }
+
+                logCrunchyrollServiceError(
+                    CrunchyrollService.versions,
+                    'Failed to Fetch Crunchyroll Episode',
+                    {
+                        status: response.status,
+                        message: text
+                    }
+                )
+                return null
+            })
+            .catch((error) => {
+                logCrunchyrollServiceError(
+                    CrunchyrollService.versions,
+                    'Failed to Fetch Crunchyroll Episode',
+                    error
+                )
+                return null
+            })
+    }
+
+    static async playlist(
+        query: string,
+        geo: string | undefined
+    ): Promise<{ data: VideoPlaylist; account_id: string } | null> {
+        const proxyActive = await isProxyActive()
+        let proxies: Proxy[] = []
+
+        if (proxyActive) {
+            proxies = await validateProxies()
+        }
+
+        const account = await getOneAccountByService(SERVICES.crunchyroll)
+        if (account === null) return null
+
+        const user = await CrunchyrollService.loginHandler(
+            account.username,
+            account.password,
+            geo || 'LOCAL'
+        )
+        if (user === null) return null
+
+        const endpoints = [...ENDPOINTS]
+        const endpoint = await CrunchyrollService.endpoint()
+        const validatedEndpoint = endpoints.find((e) => e.id === endpoint)
+
+        const headers = {
+            Authorization: `Bearer ${user.access_token}`,
+            'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27',
+            'x-cr-disable-drm': 'true'
+        }
+
+        if (maxLimit === 0) {
+            maxLimit = await CrunchyrollService.maxStreams()
+        }
+
+        await incrementPlaylistCounter()
+
+        let playlist: VideoPlaylist = {} as VideoPlaylist
+
+        try {
+            const response = await fetch(
+                `https://cr-play-service.prd.crunchyrollsvc.com/v1/${query}${
+                    validatedEndpoint ? validatedEndpoint?.url : '/console/switch/play'
+                }`,
+                {
+                    method: 'GET',
+                    headers
+                }
+            )
+            const text = await response.text()
+
+            if (response.ok) {
+                const data: VideoPlaylist = JSON.parse(text)
+
+                data.hardSubs = Object.values((data as any).hardSubs)
+                data.subtitles = Object.values((data as any).subtitles)
+                data.geo = geo
+                playlist = data
+
+                await CrunchyrollService.deleteToken(query, playlist.token)
+            } else {
+                const error: { activeStreams: ActiveStream[] } = await JSON.parse(text)
+                if (error && error.activeStreams && error.activeStreams.length > 0) {
+                    for (const activeStream of error.activeStreams) {
+                        await CrunchyrollService.deleteToken(
+                            activeStream.contentId,
+                            activeStream.token
+                        )
+                    }
+
+                    logCrunchyrollServiceError(
+                        CrunchyrollService.playlist,
+                        // eslint-disable-next-line max-len
+                        'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
+                        error
+                    )
+
+                    return await CrunchyrollService.playlist(query, geo)
+                }
+
+                logCrunchyrollServiceError(
+                    CrunchyrollService.playlist,
+                    'Failed to get Crunchyroll Video Playlist',
+                    text
+                )
+
+                return null
+            }
+        } catch (error) {
+            logCrunchyrollServiceError(
+                CrunchyrollService.playlist,
+                'Failed to get Crunchyroll Video Playlist',
+                error
+            )
+        }
+
+        if (!proxyActive) return { data: playlist, account_id: user.account_id }
+
+        for (const proxy of proxies) {
+            if (proxy.code !== user.country) {
                 await incrementPlaylistCounter()
 
-                const logindata = await crunchyLogin(account.username, account.password, p.code)
+                const user = await CrunchyrollService.loginHandler(
+                    account.username,
+                    account.password,
+                    proxy.code
+                )
 
-                if (!logindata) return
+                if (user === null) return null
 
                 const headers = {
-                    Authorization: `Bearer ${logindata.access_token}`,
+                    Authorization: `Bearer ${user.access_token}`,
                     'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
                 }
 
-                const responseProx = await fetch(
-                    `https://cr-play-service.prd.crunchyrollsvc.com/v1/${q}${
-                        endpoints.find((e) => e.id === endpoint) ? endpoints.find((e) => e.id === endpoint)?.url : '/console/switch/play'
-                    }`,
-                    {
-                        method: 'GET',
-                        headers: headers
-                    }
-                )
-
-                if (responseProx.ok) {
-                    const dataProx: VideoPlaylistNoGEO = JSON.parse(await responseProx.text())
-
-                    dataProx.hardSubs = Object.values((dataProx as any).hardSubs)
-
-                    dataProx.subtitles = Object.values((dataProx as any).subtitles)
-
-                    for (const v of dataProx.versions) {
-                        if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
-                            playlist.versions.push({ ...v, geo: p.code })
+                try {
+                    const response = await fetch(
+                        `https://cr-play-service.prd.crunchyrollsvc.com/v1/${query}${
+                            validatedEndpoint ? validatedEndpoint?.url : '/console/switch/play'
+                        }`,
+                        {
+                            method: 'GET',
+                            headers
                         }
-                    }
+                    )
 
-                    for (const v of dataProx.subtitles) {
-                        if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
-                            playlist.subtitles.push({ ...v, geo: p.code })
+                    const text = await response.text()
+
+                    if (response.ok) {
+                        const data: VideoPlaylistNoGEO = JSON.parse(text)
+
+                        data.hardSubs = Object.values((data as any).hardSubs)
+                        data.subtitles = Object.values((data as any).subtitles)
+                        for (const v of data.versions) {
+                            if (!playlist.versions.find((ver) => ver.guid === v.guid)) {
+                                playlist.versions.push({ ...v, geo: proxy.code })
+                            }
                         }
-                    }
-
-                    for (const v of dataProx.hardSubs) {
-                        if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
-                            playlist.hardSubs.push({ ...v, geo: p.code })
+                        for (const v of data.subtitles) {
+                            if (!playlist.subtitles.find((ver) => ver.language === v.language)) {
+                                playlist.subtitles.push({ ...v, geo: proxy.code })
+                            }
                         }
-                    }
-
-                    deleteVideoToken(q, dataProx.token)
-                } else {
-                    decrementPlaylistCounter()
-                    const error = await responseProx.text()
-                    const errorJSON: {
-                        activeStreams: {
-                            accountId: string
-                            active: boolean
-                            assetId: string
-                            clientId: string
-                            contentId: string
-                            country: string
-                            createdTimestamp: string
-                            deviceSubtype: string
-                            deviceType: string
-                            episodeIdentity: string
-                            id: string
-                            token: string
-                        }[]
-                    } = await JSON.parse(error)
-
-                    if (errorJSON && errorJSON.activeStreams && errorJSON.activeStreams.length !== 0) {
-                        for (const e of errorJSON.activeStreams) {
-                            deleteVideoToken(e.contentId, e.token)
+                        for (const v of data.hardSubs) {
+                            if (!playlist.hardSubs.find((ver) => ver.hlang === v.hlang)) {
+                                playlist.hardSubs.push({ ...v, geo: proxy.code })
+                            }
                         }
 
-                        server.logger.log({
-                            level: 'error',
-                            message: 'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
-                            error: errorJSON,
-                            timestamp: new Date().toISOString(),
-                            section: 'playlistCrunchyrollFetch'
-                        })
+                        await CrunchyrollService.deleteToken(query, data.token)
+                    } else {
+                        decrementPlaylistCounter()
+                        const error: { activeStreams: ActiveStream[] } = await JSON.parse(text)
+
+                        if (error && error.activeStreams && error.activeStreams.length > 0) {
+                            for (const activeStream of error.activeStreams) {
+                                await CrunchyrollService.deleteToken(
+                                    activeStream.contentId,
+                                    activeStream.token
+                                )
+                            }
+
+                            logCrunchyrollServiceError(
+                                CrunchyrollService.playlist,
+                                // eslint-disable-next-line max-len
+                                'Refetching Crunchyroll Video Playlist & Deleting all Video Token because too many streams',
+                                error
+                            )
+                        }
                     }
+                } catch (error) {
+                    logCrunchyrollServiceError(
+                        CrunchyrollService.playlist,
+                        'Failed to get Crunchyroll Video Playlist',
+                        error
+                    )
                 }
             }
         }
-    }
-    return { data: playlist, account_id: login.account_id }
-}
-
-// Crunchyroll Delete Video Token Fetch
-export async function removeVideoToken(content: string, token: string) {
-    const account = await loggedInCheck('CR')
-
-    if (!account) return
-
-    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
-
-    if (!login) return
-
-    const headers = {
-        Authorization: `Bearer ${login.access_token}`
+        return { data: playlist, account_id: user.account_id }
     }
 
-    const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}`, {
-        method: 'DELETE',
-        headers: headers
-    })
+    static async deleteToken(content: string, token: string) {
+        const account = await getOneAccountByService(SERVICES.crunchyroll)
+        if (account === null) return null
 
-    if (response.ok) {
-        server.logger.log({
-            level: 'info',
-            message: 'Deleted Video Token',
-            token: token,
-            timestamp: new Date().toISOString(),
-            section: 'tokenDeletionCrunchyrollFetch'
-        })
+        const user = await CrunchyrollService.loginHandler(
+            account.username,
+            account.password,
+            'LOCAL'
+        )
+        if (user === null) return null
 
-        decrementPlaylistCounter()
+        const headers = { Authorization: `Bearer ${user.access_token}` }
 
-        return 'ok'
-    } else {
-        decrementPlaylistCounter()
-        const error = await response.text()
-        // messageBox('error', ['Cancel'], 2, 'Failed to delete Crunchyroll Video Token', 'Failed to delete Crunchyroll Video Token', error)
-        server.logger.log({
-            level: 'error',
-            message: 'Failed to delete Crunchyroll Video Token',
-            token: token,
-            error: error,
-            timestamp: new Date().toISOString(),
-            section: 'tokenDeletionCrunchyrollFetch'
-        })
-    }
-}
-
-// Crunchyroll Deactivate Video Token Fetch
-export async function deleteVideoToken(content: string, token: string) {
-    const account = await loggedInCheck('CR')
-
-    if (!account) return
-
-    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
-
-    if (!login) return
-
-    const headers = {
-        Authorization: `Bearer ${login.access_token}`
-    }
-
-    const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}/inactive`, {
-        method: 'PATCH',
-        headers: headers
-    })
-
-    if (response.ok) {
-        server.logger.log({
-            level: 'info',
-            message: 'Disabled Video Token',
-            token: token,
-            timestamp: new Date().toISOString(),
-            section: 'tokenDeletionCrunchyrollFetch'
-        })
-
-        decrementPlaylistCounter()
-
-        return 'ok'
-    } else {
-        decrementPlaylistCounter()
-        const error = await response.text()
-        server.logger.log({
-            level: 'error',
-            message: 'Failed to disable Crunchyroll Video Token',
-            token: token,
-            error: error,
-            timestamp: new Date().toISOString(),
-            section: 'tokenDisabelingCrunchyrollFetch'
-        })
-    }
-}
-
-// Crunchyroll Activate Video Token Fetch
-export async function activateVideoToken(content: string, token: string) {
-    const account = await loggedInCheck('CR')
-
-    if (!account) return
-
-    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
-
-    if (!login) return
-
-    const headers = {
-        Authorization: `Bearer ${login.access_token}`
-    }
-
-    await incrementPlaylistCounter()
-    const response = await fetch(`https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}/keepAlive?playhead=1`, {
-        method: 'PATCH',
-        headers: headers
-    })
-
-    if (response.ok) {
-        server.logger.log({
-            level: 'info',
-            message: 'Activated Video Token',
-            token: token,
-            timestamp: new Date().toISOString(),
-            section: 'tokenDeletionCrunchyrollFetch'
-        })
-
-        return 'ok'
-    } else {
-        const error = await response.text()
-        server.logger.log({
-            level: 'error',
-            message: 'Failed to activate Crunchyroll Video Token',
-            token: token,
-            error: error,
-            timestamp: new Date().toISOString(),
-            section: 'tokenActivationCrunchyrollFetch'
-        })
-    }
-}
-
-// Crunchyroll MPD Fetch
-export async function crunchyGetPlaylistMPD(q: string, geo: string | undefined) {
-    const account = await loggedInCheck('CR')
-
-    if (!account) return
-
-    const login = await crunchyLogin(account.username, account.password, geo ? geo : 'LOCAL')
-
-    if (!login) return
-
-    const headers = {
-        Authorization: `Bearer ${login.access_token}`,
-        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
-    }
-
-    const regex = /\/manifest\/([A-Z0-9]+)\/.*\?playbackGuid=([^&]+)/
-
-    const match = q.match(regex)
-
-    if (!match) return
-
-    const contentID = match[1]
-    const playlistID = match[2]
-
-    await activateVideoToken(contentID, playlistID)
-
-    try {
-        const response = await fetch(q, {
-            method: 'GET',
-            headers: headers
-        })
-
-        if (response.ok) {
-            deleteVideoToken(contentID, playlistID)
-            const raw = await response.text()
-
-            const parsed = mpdParse(raw)
-
-            return parsed
-        } else {
-            const error = await response.text()
-
-            const errorJSON: {
-                error: string
-            } = await JSON.parse(error)
-
-            if (errorJSON.error === 'Invalid streaming token') {
-                decrementPlaylistCounter()
-
-                await activateVideoToken(contentID, playlistID)
-                return await crunchyGetPlaylistMPD(q, geo)
+        return await fetch(
+            `https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}/inactive`,
+            {
+                method: 'PATCH',
+                headers
             }
-
-            messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll MPD', 'Failed to get Crunchyroll MPD', error)
-            server.logger.log({
-                level: 'error',
-                message: 'Failed to get Crunchyroll MPD',
-                error: error,
-                timestamp: new Date().toISOString(),
-                section: 'mpdCrunchyrollFetch'
+        )
+            .then(async (response) => {
+                if (response.ok) {
+                    logCrunchyrollServiceInfo(
+                        CrunchyrollService.deleteToken,
+                        `Disabled Video Token: ${token}`
+                    )
+                    decrementPlaylistCounter()
+                    return 'deleted'
+                }
+                decrementPlaylistCounter()
+                const error = await response.text()
+                logCrunchyrollServiceError(
+                    CrunchyrollService.deleteToken,
+                    `Failed to disable Crunchyroll Video Token: ${token}`,
+                    error,
+                    false
+                )
+                return null
             })
-            throw new Error(error)
+            .catch((error) => {
+                logCrunchyrollServiceError(
+                    CrunchyrollService.deleteToken,
+                    `Failed to disable Crunchyroll Video Token: ${token}`,
+                    error,
+                    false
+                )
+                return null
+            })
+    }
+
+    static async activateToken(content: string, token: string) {
+        const account = await getOneAccountByService(SERVICES.crunchyroll)
+        if (account === null) return null
+
+        const user = await CrunchyrollService.loginHandler(
+            account.username,
+            account.password,
+            'LOCAL'
+        )
+        if (user === null) return null
+
+        const headers = { Authorization: `Bearer ${user.access_token}` }
+
+        await incrementPlaylistCounter()
+
+        return await fetch(
+            // eslint-disable-next-line max-len
+            `https://cr-play-service.prd.crunchyrollsvc.com/v1/token/${content}/${token}/keepAlive?playhead=1`,
+            {
+                method: 'PATCH',
+                headers
+            }
+        )
+            .then(async (response) => {
+                if (response.ok) {
+                    logCrunchyrollServiceInfo(
+                        CrunchyrollService.deleteToken,
+                        `Activated Video Token: ${token}`
+                    )
+                    return 'activated'
+                }
+                const error = await response.text()
+                logCrunchyrollServiceError(
+                    CrunchyrollService.deleteToken,
+                    `Failed to activate Crunchyroll Video Token: ${token}`,
+                    error,
+                    false
+                )
+                return null
+            })
+            .catch((error) => {
+                logCrunchyrollServiceError(
+                    CrunchyrollService.deleteToken,
+                    `Failed to activate Crunchyroll Video Token: ${token}`,
+                    error,
+                    false
+                )
+                return null
+            })
+    }
+
+    static async playlistMpd(query: string, geo: string | undefined) {
+        const account = await getOneAccountByService(SERVICES.crunchyroll)
+        if (account === null) return null
+
+        const user = await CrunchyrollService.loginHandler(
+            account.username,
+            account.password,
+            'LOCAL'
+        )
+        if (user === null) return null
+
+        const headers = {
+            Authorization: `Bearer ${user.access_token}`,
+            'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
         }
-    } catch (e) {
-        throw new Error(e as string)
-    }
-}
 
-// Crunchyroll Metadata Fetch
-export async function crunchyGetMetadata(q: string) {
-    const headers = {
-        'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
-    }
+        const regex = /\/manifest\/([A-Z0-9]+)\/.*\?playbackGuid=([^&]+)/
 
-    const response = await fetch(`https://static.crunchyroll.com/skip-events/production/${q}.json`, {
-        method: 'GET',
-        headers: headers
-    })
+        const match = query.match(regex)
 
-    if (response.ok) {
-        return (await JSON.parse(await response.text())) as VideoMetadata
-    } else {
-        return null
-    }
-}
+        if (!match) return null
 
-export async function getAccountInfo() {
-    const account = await loggedInCheck('CR')
+        const contentId = match[1]
+        const playlistId = match[2]
 
-    if (!account) return
+        await CrunchyrollService.activateToken(contentId, playlistId)
 
-    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
-
-    if (!login) return
-
-    const headers = {
-        Authorization: `Bearer ${login.access_token}`
-    }
-
-    try {
-        const response = await fetch('https://beta-api.crunchyroll.com/accounts/v1/me', {
+        return await fetch(query, {
             method: 'GET',
-            headers: headers
+            headers
         })
+            .then(async (response): Promise<null | Manifest> => {
+                const text = await response.text()
 
-        if (response.ok) {
-            const data: {
-                account_id: string
-                external_id: string
-            } = await JSON.parse(await response.text())
+                if (response.ok) {
+                    await CrunchyrollService.deleteToken(contentId, playlistId)
+                    return mpdParse(text)
+                }
 
-            return data
-        } else {
-            const error = await response.text()
-            server.logger.log({
-                level: 'error',
-                message: 'Failed to get Crunchyroll Account Info',
-                error: error,
-                timestamp: new Date().toISOString(),
-                section: 'settingsCrunchyrollFetch'
+                const error: { error: string } = await JSON.parse(text)
+
+                if (error.error === 'Invalid streaming token') {
+                    decrementPlaylistCounter()
+
+                    await CrunchyrollService.activateToken(contentId, playlistId)
+                    return await CrunchyrollService.playlistMpd(query, geo)
+                }
+
+                logCrunchyrollServiceError(
+                    CrunchyrollService.playlistMpd,
+                    'Failed to get Crunchyroll MPD',
+                    text
+                )
+                return null
             })
-            throw new Error(await response.text())
+            .catch((error) => {
+                logCrunchyrollServiceError(
+                    CrunchyrollService.playlistMpd,
+                    'Failed to get Crunchyroll MPD',
+                    error
+                )
+                return null
+            })
+    }
+
+    static async metadata(query: string) {
+        const headers = {
+            'User-Agent': 'Crunchyroll/1.8.0 Nintendo Switch/12.3.12.0 UE4/4.27'
         }
-    } catch (e) {
-        throw new Error(e as string)
-    }
-}
 
-// Check Max account streams because of crunchyroll activestream limit
-export async function checkAccountMaxStreams() {
-    const accountinfo = await getAccountInfo()
-
-    if (!accountinfo) return 1
-
-    const account = await loggedInCheck('CR')
-
-    if (!account) return 1
-
-    const login = await crunchyLogin(account.username, account.password, 'LOCAL')
-
-    if (!login) return 1
-
-    const headers = {
-        Authorization: `Bearer ${login.access_token}`
-    }
-
-    try {
-        const response = await fetch(`https://beta-api.crunchyroll.com/subs/v1/subscriptions/${accountinfo.external_id}/benefits`, {
+        return await fetch(`https://static.crunchyroll.com/skip-events/production/${query}.json`, {
             method: 'GET',
-            headers: headers
+            headers
         })
+            .then(async (response) => {
+                if (response.ok) {
+                    return (await JSON.parse(await response.text())) as VideoMetadata
+                }
 
-        if (response.ok) {
-            const data: {
-                items: {
-                    __class__: string
-                    __href__: string
-                    __links__: string
-                    __actions__: string
-                    benefit: string
-                    source: string
-                }[]
-            } = await JSON.parse(await response.text())
-
-            if (!data.items || data.items.length === 0) return 1
-
-            if (data.items.find((i) => i.benefit === 'concurrent_streams.4')) return 4
-
-            if (data.items.find((i) => i.benefit === 'concurrent_streams.1')) return 1
-
-            if (data.items.find((i) => i.benefit === 'concurrent_streams.6')) return 6
-
-            return 1
-        } else {
-            const error = await response.text()
-            messageBox('error', ['Cancel'], 2, 'Failed to get Crunchyroll Account Subscription', 'Failed to get Crunchyroll Account Subscription', error)
-            server.logger.log({
-                level: 'error',
-                message: 'Failed to get Crunchyroll Account Subscription',
-                error: error,
-                timestamp: new Date().toISOString(),
-                section: 'subCrunchyrollFetch'
+                return null
             })
-            throw new Error(await response.text())
-        }
-    } catch (e) {
-        return 1
+            .catch((_error) => {
+                return null
+            })
+    }
+
+    static async accountInfo() {
+        const account = await getOneAccountByService(SERVICES.crunchyroll)
+        if (account === null) return null
+
+        const user = await CrunchyrollService.loginHandler(
+            account.username,
+            account.password,
+            'LOCAL'
+        )
+        if (user === null) return null
+
+        const headers = { Authorization: `Bearer ${user.access_token}` }
+
+        return await fetch('https://beta-api.crunchyroll.com/accounts/v1/me', {
+            method: 'GET',
+            headers
+        })
+            .then(async (response) => {
+                const text = await response.text()
+
+                if (response.ok) {
+                    return (await JSON.parse(text)) as { account_id: string; external_id: string }
+                }
+
+                logCrunchyrollServiceError(
+                    CrunchyrollService.accountInfo,
+                    'Failed to get Crunchyroll Account Info',
+                    text,
+                    false
+                )
+                return null
+            })
+            .catch((error) => {
+                logCrunchyrollServiceError(
+                    CrunchyrollService.accountInfo,
+                    'Failed to get Crunchyroll Account Info',
+                    error,
+                    false
+                )
+                return null
+            })
+    }
+
+    static async maxStreams() {
+        const accountInfo = await CrunchyrollService.accountInfo()
+
+        if (accountInfo === null) return 1
+
+        const account = await getOneAccountByService(SERVICES.crunchyroll)
+        if (account === null) return 1
+
+        const user = await CrunchyrollService.loginHandler(
+            account.username,
+            account.password,
+            'LOCAL'
+        )
+        if (user === null) return 1
+
+        const headers = { Authorization: `Bearer ${user.access_token}` }
+
+        return await fetch(
+            // eslint-disable-next-line max-len
+            `https://beta-api.crunchyroll.com/subs/v1/subscriptions/${accountInfo.external_id}/benefits`,
+            {
+                method: 'GET',
+                headers
+            }
+        )
+            .then(async (response) => {
+                const text = await response.text()
+
+                if (response.ok) {
+                    const data: { items: Item[] } = await JSON.parse(text)
+
+                    if (!data.items || data.items.length === 0) return 1
+                    if (data.items.find((i) => i.benefit === 'concurrent_streams.4')) return 4
+                    if (data.items.find((i) => i.benefit === 'concurrent_streams.1')) return 1
+                    if (data.items.find((i) => i.benefit === 'concurrent_streams.6')) return 6
+                    return 1
+                }
+
+                logCrunchyrollServiceError(
+                    CrunchyrollService.maxStreams,
+                    'Failed to get Crunchyroll Account Subscription',
+                    text
+                )
+                return 1
+            })
+            .catch((error) => {
+                logCrunchyrollServiceError(
+                    CrunchyrollService.maxStreams,
+                    'Failed to get Crunchyroll Account Subscription',
+                    error
+                )
+                return 1
+            })
     }
 }

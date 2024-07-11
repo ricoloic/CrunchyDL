@@ -1,3 +1,5 @@
+import type { Locale } from '~/src/constants'
+
 export interface CrunchySearchFetch {
     total: number
     data: Array<{
@@ -69,7 +71,7 @@ export interface CrunchyAnimeFetch {
         search_metadata: {
             score: number
         }
-        audio_locales: Array<string>
+        audio_locales: Locale[]
         availability_notes: string
         episode_count: number
         extended_description: string
@@ -82,7 +84,7 @@ export interface CrunchyAnimeFetch {
         maturity_ratings: Array<string>
         season_count: number
         series_launch_year: number
-        subtitle_locales: Array<string>
+        subtitle_locales: Locale[]
         id: string
         slug: string
         external_id: string

@@ -1,17 +1,18 @@
 import type { CrunchyLogin } from './Types'
+import type { Services } from '~/src/constants'
 
 export async function crunchyLogin(geo: string) {
     const { data, error } = await useFetch<CrunchyLogin>('http://localhost:9941/api/crunchyroll/login', {
         method: 'POST',
         query: {
-            geo: geo
+            geo
         }
     })
 
     return { data, error }
 }
 
-export async function checkAccount(service: string) {
+export async function checkAccount(service: Services) {
     const { data, error } = await useFetch<CrunchyLogin>(`http://localhost:9941/api/service/check/${service}`, {
         method: 'GET'
     })
@@ -19,12 +20,12 @@ export async function checkAccount(service: string) {
     return { data, error }
 }
 
-export async function loginAccount(user: string, password: string, service: string) {
+export async function loginAccount(user: string, password: string, service: Services) {
     const { data, error } = await useFetch<CrunchyLogin>(`http://localhost:9941/api/service/login/${service}`, {
         method: 'POST',
         body: {
-            user: user,
-            password: password
+            user,
+            password
         }
     })
 

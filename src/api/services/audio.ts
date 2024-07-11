@@ -1,20 +1,20 @@
 import fs from 'fs'
 import { Readable } from 'stream'
+import util from 'util'
+import { finished } from 'stream/promises'
+import Ffmpeg from 'fluent-ffmpeg'
+import { server } from '../api'
+import { MessageBoxBuilder } from '../../electron/utils/messageBox'
 import { checkFileExistence, createFolder, deleteFolder } from './folder'
 import { concatenateTSFiles } from './concatenate'
-import Ffmpeg from 'fluent-ffmpeg'
 import { getFFMPEGPath } from './ffmpeg'
 import { getShakaPath } from './shaka'
 const ffmpegP = getFFMPEGPath()
 const shaka = getShakaPath()
-import util from 'util'
-import { server } from '../api'
 const execFile = util.promisify(require('child_process').execFile)
-import { finished } from 'stream/promises'
-import { messageBox } from '../../electron/background'
 
 // Define Downloading Array
-var downloading: Array<{
+const downloading: Array<{
     id: number
     status: string
     audio: string
@@ -49,7 +49,7 @@ export async function downloadMPDAudio(
 
     async function downloadPart(part: { filename: string; url: string }, ind: number) {
         try {
-            var stream
+            let stream
 
             console.log(`[${name} DOWNLOAD] Fetching Part ${ind + 1}`)
 
@@ -58,7 +58,7 @@ export async function downloadMPDAudio(
             const response = rawres.clone()
 
             if (!response.ok) {
-                throw Error(await response.text())
+                throw new Error(await response.text())
             }
 
             console.log(`[${name} DOWNLOAD] Writing Part ${ind + 1}`)
@@ -77,7 +77,7 @@ export async function downloadMPDAudio(
             server.logger.log({
                 level: 'error',
                 message: `Error occurred during download of fragment ${ind + 1}`,
-                error: error,
+                error,
                 timestamp: new Date().toISOString(),
                 section: 'crunchyrollDownloadProcessAudioDownload'
             })
@@ -98,12 +98,12 @@ export async function downloadMPDAudio(
 
     if (parts[6] !== downloadedParts[6] && dn) {
         dn.status = 'failed'
-        messageBox('error', ['Cancel'], 2, 'Audio Download failed', 'Audio Download failed', 'Validation returned downloaded parts are invalid')
+        MessageBoxBuilder.new('error').button('Cancel', true).detail(`Validation returned downloaded parts are invalid`).build('Audio Download failed', 'Audio Download failed')
         server.logger.log({
             level: 'error',
             message: 'Audio Download failed',
             error: 'Validation returned downloaded parts are invalid',
-            parts: parts,
+            parts,
             partsdownloaded: downloadedParts,
             timestamp: new Date().toISOString(),
             section: 'AudioCrunchyrollValidation'
@@ -137,7 +137,7 @@ async function mergePartsAudio(
             list.push(`${tmp}/${part.filename}`)
         }
 
-        var concatenatedFile: string
+        let concatenatedFile: string
 
         if (drmkeys) {
             concatenatedFile = `${tmp}/temp-main.m4s`
@@ -200,7 +200,7 @@ async function mergePartsAudio(
                     server.logger.log({
                         level: 'error',
                         message: `Error merging audio fragments of Download ${downloadID} Audio ${name}`,
-                        error: error,
+                        error,
                         timestamp: new Date().toISOString(),
                         section: 'crunchyrollDownloadProcessAudioMergingFFMPEG'
                     })
@@ -225,7 +225,7 @@ async function mergePartsAudio(
         server.logger.log({
             level: 'error',
             message: 'Error while merging Audio',
-            error: error,
+            error,
             timestamp: new Date().toISOString(),
             section: 'audioCrunchyrollMerging'
         })

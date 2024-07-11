@@ -1,20 +1,25 @@
 import fastify from 'fastify'
 import cors from '@fastify/cors'
 import NodeCache from 'node-cache'
-import crunchyrollRoutes from './routes/crunchyroll/crunchyroll.route'
-import { sequelize } from './db/database'
-import serviceRoutes from './routes/service/service.route'
 import { app } from 'electron'
-import winston from 'winston'
-import { messageBox } from '../electron/background'
+import * as winston from 'winston'
+import { MessageBoxBuilder } from '../electron/utils/messageBox'
+import serviceRoutes from './routes/service/service.route'
+import { sequelize } from './db/database'
+import crunchyrollRoutes from './routes/crunchyroll/crunchyroll.route'
 
 const logger = winston.createLogger({
     level: 'info',
     format: winston.format.json(),
     defaultMeta: { service: 'user-service' },
     transports: [
-        new winston.transports.File({ filename: app.getPath('documents') + '/Crunchyroll Downloader/logs/error.log', level: 'error' }),
-        new winston.transports.File({ filename: app.getPath('documents') + '/Crunchyroll Downloader/logs/combined.log' })
+        new winston.transports.File({
+            filename: app.getPath('documents') + '/Crunchyroll Downloader/logs/error.log',
+            level: 'error'
+        }),
+        new winston.transports.File({
+            filename: app.getPath('documents') + '/Crunchyroll Downloader/logs/combined.log'
+        })
     ]
 })
 
@@ -59,7 +64,10 @@ async function startAPI() {
     server.listen({ port: 9941 }, (err, address) => {
         if (err) {
             console.error(err)
-            messageBox('error', ['Cancel'], 2, 'Unable to start backend server', 'Unable to connect to the database', JSON.stringify(err))
+            MessageBoxBuilder.new('error')
+                .button('Cancel', true)
+                .detail(JSON.stringify(err))
+                .build('Unable to start backend server', 'Unable to connect to the database')
             logger.log({
                 level: 'error',
                 message: 'Unable to start backend server',
@@ -92,11 +100,14 @@ async function startDB() {
         })
     } catch (error) {
         console.error('Unable to connect to the database:', error)
-        messageBox('error', ['Cancel'], 2, 'Unable to connect to the database', 'Unable to connect to the database', JSON.stringify(error))
+        MessageBoxBuilder.new('error')
+            .button('Cancel', true)
+            .detail(JSON.stringify(error))
+            .build('Unable to connect to the database', 'Unable to connect to the database')
         logger.log({
             level: 'error',
             message: 'Unable to connect to the database',
-            error: error,
+            error,
             timestamp: new Date().toISOString(),
             section: 'databaseConnection'
         })
@@ -114,11 +125,14 @@ async function startDB() {
         })
     } catch (error) {
         console.log('Failed to synchronize Models')
-        messageBox('error', ['Cancel'], 2, 'Failed to synchronize database Models', 'Failed to synchronize database Models', JSON.stringify(error))
+        MessageBoxBuilder.new('error')
+            .button('Cancel', true)
+            .detail(JSON.stringify(error))
+            .build('Failed to synchronize database Models', 'Failed to synchronize database Models')
         logger.log({
             level: 'error',
             message: 'Failed to synchronize Models',
-            error: error,
+            error,
             timestamp: new Date().toISOString(),
             section: 'databaseSync'
         })

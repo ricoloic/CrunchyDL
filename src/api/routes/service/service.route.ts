@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify'
+import { type FastifyInstance } from 'fastify'
 import {
     addPlaylistController,
     checkLoginController,
@@ -9,108 +9,22 @@ import {
     loginController
 } from './service.controller'
 
+export const RESPONSES = {
+    '4xx': {
+        error: { type: 'string' },
+        message: { type: 'string' }
+    }
+}
+
+// eslint-disable-next-line require-await
 async function serviceRoutes(server: FastifyInstance) {
-    server.post(
-        '/login/:id',
-        {
-            schema: {
-                response: {
-                    '4xx': {
-                        error: { type: 'string' },
-                        message: { type: 'string' }
-                    }
-                }
-            }
-        },
-        loginController
-    ),
-        server.get(
-            '/check/:id',
-            {
-                schema: {
-                    response: {
-                        '4xx': {
-                            error: { type: 'string' },
-                            message: { type: 'string' }
-                        }
-                    }
-                }
-            },
-            checkLoginController
-        ),
-        server.post(
-            '/playlist',
-            {
-                schema: {
-                    response: {
-                        '4xx': {
-                            error: { type: 'string' },
-                            message: { type: 'string' }
-                        }
-                    }
-                }
-            },
-            addPlaylistController
-        )
-    server.get(
-        '/playlist',
-        {
-            schema: {
-                response: {
-                    '4xx': {
-                        error: { type: 'string' },
-                        message: { type: 'string' }
-                    }
-                }
-            }
-        },
-        getPlaylistController
-    )
-
-    server.get(
-        '/accounts',
-        {
-            schema: {
-                response: {
-                    '4xx': {
-                        error: { type: 'string' },
-                        message: { type: 'string' }
-                    }
-                }
-            }
-        },
-        getAllAccountsHandler
-    )
-
-    server.delete(
-        '/account/:id',
-        {
-            schema: {
-                response: {
-                    '4xx': {
-                        error: { type: 'string' },
-                        message: { type: 'string' }
-                    }
-                }
-            }
-        },
-        deleteAccountHandler
-    )
-
-    server.get(
-        '/proxies',
-        {
-            schema: {
-                response: {
-                    '4xx': {
-                        error: { type: 'string' },
-                        message: { type: 'string' }
-                    }
-                }
-            }
-        },
-        checkProxiesController
-    )
+    server.post('/login/:service', { schema: { response: { ...RESPONSES } } }, loginController)
+    server.get('/check/:service', { schema: { response: { ...RESPONSES } } }, checkLoginController)
+    server.post('/playlist', { schema: { response: { ...RESPONSES } } }, addPlaylistController)
+    server.get('/playlist', { schema: { response: { ...RESPONSES } } }, getPlaylistController)
+    server.get('/accounts', { schema: { response: { ...RESPONSES } } }, getAllAccountsHandler)
+    server.delete('/account/:id', { schema: { response: { ...RESPONSES } } }, deleteAccountHandler)
+    server.get('/proxies', { schema: { response: { ...RESPONSES } } }, checkProxiesController)
 }
 
 export default serviceRoutes

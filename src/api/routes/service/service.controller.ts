@@ -1,20 +1,23 @@
-import { FastifyReply, FastifyRequest } from 'fastify'
-import { crunchyLogin } from '../crunchyroll/crunchyroll.service'
-import { addEpisodeToPlaylist, deleteAccountID, getAllAccounts, getDownloading, getPlaylist, loggedInCheck, safeLoginData } from './service.service'
+import type { FastifyReply, FastifyRequest } from 'fastify'
 import { CrunchyEpisodes } from '../../types/crunchyroll'
 import { adnLogin } from '../adn/adn.service'
 import { server } from '../../api'
 import { getDownloadingAudio } from '../../services/audio'
+import { Formats, Locales, Qualities, Services, SERVICES } from '../../../constants'
+import { deleteOneAccount, getAllAccounts } from '../../db/models/account'
+import { CrunchyrollService } from '../crunchyroll/crunchyroll.service'
+import { createOnePlaylist } from '../../db/models/playlist'
+import { getDownloading, getPlaylist, loggedInCheck, safeLoginData } from './service.service'
 
 export async function checkLoginController(
     request: FastifyRequest<{
         Params: {
-            id: string
+            service: Services
         }
     }>,
     reply: FastifyReply
 ) {
-    const account = await loggedInCheck(request.params.id)
+    const account = await loggedInCheck(request.params.service)
 
     if (!account) {
         return reply.code(401).send({ message: 'Not Logged in' })
@@ -30,7 +33,7 @@ export async function loginController(
             password: string
         }
         Params: {
-            id: string
+            service: Services
         }
     }>,
     reply: FastifyReply
@@ -38,24 +41,24 @@ export async function loginController(
     const body = request.body
     const params = request.params
 
-    const account = await loggedInCheck(params.id)
+    const account = await loggedInCheck(params.service)
 
     if (account) {
         return reply.code(404).send({ message: 'Already Logged In' })
     }
 
-    var response
-    var responseError
-    var responseData
+    let response
+    let responseError
+    let responseData
 
-    if (params.id === 'CR') {
-        const login = await crunchyLogin(body.user, body.password, 'LOCAL')
-        response = login
+    if (params.service === SERVICES.crunchyroll) {
+        response = await CrunchyrollService.loginHandler(body.user, body.password, 'LOCAL')
     }
 
-    if (params.id === 'ADN') {
+    if (params.service === SERVICES.animationdigitalnetwork) {
         const { data, error } = await adnLogin(body.user, body.password)
-        ;(responseError = error), (responseData = data)
+        responseError = error
+        responseData = data
     }
 
     if (responseError && !responseData && !response) {
@@ -64,12 +67,12 @@ export async function loginController(
         })
     }
 
-    await safeLoginData(body.user, body.password, params.id)
+    await safeLoginData(body.user, body.password, params.service)
 
     return reply.code(200).send()
 }
 
-export async function getAllAccountsHandler(request: FastifyRequest, reply: FastifyReply) {
+export async function getAllAccountsHandler(_: FastifyRequest, reply: FastifyReply) {
     const accounts = await getAllAccounts()
 
     return reply.code(200).send(accounts)
@@ -83,10 +86,10 @@ export async function deleteAccountHandler(
     }>,
     reply: FastifyReply
 ) {
-    try {
-        await deleteAccountID(request.params.id)
-    } catch (e) {
-        return reply.code(500).send(e)
+    const account = await deleteOneAccount(request.params.id)
+
+    if (account === null) {
+        return reply.code(500).send()
     }
 
     return reply.code(200).send()
@@ -96,14 +99,14 @@ export async function addPlaylistController(
     request: FastifyRequest<{
         Body: {
             episodes: CrunchyEpisodes
-            dubs: { name: string | undefined; locale: string }[]
-            subs: { name: string | undefined; locale: string }[]
-            hardsub: { name: string | undefined; locale: string; format: string } | undefined
+            dubs: Locales[]
+            subs: Locales[]
+            hardsub: { format: string } & Locales
             dir: string
-            quality: 1080 | 720 | 480 | 360 | 240
+            quality: Qualities
             qualityaudio: 1 | 2 | 3 | undefined
-            service: 'CR' | 'ADN'
-            format: 'mp4' | 'mkv'
+            service: Services
+            format: Formats
         }
     }>,
     reply: FastifyReply
@@ -111,13 +114,24 @@ export async function addPlaylistController(
     const body = request.body
 
     for (const e of body.episodes) {
-        await addEpisodeToPlaylist(e, body.subs, body.dubs, body.hardsub, body.dir, 'waiting', body.quality, body.qualityaudio, body.service, body.format)
+        await createOnePlaylist({
+            media: e,
+            sub: body.subs,
+            dub: body.dubs,
+            hardsub: body.hardsub,
+            dir: body.dir,
+            status: 'waiting',
+            quality: body.quality,
+            qualityaudio: body.qualityaudio,
+            service: body.service,
+            format: body.format
+        })
     }
 
     return reply.code(201).send()
 }
 
-export async function getPlaylistController(request: FastifyRequest, reply: FastifyReply) {
+export async function getPlaylistController(_request: FastifyRequest, reply: FastifyReply) {
     const playlist = await getPlaylist()
 
     if (!playlist) return
@@ -147,7 +161,7 @@ export async function getPlaylistController(request: FastifyRequest, reply: Fast
     return reply.code(200).send(playlist.reverse())
 }
 
-export async function checkProxiesController(request: FastifyRequest, reply: FastifyReply) {
+export async function checkProxiesController(_request: FastifyRequest, reply: FastifyReply) {
     const cachedData = server.CacheController.get('proxycheck')
 
     if (!cachedData) {
@@ -176,7 +190,9 @@ export async function checkProxiesController(request: FastifyRequest, reply: Fas
             try {
                 const response: Response = await Promise.race([
                     fetch(p.url + 'health', { method: 'GET' }),
-                    new Promise<Response>((_, reject) => setTimeout(() => reject(new Error('Timeout')), 500))
+                    new Promise<Response>((_resolve, reject) =>
+                        setTimeout(() => reject(new Error('Timeout')), 500)
+                    )
                 ])
 
                 if (response.ok) {

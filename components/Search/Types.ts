@@ -1,10 +1,12 @@
+import type { Locale } from '~/src/constants'
+
 export interface CrunchyrollSearchResult {
     ID: string
     Url: string
     Title: string
     Description: string
-    Dubs: Array<string>
-    Subs: Array<string>
+    Dubs: Locale[]
+    Subs: Locale[]
     Episodes: number
     Seasons: number
     PEGI: Array<string>

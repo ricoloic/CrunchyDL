@@ -1,10 +1,11 @@
+import crypto from 'crypto'
 import CryptoJS from 'crypto-js'
 import { server } from '../../api'
 import { ADNLink, ADNPlayerConfig } from '../../types/adn'
-import { messageBox } from '../../../electron/background'
 import { useFetch } from '../useFetch'
 import { loggedInCheck } from '../service/service.service'
-import crypto from 'crypto'
+import { SERVICES } from '../../../constants'
+import { MessageBoxBuilder } from '../../../electron/utils/messageBox'
 
 export async function adnLogin(user: string, passw: string) {
     const cachedData:
@@ -14,26 +15,35 @@ export async function adnLogin(user: string, passw: string) {
         | undefined = server.CacheController.get('adntoken')
 
     if (!cachedData) {
-        var { data, error } = await adnLoginFetch(user, passw)
+        const { data, error } = await adnLoginFetch(user, passw)
 
         if (error) {
-            messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to ADN', error.error as string)
+            MessageBoxBuilder.new('error')
+                .button('Cancel', true)
+                .detail(error.error as string)
+                .build('Failed to login', 'Failed to login to ADN')
             return { data: null, error: error.error }
         }
 
         if (!data) {
-            messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to ADN', 'ADN returned null')
+            MessageBoxBuilder.new('error')
+                .button('Cancel', true)
+                .detail('ADN returned null')
+                .build('Failed to login', 'Failed to login to ADN')
             return { data: null, error: 'ADN returned null' }
         }
 
         if (!data.accessToken) {
-            messageBox('error', ['Cancel'], 2, 'Failed to login', 'Failed to login to ADN', 'ADN returned malformed data')
+            MessageBoxBuilder.new('error')
+                .button('Cancel', true)
+                .detail('ADN returned malformed data')
+                .build('Failed to login', 'Failed to login to ADN')
             return { data: null, error: 'ADN returned malformed data' }
         }
 
         server.CacheController.set('adntoken', data, 300)
 
-        return { data: data, error: null }
+        return { data, error: null }
     }
 
     return { data: cachedData, error: null }
@@ -60,14 +70,14 @@ async function adnLoginFetch(user: string, passw: string) {
     })
 
     if (error) {
-        return { data: null, error: error }
+        return { data: null, error }
     }
 
     if (!data) {
         return { data: null, error: null }
     }
 
-    return { data: data, error: null }
+    return { data, error: null }
 }
 
 export async function getEpisodeADN(q: number) {
@@ -78,12 +88,15 @@ export async function getEpisodeADN(q: number) {
     }
 
     try {
-        const response = await fetch(`https://gw.api.animationdigitalnetwork.fr/video/${q}/public`, {
-            method: 'GET',
-            headers: {
-                'x-target-distribution': 'de'
+        const response = await fetch(
+            `https://gw.api.animationdigitalnetwork.fr/video/${q}/public`,
+            {
+                method: 'GET',
+                headers: {
+                    'x-target-distribution': 'de'
+                }
             }
-        })
+        )
 
         if (response.ok) {
             const data: {
@@ -102,7 +115,7 @@ export async function getEpisodeADN(q: number) {
 }
 
 export async function getPlayerConfigADN(id: number, geo: 'de' | 'fr') {
-    const account = await loggedInCheck('ADN')
+    const account = await loggedInCheck(SERVICES.animationdigitalnetwork)
 
     if (!account) return
 
@@ -111,14 +124,17 @@ export async function getPlayerConfigADN(id: number, geo: 'de' | 'fr') {
     if (!token.data?.accessToken) return
 
     try {
-        const response = await fetch(`https://gw.api.animationdigitalnetwork.fr/player/video/${id}/configuration`, {
-            method: 'GET',
-            headers: {
-                'x-target-distribution': geo,
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token.data.accessToken}`
+        const response = await fetch(
+            `https://gw.api.animationdigitalnetwork.fr/player/video/${id}/configuration`,
+            {
+                method: 'GET',
+                headers: {
+                    'x-target-distribution': geo,
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token.data.accessToken}`
+                }
             }
-        })
+        )
 
         if (response.ok) {
             const data: ADNPlayerConfig = JSON.parse(await response.text())
@@ -138,14 +154,17 @@ async function getPlayerToken(id: number, geo: 'de' | 'fr') {
     if (!r) return
 
     try {
-        const response = await fetch(`https://gw.api.animationdigitalnetwork.fr/player/refresh/token`, {
-            method: 'POST',
-            headers: {
-                'x-target-distribution': geo,
-                'Content-Type': 'application/json',
-                'X-Player-Refresh-Token': r.player.options.user.refreshToken
+        const response = await fetch(
+            `https://gw.api.animationdigitalnetwork.fr/player/refresh/token`,
+            {
+                method: 'POST',
+                headers: {
+                    'x-target-distribution': geo,
+                    'Content-Type': 'application/json',
+                    'X-Player-Refresh-Token': r.player.options.user.refreshToken
+                }
             }
-        })
+        )
 
         if (response.ok) {
             const data: {
@@ -198,21 +217,29 @@ export async function adnGetPlaylist(animeid: number, geo: 'de' | 'fr') {
     if (!authorization) return
 
     try {
-        const response = await fetch(`https://gw.api.animationdigitalnetwork.fr/player/video/${animeid}/link`, {
-            method: 'GET',
-            headers: {
-                'x-target-distribution': geo,
-                'X-Player-Token': authorization
+        const response = await fetch(
+            `https://gw.api.animationdigitalnetwork.fr/player/video/${animeid}/link`,
+            {
+                method: 'GET',
+                headers: {
+                    'x-target-distribution': geo,
+                    'X-Player-Token': authorization
+                }
             }
-        })
+        )
 
         if (response.ok) {
             const data: ADNLink = await JSON.parse(await response.text())
-            return { data: data, secret: random }
+            return { data, secret: random }
         } else {
-            const data: { message: string; code: string; statusCode: string } = JSON.parse(await response.text())
+            const data: { message: string; code: string; statusCode: string } = JSON.parse(
+                await response.text()
+            )
 
-            messageBox('error', ['Cancel'], 2, 'Failed to fetch Playlist', 'Failed to fetch ADN Playlist', `${data.message} - ${data.code}`)
+            MessageBoxBuilder.new('error')
+                .button('Cancel', true)
+                .detail(`${data.message} - ${data.code}`)
+                .build('Failed to fetch Playlist', 'Failed to fetch ADN Playlist')
 
             return null
         }
@@ -256,20 +283,20 @@ export async function adnGetM3U8Playlist(url: string) {
 }
 
 async function extractURLFromPlaylist(playlist: string) {
-    var startIndex = playlist.indexOf('http')
-    var endIndex = playlist.indexOf(' ', startIndex)
-    var extractedURL = playlist.slice(startIndex, endIndex)
+    const startIndex = playlist.indexOf('http')
+    const endIndex = playlist.indexOf(' ', startIndex)
+    const extractedURL = playlist.slice(startIndex, endIndex)
     return extractedURL
 }
 
 async function extractBaseURL(playlistURL: string) {
-    var baseURL = playlistURL.substring(0, playlistURL.lastIndexOf('/') + 1)
+    const baseURL = playlistURL.substring(0, playlistURL.lastIndexOf('/') + 1)
     return baseURL
 }
 
 async function extractSequenceURLs(playlistText: string, baseURL: string) {
-    var sequenceURLs: Array<{ filename: string; url: string }> = []
-    var matches = playlistText.match(/sequence_\d+\.ts/g)
+    const sequenceURLs: Array<{ filename: string; url: string }> = []
+    const matches = playlistText.match(/sequence_\d+\.ts/g)
     if (matches) {
         matches.forEach(function (match) {
             sequenceURLs.push({ filename: match, url: baseURL + match })
@@ -283,15 +310,15 @@ export async function parseSubs(url: string, secret: string) {
 
     const data = await response.text()
 
-    var key = secret + '7fac1178830cfe0c'
+    const key = secret + '7fac1178830cfe0c'
 
-    var parsedSubtitle = CryptoJS.enc.Base64.parse(data.substring(0, 24))
-    var sec = CryptoJS.enc.Hex.parse(key)
-    var som = data.substring(24)
+    const parsedSubtitle = CryptoJS.enc.Base64.parse(data.substring(0, 24))
+    const sec = CryptoJS.enc.Hex.parse(key)
+    const som = data.substring(24)
 
     try {
         // Fuck You ADN
-        var decrypted: any = CryptoJS.AES.decrypt(som, sec, { iv: parsedSubtitle })
+        let decrypted: any = CryptoJS.AES.decrypt(som, sec, { iv: parsedSubtitle })
         decrypted = decrypted.toString(CryptoJS.enc.Utf8)
         return decrypted
     } catch (error) {

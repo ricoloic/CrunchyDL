@@ -2,17 +2,17 @@
     <div class="flex flex-col mt-3 gap-3 font-dm overflow-y-scroll h-[calc(100%)]" style="-webkit-app-region: no-drag">
         <div class="flex flex-col items-center p-3 bg-[#11111189] rounded-xl select-none gap-2">
             <div class="text-sm"> Account Management </div>
-            <div v-for="account in accounts" class="flex flex-row items-center h-12 p-3 w-full bg-[#4b4b4b89] rounded-xl">
-                <Icon v-if="account.service === 'CR'" name="simple-icons:crunchyroll" class="h-6 w-6 text-white" />
-                <Icon v-if="account.service === 'ADN'" name="arcticons:animeultima" class="h-6 w-6 text-white" />
+            <div v-for="account in accounts" :key="account.id" class="flex flex-row items-center h-12 p-3 w-full bg-[#4b4b4b89] rounded-xl">
+                <Icon v-if="account.service === SERVICES.crunchyroll" name="simple-icons:crunchyroll" class="h-6 w-6 text-white" />
+                <Icon v-if="account.service === SERVICES.animationdigitalnetwork" name="arcticons:animeultima" lass="h-6 w-6 text-white" />
                 <div class="text-xs ml-1.5">
-                    {{ services.find((s) => s.service === account.service)?.name }}
+                    {{ account.service }}
                 </div>
                 <div class="text-xs ml-auto">
                     {{ account.username }}
                 </div>
                 <div class="flex flex-row ml-2">
-                    <button @click="deleteAccount(account.id)" class="flex items-center justify-center bg-red-500 hover:bg-red-600 w-8 h-8 rounded-lg transition-all">
+                    <button class="flex items-center justify-center bg-red-500 hover:bg-red-600 w-8 h-8 rounded-lg transition-all" @click="deleteAccount(account.id)">
                         <Icon name="majesticons:logout" class="h-4 w-4 text-white" />
                     </button>
                 </div>
@@ -27,9 +27,10 @@
             <div class="w-full bg-[#636363] rounded-xl grid grid-cols-10 gap-1 p-1 z-10">
                 <button
                     v-for="l in locales"
-                    @click="toggleDub(l)"
+                    :key="l.locale"
                     class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                     :class="dubLocales && dubLocales.length !== 0 && dubLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
+                    @click="toggleDub(l)"
                 >
                     {{ l.name }}
                 </button>
@@ -40,9 +41,9 @@
             <div class="w-full bg-[#636363] rounded-xl grid grid-cols-10 gap-1 p-1 z-10">
                 <button
                     v-for="l in locales"
-                    @click="toggleSub(l)"
                     class="flex flex-row items-center justify-center gap-3 py-2 rounded-xl text-sm"
                     :class="subLocales && subLocales.length !== 0 && subLocales.find((i) => i.locale === l.locale) ? 'bg-[#424242]' : 'hover:bg-[#747474]'"
+                    @click="toggleSub(l)"
                 >
                     {{ l.name }}
                 </button>
@@ -52,8 +53,8 @@
             <div class="text-sm mb-2">Default Video Quality</div>
             <select
                 v-model="selectedVideoQuality"
-                @change="selectVideoQuality()"
                 class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+                @change="selectVideoQuality()"
             >
                 <option :value="1080">1080p</option>
                 <option :value="720">720p</option>
@@ -66,8 +67,8 @@
             <div class="text-sm mb-2">Default Audio Quality</div>
             <select
                 v-model="selectedAudioQuality"
-                @change="selectAudioQuality()"
                 class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+                @change="selectAudioQuality()"
             >
                 <option :value="1">44.10 kHz</option>
                 <option :value="3">22.05 kHz</option>
@@ -77,8 +78,8 @@
             <div class="text-sm mb-2">Default Output Format</div>
             <select
                 v-model="selectedVideoFormat"
-                @change="selectOutputFormat()"
                 class="bg-[#5c5b5b] w-full focus:outline-none px-3 py-2 rounded-xl text-sm text-center cursor-pointer"
+                @change="selectOutputFormat()"
             >
                 <option value="mkv">MKV</option>
                 <option value="mp4">MP4</option>
@@ -88,6 +89,8 @@
 </template>
 
 <script lang="ts" setup>
+import { type Services, SERVICES } from '~/src/constants'
+
 const dubLocales = ref<Array<{ locale: string; name: string }>>([])
 
 const subLocales = ref<Array<{ locale: string; name: string }>>([])
@@ -138,8 +141,6 @@ const toggleDub = (lang: { locale: string; name: string }) => {
         if (process.client) {
             ;(window as any).myAPI.setArrayDub(JSON.stringify(dubLocales.value))
         }
-
-        return
     }
 }
 
@@ -160,26 +161,13 @@ const toggleSub = (lang: { locale: string; name: string }) => {
         if (process.client) {
             ;(window as any).myAPI.setArraySub(JSON.stringify(subLocales.value))
         }
-
-        return
     }
 }
 
-const services = ref<{ name: string; service: string }[]>([
-    {
-        name: 'Crunchyroll',
-        service: 'CR'
-    },
-    {
-        name: 'ADN',
-        service: 'ADN'
-    }
-])
-
-const accounts = ref<{ id: number; username: string; service: string }[]>()
+const accounts = ref<{ id: number; username: string; service: Services }[]>()
 
 const getAccounts = async () => {
-    const { data, error } = await useFetch<{ id: number; username: string; service: string }[]>(`http://localhost:9941/api/service/accounts`, {
+    const { data, error } = await useFetch<{ id: number; username: string; service: Services }[]>(`http://localhost:9941/api/service/accounts`, {
         method: 'GET'
     })
 

@@ -1,8 +1,8 @@
-import { Session } from '../modules/license'
 import { readFileSync } from 'fs'
-import { getWVKPath } from './widevine'
-import { messageBox } from '../../electron/background'
+import { Session } from '../modules/license'
 import { server } from '../api'
+import { MessageBoxBuilder } from '../../electron/utils/messageBox'
+import { getWVKPath } from './widevine'
 
 export async function getDRMKeys(pssh: string, assetID: string, userID: string) {
     const auth = await getWVKey(assetID, userID)
@@ -44,12 +44,15 @@ export async function getDRMKeys(pssh: string, assetID: string, userID: string) 
 
         if (response.ok) {
             const json = JSON.parse(await response.text())
-            return session.parseLicense(Buffer.from(json['license'], 'base64')) as { kid: string; key: string }[]
+            return session.parseLicense(Buffer.from(json.license, 'base64')) as { kid: string; key: string }[]
         } else {
-            throw Error(await response.text())
+            throw new Error(await response.text())
         }
     } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Error while getting video/audio decryption keys', 'Error while getting video/audio decryption keys', String(e))
+        MessageBoxBuilder.new('error')
+            .button('Cancel', true)
+            .detail(String(e))
+            .build('Error while getting video/audio decryption keys', 'Error while getting video/audio decryption keys')
         server.logger.log({
             level: 'error',
             message: 'Error while getting video/audio decryption keys',
@@ -85,7 +88,7 @@ export async function getWVKey(assetID: string, userID: string) {
             throw new Error(await response.text())
         }
     } catch (e) {
-        messageBox('error', ['Cancel'], 2, 'Failed to Fetch Decryption token', 'Failed to Fetch Decryption token', String(e))
+        MessageBoxBuilder.new('error').button('Cancel', true).detail(String(e)).build('Failed to Fetch Decryption token', 'Failed to Fetch Decryption token')
         server.logger.log({
             level: 'error',
             message: 'Failed to Fetch Decryption token',
@@ -97,6 +100,6 @@ export async function getWVKey(assetID: string, userID: string) {
 }
 
 export function Uint8ArrayToBase64(pssh: Uint8Array) {
-    var u8 = new Uint8Array(pssh)
+    const u8 = new Uint8Array(pssh)
     return btoa(String.fromCharCode.apply(null, u8 as any))
 }

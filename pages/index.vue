@@ -9,10 +9,10 @@
                     :style="`width: calc((${p.partsdownloaded} / ${p.partsleft}) * 100%);`"
                 ></div>
                 <div class="absolute h-full w-full flex flex-row gap-3 p-3.5">
-                    <div v-if="p.service === 'CR'" class="flex w-48 min-w-48">
+                    <div v-if="p.service === SERVICES.crunchyroll" class="flex w-48 min-w-48">
                         <img :src="(p.media as CrunchyEpisode).images.thumbnail[0].find((p) => p.height === 1080)?.source" alt="Image" class="object-cover rounded-lg" />
                     </div>
-                    <div v-if="p.service === 'ADN'" class="flex min-w-52 w-52">
+                    <div v-if="p.service === SERVICES.animationdigitalnetwork" class="flex min-w-52 w-52">
                         <img :src="(p.media as ADNEpisode).image2x" alt="Image" class="object-cover rounded-lg" />
                     </div>
                     <div class="flex flex-col w-full">
@@ -114,14 +114,14 @@
                                 </div>
                             </div>
                             <div class="text-xs capitalize ml-auto">
-                                {{ p.service === 'CR' ? 'Crunchyroll' : 'ADN' }}
+                                {{ p.service }}
                             </div>
                         </div>
-                        <div v-if="p.service === 'CR'" class="text-base capitalize h-full flex items-center">
+                        <div v-if="p.service === SERVICES.crunchyroll" class="text-base capitalize h-full flex items-center">
                             {{ (p.media as CrunchyEpisode).series_title }} Season {{ (p.media as CrunchyEpisode).season_number }} Episode
                             {{ (p.media as CrunchyEpisode).episode_number ? (p.media as CrunchyEpisode).episode_number : (p.media as CrunchyEpisode).episode }}
                         </div>
-                        <div v-if="p.service === 'ADN'" class="text-base capitalize h-full">
+                        <div v-if="p.service === SERVICES.animationdigitalnetwork" class="text-base capitalize h-full">
                             {{ (p.media as ADNEpisode).show.title }} Season {{ (p.media as ADNEpisode).season ? (p.media as ADNEpisode).season : 1 }} Episode
                             {{ (p.media as ADNEpisode).shortNumber }}
                         </div>
@@ -143,7 +143,7 @@
                                     >{{ p.downloadspeed }} MB/s</div
                                 >
                             </div>
-                            <button @click="openFolder(p.installDir)" v-if="p.status === 'completed'" class="ml-auto h-9 w-9 hover:bg-[#ffffff2c] rounded-xl transition-all">
+                            <button v-if="p.status === 'completed'" class="ml-auto h-9 w-9 hover:bg-[#ffffff2c] rounded-xl transition-all" @click="openFolder(p.installDir)">
                                 <Icon name="ph:folder-open" class="h-5 w-5 text-white" />
                             </button>
                         </div>
@@ -158,6 +158,7 @@
 import type { ADNEpisode } from '~/components/ADN/Types'
 import type { CrunchyEpisode } from '~/components/Episode/Types'
 import Updater from '~/components/Updater.vue'
+import { SERVICES, type Services } from '~/src/constants'
 
 const playlist = ref<
     Array<{
@@ -175,7 +176,7 @@ const playlist = ref<
         totaldownloaded: number
         quality: number
         qualityaudio: 1 | 2 | 3 | undefined
-        service: string
+        service: Services
         format: string
         audiosdownloading: {
             status: string
