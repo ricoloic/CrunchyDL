@@ -69,7 +69,7 @@ const options = {
     }
 }
 
-const platform = 'WINDOWS'
+const platform = 'LINUX'
 builder
     .build({
         targets: Platform[platform].createTarget(),

@@ -9,13 +9,7 @@ if (isDev) {
 }
 
 export function getShakaPath() {
-    if (isDev) {
-        const shaka = process.env.SHAKA_PATH
+    const shaka = "/usr/local/bin/packager"
 
-        return shaka
-    } else {
-        const shaka = path.join(shakaFolderPath, 'shaka.exe')
-
-        return shaka
-    }
+    return shaka;
 }

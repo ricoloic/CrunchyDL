@@ -9,15 +9,8 @@ if (isDev) {
 }
 
 export function getFFMPEGPath() {
-    if (isDev) {
-        const ffmpeg = process.env.FFMPEG_PATH
-        const ffprobe = process.env.FFPROBE_PATH
+    const ffmpeg = "/usr/bin/ffmpeg";
+    const ffprobe = "/usr/bin/ffprobe";
 
-        return { ffmpeg: ffmpeg, ffprobe: ffprobe }
-    } else {
-        const ffmpeg = path.join(ffmpegPath, 'ffmpeg.exe')
-        const ffprobe = path.join(ffmpegPath, 'ffprobe.exe')
-
-        return { ffmpeg: ffmpeg, ffprobe: ffprobe }
-    }
+    return { ffmpeg: ffmpeg, ffprobe: ffprobe }
 }
